@@ -240,6 +240,68 @@ st.markdown("""
         transform: translateY(-2px);
         box-shadow: 0 10px 20px rgba(0,102,255,0.3);
     }
+
+    .review-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        cursor: pointer;
+        border-left: 4px solid #0066ff;
+    }
+
+    .review-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 16px rgba(0,102,255,0.2);
+    }
+
+    .review-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .review-author {
+        font-weight: 700;
+        color: #333;
+    }
+
+    .review-rating {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #0066ff;
+    }
+
+    .review-text {
+        color: #666;
+        line-height: 1.6;
+        margin-bottom: 1rem;
+    }
+
+    .review-meta {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.85rem;
+        color: #999;
+    }
+
+    .review-link-btn {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        background: #0066ff;
+        color: white !important;
+        text-decoration: none;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+    }
+
+    .review-link-btn:hover {
+        background: #0052cc;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -583,6 +645,51 @@ else:
                 {actions_html}
             </div>
             """, unsafe_allow_html=True)
+
+    # All Reviews Section
+    st.markdown("<h2 style='margin-top: 3rem; margin-bottom: 1.5rem;'>📝 Alle Bewertungen</h2>", unsafe_allow_html=True)
+
+    st.markdown(f"<p style='color: #666; margin-bottom: 2rem;'>Klicke auf eine Bewertung um zur Original-Review zu gelangen</p>", unsafe_allow_html=True)
+
+    # Display all reviews as clickable cards
+    for idx, review in df_reviews.iterrows():
+        hotel_slug = hotel_name.lower().replace(" ", "-").replace("ä", "ae").replace("ö", "oe").replace("ü", "ue")
+
+        # Generate review URLs based on platform
+        platform = review.get("platform", "Google")
+        if platform == "Google":
+            review_url = f"https://www.google.com/maps/search/{hotel_name.replace(' ', '+')}+{hotel_city.replace(' ', '+')}"
+        elif platform == "Booking.com":
+            review_url = f"https://www.booking.com/hotel/de/{hotel_slug}.html"
+        elif platform == "TripAdvisor":
+            review_url = f"https://www.tripadvisor.com/Search?q={hotel_name.replace(' ', '+')}"
+        else:
+            review_url = f"https://www.google.com/search?q={hotel_name.replace(' ', '+')}+{hotel_city.replace(' ', '+')}+reviews"
+
+        author = review.get("author_name", "Gast")
+        rating = review.get("rating", 5)
+        date_val = review.get("date", "2024")
+        text = review.get("review_text", "Keine Bewertung verfügbar")
+
+        # Shorten text if too long
+        if len(text) > 300:
+            text = text[:300] + "..."
+
+        st.markdown(f"""
+        <a href="{review_url}" target="_blank" style="text-decoration: none;">
+            <div class="review-card">
+                <div class="review-header">
+                    <div class="review-author">👤 {author}</div>
+                    <div class="review-rating">⭐ {rating}/10</div>
+                </div>
+                <div class="review-text">{text}</div>
+                <div class="review-meta">
+                    <span>📍 {platform}</span>
+                    <span>📅 {date_val}</span>
+                </div>
+            </div>
+        </a>
+        """, unsafe_allow_html=True)
 
     # Reset button
     st.write("")
