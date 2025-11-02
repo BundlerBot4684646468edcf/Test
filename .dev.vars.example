@@ -1,0 +1,5 @@
+# Cloudflare Worker Environment Variables (Local Development)
+# Copy this file to .dev.vars and add your actual credentials
+
+AMADEUS_CLIENT_ID=your_amadeus_client_id_here
+AMADEUS_CLIENT_SECRET=your_amadeus_client_secret_here
