@@ -766,16 +766,44 @@ else:
             </div>
             """, unsafe_allow_html=True)
 
-            # Evidence Section - Using Streamlit components
+            # Evidence Section - Using Streamlit components with CLICKABLE links
             if quotes:
-                st.markdown(f"**📝 Belege aus {evidence.get('mentions', 0)} Bewertungen:**")
+                st.markdown(f"**📝 Belege aus {evidence.get('mentions', 0)} Bewertungen (klickbar):**")
                 for quote in quotes:
+                    # Find matching review in df_reviews by author name to get the URL
+                    author_name = quote.get('author', 'Anonymous')
+                    quote_text = quote.get('text', '')
+
+                    # Try to find matching review by author or text
+                    matching_review = None
+                    if not df_reviews.empty:
+                        # Try exact author match first
+                        matches = df_reviews[df_reviews['author_name'] == author_name]
+                        if not matches.empty:
+                            matching_review = matches.iloc[0]
+                        else:
+                            # Try to find by text similarity (partial match)
+                            for idx, review in df_reviews.iterrows():
+                                if quote_text[:50] in review.get('review_text', ''):
+                                    matching_review = review
+                                    break
+
+                    # Get review URL
+                    if matching_review is not None and 'author_url' in matching_review and matching_review['author_url']:
+                        review_url = matching_review['author_url']
+                    else:
+                        # Fallback to hotel search
+                        review_url = f"https://www.google.com/maps/search/{hotel_name.replace(' ', '+')}+{hotel_city.replace(' ', '+')}"
+
                     with st.container():
                         st.markdown(f"""
-                        <div style='background: white; padding: 1rem; border-radius: 8px; margin-bottom: 0.75rem; border-left: 3px solid #667eea;'>
-                            <p style='font-style: italic; color: #334155; margin-bottom: 0.5rem;'>"{quote.get('text', '')}"</p>
-                            <p style='font-size: 0.875rem; color: #64748b;'><strong>{quote.get('author', 'Anonymous')}</strong> • {quote.get('source', 'Google')} • {quote.get('date', '2024')} • ⭐ {quote.get('rating', 5)}/10</p>
-                        </div>
+                        <a href="{review_url}" target="_blank" style="text-decoration: none;">
+                            <div style='background: white; padding: 1rem; border-radius: 8px; margin-bottom: 0.75rem; border-left: 3px solid #667eea; cursor: pointer; transition: all 0.3s ease;' onmouseover="this.style.boxShadow='0 4px 12px rgba(102,126,234,0.3)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.boxShadow=''; this.style.transform='translateY(0)';">
+                                <p style='font-style: italic; color: #334155; margin-bottom: 0.5rem;'>"{quote.get('text', '')}"</p>
+                                <p style='font-size: 0.875rem; color: #64748b;'><strong>{author_name}</strong> • {quote.get('source', 'Google')} • {quote.get('date', '2024')} • ⭐ {quote.get('rating', 5)}/10</p>
+                                <p style='font-size: 0.75rem; color: #667eea; margin-top: 0.5rem;'>🔗 Zum Original-Review →</p>
+                            </div>
+                        </a>
                         """, unsafe_allow_html=True)
 
     # Recommendations
