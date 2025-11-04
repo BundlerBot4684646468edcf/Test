@@ -400,63 +400,8 @@ def fetch_place_reviews(place_id:str)->pd.DataFrame:
         })
     return pd.DataFrame(rows)
 
-def generate_mock_booking_reviews(num_reviews=10):
-    """Generate mock Booking.com reviews for demo"""
-    from random import randint, choice
-    reviews = []
-    authors = ["Michael S.", "Anna K.", "Peter W.", "Lisa H.", "Thomas B.", "Julia M.", "Marco R.", "Sarah L."]
-    texts = [
-        "Excellent hotel! Very clean rooms and friendly staff.",
-        "Good location but breakfast could be better.",
-        "Amazing spa facilities. Highly recommended!",
-        "Nice hotel overall, small bathroom though.",
-        "Perfect for families. Kids loved the pool!",
-        "Great value for money. Will come back!",
-        "Staff was very helpful. Room was spacious.",
-        "Beautiful view from the balcony!",
-    ]
-
-    for i in range(num_reviews):
-        days_ago = randint(1, 365)
-        d = date.today() - timedelta(days=days_ago)
-        reviews.append({
-            "date": d,
-            "platform": "Booking.com",
-            "language": choice(["DE", "EN", "IT"]),
-            "rating": randint(6, 10),
-            "review_text": choice(texts),
-            "author_name": choice(authors),
-            "author_url": "https://www.booking.com"
-        })
-    return pd.DataFrame(reviews)
-
-def generate_mock_tripadvisor_reviews(num_reviews=8):
-    """Generate mock TripAdvisor reviews for demo"""
-    from random import randint, choice
-    reviews = []
-    authors = ["John D.", "Emma W.", "David L.", "Sophie M.", "Alex T.", "Maria G."]
-    texts = [
-        "Wonderful stay! Everything was perfect.",
-        "Good hotel, central location.",
-        "Nice rooms but service could improve.",
-        "Great breakfast buffet!",
-        "Comfortable beds, quiet rooms.",
-        "Loved the rooftop terrace!",
-    ]
-
-    for i in range(num_reviews):
-        days_ago = randint(1, 365)
-        d = date.today() - timedelta(days=days_ago)
-        reviews.append({
-            "date": d,
-            "platform": "TripAdvisor",
-            "language": choice(["DE", "EN", "IT"]),
-            "rating": randint(6, 10),
-            "review_text": choice(texts),
-            "author_name": choice(authors),
-            "author_url": "https://www.tripadvisor.com"
-        })
-    return pd.DataFrame(reviews)
+# ✅ REMOVED: No more mock data!
+# Only real data from Google Places API or CSV upload
 
 def llm_analyze_with_insights(df: pd.DataFrame, hotel_name: str, progress_bar=None, status_text=None):
     """Real AI Analysis with OpenAI GPT-4"""
@@ -668,12 +613,27 @@ if not st.session_state.analysis_done:
         st.write("")
         analyze_btn = st.button("🚀 Analysieren", use_container_width=True)
 
+    # ✅ CSV Upload Option
+    st.markdown("---")
+    st.markdown("### 📤 Zusätzliche Reviews hochladen")
+    st.markdown("Lade CSV-Dateien mit Reviews von Booking.com, TripAdvisor etc. hoch")
+
+    uploaded_files = st.file_uploader(
+        "CSV-Dateien (Format: date, platform, language, rating, review_text, author_name)",
+        type=["csv"],
+        accept_multiple_files=True,
+        help="Spalten: date (YYYY-MM-DD), platform, language (DE/EN/IT), rating (1-5), review_text, author_name"
+    )
+
     if analyze_btn and hotel_name and hotel_city:
         progress_bar = st.progress(0)
         status_text = st.empty()
 
         status_text.text("🔍 Suche Hotel...")
 
+        all_dataframes = []
+
+        # Load Google Reviews (REAL DATA)
         if GOOGLE_PLACES_API_KEY:
             pid = find_place_id(f"{hotel_name} {hotel_city}")
             if pid:
@@ -681,17 +641,33 @@ if not st.session_state.analysis_done:
                 status_text.text("📥 Lade Reviews von Google...")
 
                 df_google = fetch_place_reviews(pid)
+                if not df_google.empty:
+                    all_dataframes.append(df_google)
+                    st.success(f"✅ {len(df_google)} Google Reviews geladen")
 
-                status_text.text("📥 Lade Reviews von Booking.com...")
-                progress_bar.progress(0.15)
-                df_booking = generate_mock_booking_reviews(15)
+        # Load uploaded CSV files (REAL DATA from user)
+        if uploaded_files:
+            progress_bar.progress(0.15)
+            status_text.text("📥 Lade hochgeladene CSV-Dateien...")
 
-                status_text.text("📥 Lade Reviews von TripAdvisor...")
-                progress_bar.progress(0.2)
-                df_tripadvisor = generate_mock_tripadvisor_reviews(10)
+            for uploaded_file in uploaded_files:
+                try:
+                    df_csv = pd.read_csv(uploaded_file)
+                    # Convert date column to datetime
+                    df_csv['date'] = pd.to_datetime(df_csv['date']).dt.date
+                    # Add author_url if not present
+                    if 'author_url' not in df_csv.columns:
+                        df_csv['author_url'] = ""
+                    all_dataframes.append(df_csv)
+                    st.success(f"✅ {len(df_csv)} Reviews aus {uploaded_file.name} geladen")
+                except Exception as e:
+                    st.error(f"❌ Fehler beim Laden von {uploaded_file.name}: {e}")
 
-                # Combine all reviews
-                df_reviews = pd.concat([df_google, df_booking, df_tripadvisor], ignore_index=True)
+        # Combine all reviews (ONLY REAL DATA!)
+        if all_dataframes:
+            df_reviews = pd.concat(all_dataframes, ignore_index=True)
+        else:
+            df_reviews = pd.DataFrame()
 
                 if not df_reviews.empty:
                     status_text.text("🤖 Starte KI-Analyse mit OpenAI GPT-4...")
