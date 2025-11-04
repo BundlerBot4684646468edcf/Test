@@ -15,11 +15,17 @@ import time
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 GOOGLE_PLACES_API_KEY = os.getenv("GOOGLE_PLACES_API_KEY", "")
+OUTSCRAPER_API_KEY = os.getenv("OUTSCRAPER_API_KEY", "")
 USE_LLM = bool(OPENAI_API_KEY)
+USE_OUTSCRAPER = bool(OUTSCRAPER_API_KEY)
 
 if USE_LLM:
     from openai import OpenAI
     oai = OpenAI(api_key=OPENAI_API_KEY)
+
+if USE_OUTSCRAPER:
+    from outscraper import ApiClient
+    outscraper_client = ApiClient(api_key=OUTSCRAPER_API_KEY)
 
 # Page config
 st.set_page_config(
@@ -400,8 +406,122 @@ def fetch_place_reviews(place_id:str)->pd.DataFrame:
         })
     return pd.DataFrame(rows)
 
+def fetch_outscraper_google_reviews(place_id: str, limit: int = 500) -> pd.DataFrame:
+    """Fetch Google Reviews via Outscraper (more than 5 reviews!)"""
+    if not USE_OUTSCRAPER:
+        return pd.DataFrame()
+
+    try:
+        results = outscraper_client.google_maps_reviews(
+            [place_id],
+            reviews_limit=limit,
+            language='de',
+            sort='newest'
+        )
+
+        rows = []
+        for place in results:
+            for review in place.get('reviews_data', []):
+                review_date = review.get('review_timestamp')
+                if review_date:
+                    try:
+                        d = datetime.fromisoformat(review_date.replace('Z', '+00:00')).date()
+                    except:
+                        d = date.today()
+                else:
+                    d = date.today()
+
+                rows.append({
+                    "date": d,
+                    "platform": "Google",
+                    "language": (review.get('review_lang') or "de").upper()[:2],
+                    "rating": review.get('review_rating', 5),
+                    "review_text": review.get('review_text', ''),
+                    "author_name": review.get('author_title', 'Anonymous'),
+                    "author_url": review.get('author_link', '')
+                })
+
+        return pd.DataFrame(rows)
+    except Exception as e:
+        st.warning(f"⚠️ Outscraper Google error: {e}")
+        return pd.DataFrame()
+
+def fetch_outscraper_booking_reviews(hotel_url: str, limit: int = 500) -> pd.DataFrame:
+    """Fetch Booking.com Reviews via Outscraper"""
+    if not USE_OUTSCRAPER:
+        return pd.DataFrame()
+
+    try:
+        # Outscraper Booking.com API
+        results = outscraper_client.scrape_site(
+            'booking',
+            [hotel_url],
+            limit=limit
+        )
+
+        rows = []
+        for result in results:
+            for review in result.get('reviews', []):
+                review_date_str = review.get('date', '')
+                try:
+                    d = datetime.strptime(review_date_str, '%Y-%m-%d').date()
+                except:
+                    d = date.today()
+
+                rows.append({
+                    "date": d,
+                    "platform": "Booking.com",
+                    "language": (review.get('language') or "de").upper()[:2],
+                    "rating": float(review.get('rating', 5)) / 2,  # Booking uses 10-point scale
+                    "review_text": review.get('positive', '') + ' ' + review.get('negative', ''),
+                    "author_name": review.get('author', 'Anonymous'),
+                    "author_url": hotel_url
+                })
+
+        return pd.DataFrame(rows)
+    except Exception as e:
+        st.warning(f"⚠️ Outscraper Booking error: {e}")
+        return pd.DataFrame()
+
+def fetch_outscraper_tripadvisor_reviews(hotel_url: str, limit: int = 500) -> pd.DataFrame:
+    """Fetch TripAdvisor Reviews via Outscraper"""
+    if not USE_OUTSCRAPER:
+        return pd.DataFrame()
+
+    try:
+        # Outscraper TripAdvisor API
+        results = outscraper_client.scrape_site(
+            'tripadvisor',
+            [hotel_url],
+            limit=limit
+        )
+
+        rows = []
+        for result in results:
+            for review in result.get('reviews', []):
+                review_date_str = review.get('date', '')
+                try:
+                    d = datetime.strptime(review_date_str, '%Y-%m-%d').date()
+                except:
+                    d = date.today()
+
+                rows.append({
+                    "date": d,
+                    "platform": "TripAdvisor",
+                    "language": (review.get('language') or "en").upper()[:2],
+                    "rating": review.get('rating', 5),
+                    "review_text": review.get('text', ''),
+                    "author_name": review.get('author', 'Anonymous'),
+                    "author_url": review.get('author_url', hotel_url)
+                })
+
+        return pd.DataFrame(rows)
+    except Exception as e:
+        st.warning(f"⚠️ Outscraper TripAdvisor error: {e}")
+        return pd.DataFrame()
+
 # ✅ REMOVED: No more mock data!
-# Only real data from Google Places API or CSV upload
+# Only real data from Google Places API, Outscraper, or CSV upload
 
 def llm_analyze_with_insights(df: pd.DataFrame, hotel_name: str, progress_bar=None, status_text=None):
     """Real AI Analysis with OpenAI GPT-4"""
@@ -613,6 +733,32 @@ if not st.session_state.analysis_done:
         st.write("")
         analyze_btn = st.button("🚀 Analysieren", use_container_width=True)
 
+    # ✅ Outscraper Multi-Platform Option
+    booking_url = ""
+    tripadvisor_url = ""
+    reviews_limit = 500
+
+    if USE_OUTSCRAPER:
+        st.markdown("---")
+        st.markdown("### 🌐 Outscraper Multi-Platform Reviews")
+        st.markdown("Automatisch Reviews von mehreren Plattformen laden (benötigt Outscraper API Key)")
+
+        col_a, col_b = st.columns(2)
+        with col_a:
+            booking_url = st.text_input(
+                "🏨 Booking.com URL (Optional)",
+                placeholder="https://www.booking.com/hotel/...",
+                help="Komplette URL zum Hotel auf Booking.com"
+            )
+        with col_b:
+            tripadvisor_url = st.text_input(
+                "✈️ TripAdvisor URL (Optional)",
+                placeholder="https://www.tripadvisor.com/Hotel_Review-...",
+                help="Komplette URL zum Hotel auf TripAdvisor"
+            )
+
+        reviews_limit = st.slider("Max. Reviews pro Plattform", 50, 1000, 500, 50)
+
     # ✅ CSV Upload Option
     st.markdown("---")
     st.markdown("### 📤 Zusätzliche Reviews hochladen")
@@ -634,20 +780,51 @@ if not st.session_state.analysis_done:
         all_dataframes = []
 
         # Load Google Reviews (REAL DATA)
+        pid = None
         if GOOGLE_PLACES_API_KEY:
             pid = find_place_id(f"{hotel_name} {hotel_city}")
             if pid:
                 progress_bar.progress(0.1)
-                status_text.text("📥 Lade Reviews von Google...")
+                status_text.text("📥 Lade Reviews von Google Places API...")
 
                 df_google = fetch_place_reviews(pid)
                 if not df_google.empty:
                     all_dataframes.append(df_google)
-                    st.success(f"✅ {len(df_google)} Google Reviews geladen")
+                    st.success(f"✅ {len(df_google)} Google Reviews geladen (Google Places API)")
+
+        # Load Google Reviews via Outscraper (UNLIMITED!)
+        if USE_OUTSCRAPER and pid:
+            progress_bar.progress(0.2)
+            status_text.text("📥 Lade ALLE Google Reviews via Outscraper...")
+
+            df_outscraper_google = fetch_outscraper_google_reviews(pid, limit=reviews_limit if USE_OUTSCRAPER else 500)
+            if not df_outscraper_google.empty:
+                all_dataframes.append(df_outscraper_google)
+                st.success(f"✅ {len(df_outscraper_google)} Google Reviews geladen (Outscraper)")
+
+        # Load Booking.com Reviews via Outscraper
+        if USE_OUTSCRAPER and booking_url:
+            progress_bar.progress(0.4)
+            status_text.text("📥 Lade Booking.com Reviews via Outscraper...")
+
+            df_booking = fetch_outscraper_booking_reviews(booking_url, limit=reviews_limit)
+            if not df_booking.empty:
+                all_dataframes.append(df_booking)
+                st.success(f"✅ {len(df_booking)} Booking.com Reviews geladen")
+
+        # Load TripAdvisor Reviews via Outscraper
+        if USE_OUTSCRAPER and tripadvisor_url:
+            progress_bar.progress(0.6)
+            status_text.text("📥 Lade TripAdvisor Reviews via Outscraper...")
+
+            df_tripadvisor = fetch_outscraper_tripadvisor_reviews(tripadvisor_url, limit=reviews_limit)
+            if not df_tripadvisor.empty:
+                all_dataframes.append(df_tripadvisor)
+                st.success(f"✅ {len(df_tripadvisor)} TripAdvisor Reviews geladen")
 
         # Load uploaded CSV files (REAL DATA from user)
         if uploaded_files:
-            progress_bar.progress(0.15)
+            progress_bar.progress(0.7)
             status_text.text("📥 Lade hochgeladene CSV-Dateien...")
 
             for uploaded_file in uploaded_files:
@@ -669,33 +846,30 @@ if not st.session_state.analysis_done:
         else:
             df_reviews = pd.DataFrame()
 
-                if not df_reviews.empty:
-                    status_text.text("🤖 Starte KI-Analyse mit OpenAI GPT-4...")
+        if not df_reviews.empty:
+            progress_bar.progress(0.8)
+            status_text.text("🤖 Starte KI-Analyse mit OpenAI GPT-4...")
 
-                    analysis = llm_analyze_with_insights(df_reviews, hotel_name, progress_bar, status_text)
+            analysis = llm_analyze_with_insights(df_reviews, hotel_name, progress_bar, status_text)
 
-                    if analysis:
-                        st.session_state.results = {
-                            "hotel_name": hotel_name,
-                            "hotel_city": hotel_city,
-                            "analysis": analysis,
-                            "reviews": df_reviews
-                        }
-                        st.session_state.analysis_done = True
+            if analysis:
+                st.session_state.results = {
+                    "hotel_name": hotel_name,
+                    "hotel_city": hotel_city,
+                    "analysis": analysis,
+                    "reviews": df_reviews
+                }
+                st.session_state.analysis_done = True
 
-                        progress_bar.empty()
-                        status_text.empty()
+                progress_bar.empty()
+                status_text.empty()
 
-                        time.sleep(0.5)
-                        st.rerun()
-                    else:
-                        st.error("❌ KI-Analyse fehlgeschlagen.")
-                else:
-                    st.warning("⚠️ Keine Reviews gefunden")
+                time.sleep(0.5)
+                st.rerun()
             else:
-                st.error("❌ Hotel nicht gefunden")
+                st.error("❌ KI-Analyse fehlgeschlagen.")
         else:
-            st.error("❌ GOOGLE_PLACES_API_KEY fehlt in .env")
+            st.warning("⚠️ Keine Reviews gefunden. Bitte überprüfe deine API Keys und Eingaben.")
 
 # Results Section
 else:
