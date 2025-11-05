@@ -7,7 +7,6 @@ import streamlit as st
 import plotly.graph_objects as go
 import plotly.express as px
 from dotenv import load_dotenv
-from langdetect import detect
 import html
 import time
 
