@@ -359,6 +359,53 @@ st.markdown("""
         color: #667eea;
         margin: 0.25rem;
     }
+
+    /* Insight Badges */
+    .insight-badge {
+        display: inline-block;
+        padding: 0.4rem 0.9rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .badge-critical {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+    }
+
+    .badge-important {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+    }
+
+    .badge-info {
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        color: white;
+    }
+
+    /* Better Text Contrast */
+    .metric-label {
+        font-size: 0.875rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #1e293b !important;
+        margin-bottom: 0.5rem;
+    }
+
+    .category-name {
+        font-weight: 700;
+        font-size: 1.05rem;
+        color: #0f172a !important;
+    }
+
+    /* Dark readable text everywhere */
+    p, div {
+        color: #1e293b;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -1101,6 +1148,127 @@ else:
                 </div>
             </div>
             """, unsafe_allow_html=True)
+
+    # INSIGHTS SECTION
+    st.markdown('<div class="section-header">💡 Kritische Erkenntnisse (KI-generiert)</div>', unsafe_allow_html=True)
+
+    insights = analysis.get("insights", [])
+    for insight in insights:
+        priority = insight.get("priority", "medium")
+        badge_class = {"high": "badge-critical", "medium": "badge-important", "low": "badge-info"}.get(priority, "badge-info")
+        priority_text = {"high": "Kritisch", "medium": "Wichtig", "low": "Info"}.get(priority, "Info")
+        insight_class = f"insight-priority-{priority}"
+
+        evidence = insight.get("evidence", {})
+        quotes = evidence.get("quotes", [])
+
+        with st.container():
+            st.markdown(f"""
+            <div class="insight-card {insight_class}">
+                <div>
+                    <span class="insight-badge {badge_class}">{priority_text}</span>
+                </div>
+                <div class="insight-title" style="font-size: 1.25rem; font-weight: 700; color: #1e293b; margin: 1rem 0 0.5rem 0;">{insight.get('title', '')}</div>
+                <div class="insight-text" style="color: #475569; line-height: 1.6;">{insight.get('text', '')}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            if quotes:
+                st.markdown(f"**📝 Belege aus {evidence.get('mentions', 0)} Bewertungen (klickbar):**")
+                for quote in quotes:
+                    author_name = quote.get('author', 'Anonymous')
+                    quote_text = quote.get('text', '')
+
+                    matching_review = None
+                    if not df_filtered.empty:
+                        matches = df_filtered[df_filtered['author_name'] == author_name]
+                        if not matches.empty:
+                            matching_review = matches.iloc[0]
+                        else:
+                            for idx, review in df_filtered.iterrows():
+                                if quote_text[:50] in review.get('review_text', ''):
+                                    matching_review = review
+                                    break
+
+                    if matching_review is not None and 'author_url' in matching_review and matching_review['author_url']:
+                        review_url = matching_review['author_url']
+                    else:
+                        review_url = f"https://www.google.com/maps/search/{hotel_name.replace(' ', '+')}+{hotel_city.replace(' ', '+')}"
+
+                    with st.container():
+                        st.markdown(f"""
+                        <a href="{review_url}" target="_blank" style="text-decoration: none;">
+                            <div style='background: white; padding: 1rem; border-radius: 8px; margin-bottom: 0.75rem; border-left: 3px solid #667eea; cursor: pointer; transition: all 0.3s ease;' onmouseover="this.style.boxShadow='0 4px 12px rgba(102,126,234,0.3)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.boxShadow=''; this.style.transform='translateY(0)';">
+                                <p style='font-style: italic; color: #1e293b; margin-bottom: 0.5rem; font-weight: 500;'>"{quote.get('text', '')}"</p>
+                                <p style='font-size: 0.875rem; color: #64748b;'><strong>{author_name}</strong> • {quote.get('source', 'Google')} • {quote.get('date', '2024')} • ⭐ {quote.get('rating', 5)}/10</p>
+                                <p style='font-size: 0.75rem; color: #667eea; margin-top: 0.5rem; font-weight: 600;'>🔗 Zum Original-Review →</p>
+                            </div>
+                        </a>
+                        """, unsafe_allow_html=True)
+
+    # RECOMMENDATIONS SECTION
+    st.markdown('<div class="section-header">✅ Handlungsempfehlungen (KI-generiert)</div>', unsafe_allow_html=True)
+
+    recommendations = analysis.get("recommendations", {})
+    action_categories = [
+        ("immediate", "🚨 Sofort umsetzen", "category-immediate"),
+        ("short_term", "📅 Kurzfristig (1-3 Monate)", "category-short"),
+        ("long_term", "🎯 Langfristig (6+ Monate)", "category-long")
+    ]
+
+    for key, title, css_class in action_categories:
+        actions = recommendations.get(key, [])
+        if actions:
+            st.markdown(f"""
+            <div class="action-card" style='background: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08);'>
+                <div class="action-header" style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;'>
+                    <div class="action-title" style='font-size: 1.25rem; font-weight: 700; color: #1e293b;'>{title}</div>
+                    <div class="action-category {css_class}" style='padding: 0.5rem 1rem; border-radius: 20px; background: #667eea; color: white; font-weight: 600; font-size: 0.875rem;'>{len(actions)} Maßnahmen</div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            for action in actions:
+                st.markdown(f"""
+                <div style='background: #f8fafc; padding: 1.25rem; border-radius: 8px; margin-bottom: 1rem; border-left: 4px solid #667eea;'>
+                    <p style='font-weight: 700; color: #1e293b; margin-bottom: 0.5rem; font-size: 1.05rem;'>✓ {action.get('action', '')}</p>
+                    <p style='color: #475569; font-size: 0.95rem; line-height: 1.6;'>💡 {action.get('evidence', '')}</p>
+                </div>
+                """, unsafe_allow_html=True)
+
+    # ALL REVIEWS SECTION
+    st.markdown('<div class="section-header">📝 Alle Bewertungen</div>', unsafe_allow_html=True)
+    st.markdown(f"<p style='color: #475569; margin-bottom: 2rem; font-size: 1.05rem;'>Klicken Sie auf eine Bewertung um zur Original-Quelle zu gelangen • <strong>{len(df_filtered)}</strong> Reviews gefiltert</p>", unsafe_allow_html=True)
+
+    for idx, review in df_filtered.head(20).iterrows():
+        rating = review.get('rating', 5)
+        stars = "⭐" * int(rating)
+
+        author_url = review.get("author_url", "")
+        if not author_url:
+            author_url = f"https://www.google.com/maps/search/{hotel_name.replace(' ', '+')}+{hotel_city.replace(' ', '+')}"
+
+        platform = review.get('platform', 'Google')
+        platform_emoji = {"Google": "🔵", "Booking.com": "🏨", "TripAdvisor": "✈️"}.get(platform, "📱")
+
+        st.markdown(f"""
+        <a href="{author_url}" target="_blank" style="text-decoration: none;">
+            <div style='background: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 1rem; border-left: 4px solid #667eea; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.06);' onmouseover="this.style.boxShadow='0 8px 20px rgba(102,126,234,0.25)'; this.style.transform='translateY(-3px)';" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.06)'; this.style.transform='translateY(0)';">
+                <div style='display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;'>
+                    <div>
+                        <p style='font-weight: 700; color: #1e293b; font-size: 1.1rem; margin-bottom: 0.25rem;'>{review.get('author_name', 'Anonymous')}</p>
+                        <p style='font-size: 0.875rem; color: #64748b;'>{platform_emoji} {platform} • {review.get('language', 'DE')} • {review.get('date', '2024')}</p>
+                    </div>
+                    <div style='text-align: right;'>
+                        <div style='font-size: 1.5rem;'>{stars}</div>
+                        <div style='font-weight: 700; color: #667eea; font-size: 1.1rem;'>{rating}/5</div>
+                    </div>
+                </div>
+                <p style='color: #334155; line-height: 1.7; font-size: 0.95rem;'>{review.get('review_text', '')[:300]}{'...' if len(str(review.get('review_text', ''))) > 300 else ''}</p>
+                <p style='font-size: 0.85rem; color: #667eea; margin-top: 1rem; font-weight: 600;'>🔗 Vollständiges Review lesen →</p>
+            </div>
+        </a>
+        """, unsafe_allow_html=True)
 
     # Reset button
     st.write("")
