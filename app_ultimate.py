@@ -504,36 +504,53 @@ def auto_find_tripadvisor_url(hotel_name: str, city: str = "") -> str:
         return ""
 
 def fetch_outscraper_booking_reviews(hotel_url: str, limit: int = 500) -> pd.DataFrame:
-    """Fetch Booking.com Reviews via Outscraper"""
-    if not USE_OUTSCRAPER:
+    """Fetch Booking.com Reviews via Outscraper REST API"""
+    if not USE_OUTSCRAPER or not OUTSCRAPER_API_KEY:
         return pd.DataFrame()
 
     try:
-        # Outscraper Booking.com API
-        results = outscraper_client.scrape_site(
-            'booking',
-            [hotel_url],
-            limit=limit
-        )
+        # Use Outscraper REST API directly
+        api_url = "https://api.outscraper.com/booking-reviews"
+        params = {
+            'query': hotel_url,
+            'reviewsLimit': limit,
+            'async': False
+        }
+        headers = {
+            'X-API-KEY': OUTSCRAPER_API_KEY
+        }
+
+        response = requests.get(api_url, params=params, headers=headers, timeout=120)
+
+        if response.status_code != 200:
+            st.warning(f"⚠️ Booking.com API Fehler: HTTP {response.status_code}")
+            return pd.DataFrame()
+
+        data = response.json()
 
         rows = []
-        for result in results:
-            for review in result.get('reviews', []):
-                review_date_str = review.get('date', '')
-                try:
-                    d = datetime.strptime(review_date_str, '%Y-%m-%d').date()
-                except:
-                    d = date.today()
+        if isinstance(data, list) and len(data) > 0:
+            for hotel in data:
+                for review in hotel.get('reviews_data', []):
+                    review_date_str = review.get('review_datetime', '')
+                    try:
+                        d = datetime.fromisoformat(review_date_str.replace('Z', '+00:00')).date()
+                    except:
+                        d = date.today()
 
-                rows.append({
-                    "date": d,
-                    "platform": "Booking.com",
-                    "language": (review.get('language') or "de").upper()[:2],
-                    "rating": float(review.get('rating', 5)) / 2,  # Booking uses 10-point scale
-                    "review_text": review.get('positive', '') + ' ' + review.get('negative', ''),
-                    "author_name": review.get('author', 'Anonymous'),
-                    "author_url": hotel_url
-                })
+                    # Booking.com uses 10-point scale, convert to 5-point
+                    rating = review.get('review_rating', 10)
+                    rating_5 = float(rating) / 2
+
+                    rows.append({
+                        "date": d,
+                        "platform": "Booking.com",
+                        "language": (review.get('review_language') or "de").upper()[:2],
+                        "rating": rating_5,
+                        "review_text": (review.get('review_positive', '') + ' ' + review.get('review_negative', '')).strip(),
+                        "author_name": review.get('author_name', 'Anonymous'),
+                        "author_url": hotel_url
+                    })
 
         return pd.DataFrame(rows)
     except Exception as e:
@@ -541,36 +558,52 @@ def fetch_outscraper_booking_reviews(hotel_url: str, limit: int = 500) -> pd.Dat
         return pd.DataFrame()
 
 def fetch_outscraper_tripadvisor_reviews(hotel_url: str, limit: int = 500) -> pd.DataFrame:
-    """Fetch TripAdvisor Reviews via Outscraper"""
-    if not USE_OUTSCRAPER:
+    """Fetch TripAdvisor Reviews via Outscraper REST API"""
+    if not USE_OUTSCRAPER or not OUTSCRAPER_API_KEY:
         return pd.DataFrame()
 
     try:
-        # Outscraper TripAdvisor API
-        results = outscraper_client.scrape_site(
-            'tripadvisor',
-            [hotel_url],
-            limit=limit
-        )
+        # Use Outscraper REST API directly
+        api_url = "https://api.outscraper.com/tripadvisor-reviews"
+        params = {
+            'query': hotel_url,
+            'reviewsLimit': limit,
+            'async': False
+        }
+        headers = {
+            'X-API-KEY': OUTSCRAPER_API_KEY
+        }
+
+        response = requests.get(api_url, params=params, headers=headers, timeout=120)
+
+        if response.status_code != 200:
+            st.warning(f"⚠️ TripAdvisor API Fehler: HTTP {response.status_code}")
+            return pd.DataFrame()
+
+        data = response.json()
 
         rows = []
-        for result in results:
-            for review in result.get('reviews', []):
-                review_date_str = review.get('date', '')
-                try:
-                    d = datetime.strptime(review_date_str, '%Y-%m-%d').date()
-                except:
-                    d = date.today()
+        if isinstance(data, list) and len(data) > 0:
+            for location in data:
+                for review in location.get('reviews_data', []):
+                    review_date_str = review.get('review_datetime', '')
+                    try:
+                        d = datetime.fromisoformat(review_date_str.replace('Z', '+00:00')).date()
+                    except:
+                        d = date.today()
 
-                rows.append({
-                    "date": d,
-                    "platform": "TripAdvisor",
-                    "language": (review.get('language') or "en").upper()[:2],
-                    "rating": review.get('rating', 5),
-                    "review_text": review.get('text', ''),
-                    "author_name": review.get('author', 'Anonymous'),
-                    "author_url": review.get('author_url', hotel_url)
-                })
+                    # TripAdvisor uses bubble rating (1-5)
+                    rating = review.get('review_rating', 5)
+
+                    rows.append({
+                        "date": d,
+                        "platform": "TripAdvisor",
+                        "language": (review.get('review_language') or "en").upper()[:2],
+                        "rating": float(rating),
+                        "review_text": review.get('review_text', ''),
+                        "author_name": review.get('author_name', 'Anonymous'),
+                        "author_url": review.get('author_url', hotel_url)
+                    })
 
         return pd.DataFrame(rows)
     except Exception as e:
