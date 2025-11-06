@@ -550,7 +550,31 @@ def llm_analyze_with_insights(df: pd.DataFrame, hotel_name: str, progress_bar=No
     if status_text:
         status_text.text("🤖 OpenAI GPT-4 analysiert Reviews...")
 
-    sample = df.head(20)
+    # Calculate REAL statistics from ALL reviews
+    total_reviews = len(df)
+    avg_rating = df['rating'].mean()
+    overall_score = int((avg_rating / 5) * 100)
+
+    # Calculate REAL trend from data (last 30 days vs previous 30 days)
+    df_sorted = df.sort_values('date', ascending=False)
+    df_sorted['date'] = pd.to_datetime(df_sorted['date'])
+
+    today = pd.Timestamp.now()
+    last_30 = df_sorted[df_sorted['date'] >= (today - pd.Timedelta(days=30))]
+    prev_30 = df_sorted[(df_sorted['date'] >= (today - pd.Timedelta(days=60))) &
+                        (df_sorted['date'] < (today - pd.Timedelta(days=30)))]
+
+    if len(prev_30) > 0:
+        last_30_avg = last_30['rating'].mean() if len(last_30) > 0 else avg_rating
+        prev_30_avg = prev_30['rating'].mean()
+        trend_pct = ((last_30_avg - prev_30_avg) / prev_30_avg) * 100
+        trend = f"{'+' if trend_pct > 0 else ''}{trend_pct:.1f}%"
+    else:
+        trend = "+0%"
+
+    # Analyze a LARGER sample (50 reviews instead of 20)
+    sample_size = min(50, len(df))
+    sample = df.head(sample_size)
     reviews_text = []
     for _, r in sample.iterrows():
         reviews_text.append({
@@ -564,15 +588,27 @@ def llm_analyze_with_insights(df: pd.DataFrame, hotel_name: str, progress_bar=No
         progress_bar.progress(0.4)
 
     system = f"""Du bist ein Hotel-Analyse-Experte für {hotel_name}.
-Analysiere die Reviews professionell und erstelle einen detaillierten Bericht."""
+Analysiere die Reviews professionell und erstelle einen detaillierten Bericht.
+
+WICHTIG:
+- Verwende ECHTE Daten aus den Reviews
+- Zitiere ECHTE Reviewtexte als Belege
+- Berechne keine eigenen Scores - die werden aus den Daten berechnet"""
 
     user = f"""
-Analysiere diese Hotel-Reviews und erstelle einen Bericht im EXAKTEN JSON-Format:
+Analysiere diese {sample_size} Hotel-Reviews (von insgesamt {total_reviews} Reviews).
+
+STATISTIKEN (BEREITS BERECHNET):
+- Gesamt-Score: {overall_score}/100
+- Durchschnittliche Bewertung: {avg_rating:.1f}/5
+- Trend: {trend}
+
+Erstelle einen Bericht im EXAKTEN JSON-Format (VERWENDE DIE BERECHNETEN WERTE!):
 
 {{
-  "overall_rating": 85,
-  "sentiment_score": 82,
-  "trend": "+5%",
+  "overall_rating": {overall_score},
+  "sentiment_score": {overall_score},
+  "trend": "{trend}",
   "categories": {{
     "Service": 88,
     "Zimmer": 78,
@@ -753,7 +789,7 @@ if not st.session_state.analysis_done:
     # ✅ Outscraper Multi-Platform Option
     booking_url = ""
     tripadvisor_url = ""
-    reviews_limit = 500
+    reviews_limit = 1000
 
     if USE_OUTSCRAPER:
         st.markdown("---")
@@ -774,7 +810,7 @@ if not st.session_state.analysis_done:
                 help="Komplette URL zum Hotel auf TripAdvisor"
             )
 
-        reviews_limit = st.slider("Max. Reviews pro Plattform", 50, 1000, 500, 50)
+        reviews_limit = st.slider("Max. Reviews pro Plattform", 100, 5000, 1000, 100)
 
     # ✅ CSV Upload Option
     st.markdown("---")
@@ -814,7 +850,7 @@ if not st.session_state.analysis_done:
             progress_bar.progress(0.2)
             status_text.text("📥 Lade ALLE Google Reviews via Outscraper...")
 
-            df_outscraper_google = fetch_outscraper_google_reviews(pid, limit=reviews_limit if USE_OUTSCRAPER else 500)
+            df_outscraper_google = fetch_outscraper_google_reviews(pid, limit=reviews_limit)
             if not df_outscraper_google.empty:
                 all_dataframes.append(df_outscraper_google)
                 st.success(f"✅ {len(df_outscraper_google)} Google Reviews geladen (Outscraper)")
