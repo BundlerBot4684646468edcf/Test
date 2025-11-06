@@ -1232,9 +1232,15 @@ else:
         platform = review.get('platform', 'Google')
         platform_emoji = {"Google": "🔵", "Booking.com": "🏨", "TripAdvisor": "✈️"}.get(platform, "📱")
 
+        # Safe text handling
+        review_text = review.get('review_text') or ''
+        review_text = str(review_text)
+        text_preview = review_text[:300]
+        show_more = '...' if len(review_text) > 300 else ''
+
         st.markdown(f"""
         <a href="{author_url}" target="_blank" style="text-decoration: none;">
-            <div style='background: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 1rem; border-left: 4px solid #667eea; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.06);' onmouseover="this.style.boxShadow='0 8px 20px rgba(102,126,234,0.25)'; this.style.transform='translateY(-3px)';" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.06)'; this.style.transform='translateY(0)';">
+            <div style='background: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 1rem; border-left: 4px solid #2563eb; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.06);' onmouseover="this.style.boxShadow='0 8px 20px rgba(37,99,235,0.25)'; this.style.transform='translateY(-3px)';" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.06)'; this.style.transform='translateY(0)';">
                 <div style='display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;'>
                     <div>
                         <p style='font-weight: 700; color: #1e293b; font-size: 1.1rem; margin-bottom: 0.25rem;'>{review.get('author_name', 'Anonymous')}</p>
@@ -1242,11 +1248,11 @@ else:
                     </div>
                     <div style='text-align: right;'>
                         <div style='font-size: 1.5rem;'>{stars}</div>
-                        <div style='font-weight: 700; color: #667eea; font-size: 1.1rem;'>{rating}/5</div>
+                        <div style='font-weight: 700; color: #2563eb; font-size: 1.1rem;'>{rating}/5</div>
                     </div>
                 </div>
-                <p style='color: #334155; line-height: 1.7; font-size: 0.95rem;'>{review.get('review_text', '')[:300]}{'...' if len(str(review.get('review_text', ''))) > 300 else ''}</p>
-                <p style='font-size: 0.85rem; color: #667eea; margin-top: 1rem; font-weight: 600;'>🔗 Vollständiges Review lesen →</p>
+                <p style='color: #334155; line-height: 1.7; font-size: 0.95rem;'>{text_preview}{show_more}</p>
+                <p style='font-size: 0.85rem; color: #2563eb; margin-top: 1rem; font-weight: 600;'>🔗 Vollständiges Review lesen →</p>
             </div>
         </a>
         """, unsafe_allow_html=True)
