@@ -34,36 +34,35 @@ st.set_page_config(
     page_icon="🏨"
 )
 
-# Delightful CSS with animations
+# Delightful CSS with animations - PROFESSIONAL 2025 DESIGN
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
     * { font-family: 'Inter', sans-serif !important; }
 
+    /* PROFESSIONAL BACKGROUND - Soft, not distracting */
     .main {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #f0f4f8 0%, #e8eef3 100%);
         padding: 2rem 3rem !important;
     }
 
     .block-container {
-        background: rgba(255,255,255,0.95);
-        border-radius: 24px;
-        padding: 2rem !important;
-        backdrop-filter: blur(10px);
-        box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 2.5rem !important;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        max-width: 1400px;
+        margin: 0 auto;
     }
 
-    /* Glassmorphism Header */
+    /* Professional Header */
     .glass-header {
-        background: rgba(255,255,255,0.1);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255,255,255,0.2);
-        padding: 3rem 2rem;
-        border-radius: 20px;
-        margin-bottom: 2rem;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-        animation: fadeInDown 0.6s ease;
+        background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+        padding: 2.5rem 2rem;
+        border-radius: 12px;
+        margin-bottom: 2.5rem;
+        box-shadow: 0 4px 16px rgba(37,99,235,0.2);
     }
 
     @keyframes fadeInDown {
@@ -82,31 +81,29 @@ st.markdown("""
     }
 
     .app-logo {
-        font-size: 2.8rem;
-        font-weight: 900;
-        color: white;
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: #ffffff;
         margin-bottom: 0.5rem;
-        letter-spacing: -1px;
-        text-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        letter-spacing: -0.5px;
     }
 
     .app-subtitle {
         color: rgba(255,255,255,0.95);
-        font-size: 1.15rem;
+        font-size: 1.05rem;
         font-weight: 400;
+        letter-spacing: 0.3px;
     }
 
-    /* Delightful Metric Cards */
+    /* PROFESSIONAL METRIC CARDS - High Contrast, Clean */
     .metric-card {
-        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-        padding: 2rem;
-        border-radius: 16px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-        border: 1px solid rgba(102,126,234,0.1);
-        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        animation: fadeInUp 0.6s ease;
+        background: #ffffff;
+        padding: 1.75rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        border: 1px solid #e2e8f0;
+        transition: all 0.3s ease;
         position: relative;
-        overflow: hidden;
     }
 
     .metric-card::before {
@@ -115,35 +112,35 @@ st.markdown("""
         top: 0;
         left: 0;
         width: 100%;
-        height: 4px;
-        background: linear-gradient(90deg, #667eea, #764ba2);
+        height: 3px;
+        background: linear-gradient(90deg, #2563eb, #1e40af);
     }
 
     .metric-card:hover {
-        transform: translateY(-8px) scale(1.02);
-        box-shadow: 0 12px 40px rgba(102,126,234,0.25);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(37,99,235,0.15);
+        border-color: #2563eb;
     }
 
+    /* WCAG AA Compliant Text Colors */
     .metric-value {
-        font-size: 3.5rem;
-        font-weight: 900;
+        font-size: 3rem;
+        font-weight: 800;
         line-height: 1;
         margin-bottom: 0.5rem;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        color: #1e293b;
     }
 
     .metric-positive {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        color: #10b981;
     }
 
     .metric-negative {
-        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        color: #ef4444;
+    }
+
+    .metric-neutral {
+        color: #2563eb;
     }
 
     .metric-label {
@@ -174,18 +171,14 @@ st.markdown("""
         color: #dc2626;
     }
 
-    /* Beautiful Section Headers */
+    /* PROFESSIONAL SECTION HEADERS - Clear Hierarchy */
     .section-header {
-        font-size: 2rem;
-        font-weight: 900;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        margin: 3rem 0 1.5rem 0;
-        padding-bottom: 1rem;
-        border-bottom: 3px solid;
-        border-image: linear-gradient(90deg, #667eea, #764ba2) 1;
-        animation: fadeInUp 0.6s ease;
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin: 2.5rem 0 1.5rem 0;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid #e2e8f0;
     }
 
     /* Category Cards with Gradient */
@@ -217,67 +210,44 @@ st.markdown("""
         font-weight: 900;
     }
 
+    /* WCAG Compliant Score Colors - Solid, readable */
     .score-excellent {
-        background: linear-gradient(135deg, #10b981, #059669);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        color: #10b981;
     }
 
     .score-good {
-        background: linear-gradient(135deg, #3b82f6, #2563eb);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        color: #2563eb;
     }
 
     .score-average {
-        background: linear-gradient(135deg, #f59e0b, #d97706);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        color: #f59e0b;
     }
 
     .score-poor {
-        background: linear-gradient(135deg, #ef4444, #dc2626);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        color: #ef4444;
     }
 
+    /* Professional Progress Bar */
     .progress-bar {
         width: 100%;
-        height: 12px;
+        height: 10px;
         background: #e2e8f0;
-        border-radius: 10px;
+        border-radius: 8px;
         overflow: hidden;
         position: relative;
     }
 
     .progress-fill {
         height: 100%;
-        border-radius: 10px;
-        transition: width 1.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        border-radius: 8px;
+        transition: width 0.8s ease;
         position: relative;
-        overflow: hidden;
     }
 
-    .progress-fill::after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        bottom: 0;
-        right: 0;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-        animation: shimmer 2s infinite;
-    }
-
-    @keyframes shimmer {
-        0% { transform: translateX(-100%); }
-        100% { transform: translateX(100%); }
-    }
-
-    .progress-excellent { background: linear-gradient(90deg, #10b981, #059669); }
-    .progress-good { background: linear-gradient(90deg, #3b82f6, #2563eb); }
-    .progress-average { background: linear-gradient(90deg, #f59e0b, #d97706); }
-    .progress-poor { background: linear-gradient(90deg, #ef4444, #dc2626); }
+    .progress-excellent { background: #10b981; }
+    .progress-good { background: #2563eb; }
+    .progress-average { background: #f59e0b; }
+    .progress-poor { background: #ef4444; }
 
     /* Insight Cards */
     .insight-card {
@@ -329,34 +299,35 @@ st.markdown("""
     }
 
     /* Buttons */
+    /* PROFESSIONAL BUTTONS */
     .stButton>button {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: #2563eb;
         color: white;
-        font-weight: 700;
-        padding: 0.85rem 2.5rem;
-        border-radius: 12px;
+        font-weight: 600;
+        padding: 0.75rem 2rem;
+        border-radius: 8px;
         border: none;
-        box-shadow: 0 6px 20px rgba(102,126,234,0.4);
-        transition: all 0.3s ease;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
+        box-shadow: 0 2px 8px rgba(37,99,235,0.25);
+        transition: all 0.2s ease;
+        letter-spacing: 0.3px;
     }
 
     .stButton>button:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 12px 32px rgba(102,126,234,0.5);
+        background: #1e40af;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(37,99,235,0.35);
     }
 
     /* Filter Badge */
     .filter-badge {
         display: inline-block;
-        padding: 0.4rem 1rem;
-        background: rgba(102,126,234,0.1);
-        border: 1px solid rgba(102,126,234,0.3);
-        border-radius: 20px;
-        font-size: 0.85rem;
+        padding: 0.4rem 0.9rem;
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        border-radius: 16px;
+        font-size: 0.8rem;
         font-weight: 600;
-        color: #667eea;
+        color: #2563eb;
         margin: 0.25rem;
     }
 
@@ -928,12 +899,17 @@ else:
     # Apply Filters
     df_filtered = df_reviews.copy()
 
+    # Apply Filters with Debug Info
+    original_count = len(df_filtered)
+
     # Date filter
     if start_date:
+        df_filtered['date'] = pd.to_datetime(df_filtered['date'])
         df_filtered = df_filtered[
-            (pd.to_datetime(df_filtered['date']) >= pd.to_datetime(start_date)) &
-            (pd.to_datetime(df_filtered['date']) <= pd.to_datetime(end_date))
+            (df_filtered['date'] >= pd.Timestamp(start_date)) &
+            (df_filtered['date'] <= pd.Timestamp(end_date))
         ]
+        df_filtered['date'] = df_filtered['date'].dt.date  # Convert back to date
 
     # Rating filter
     df_filtered = df_filtered[
@@ -948,6 +924,11 @@ else:
     # Platform filter
     if platform_filter:
         df_filtered = df_filtered[df_filtered['platform'].isin(platform_filter)]
+
+    # Show filter status
+    filtered_count = len(df_filtered)
+    if filtered_count < original_count:
+        st.info(f"🎯 Filter aktiv: {original_count} → {filtered_count} Reviews ({original_count - filtered_count} herausgefiltert)")
 
     # Hotel Header
     st.markdown(f"""
