@@ -470,7 +470,7 @@ def auto_find_booking_url(hotel_name: str, city: str = "") -> str:
 
     try:
         search_query = f"{hotel_name} {city} site:booking.com".strip()
-        results = outscraper_client.google_search(search_query, limit=5)
+        results = outscraper_client.google_search(search_query)
 
         for result in results:
             for item in result.get('organic_results', []):
@@ -490,7 +490,7 @@ def auto_find_tripadvisor_url(hotel_name: str, city: str = "") -> str:
 
     try:
         search_query = f"{hotel_name} {city} site:tripadvisor.com hotel review".strip()
-        results = outscraper_client.google_search(search_query, limit=5)
+        results = outscraper_client.google_search(search_query)
 
         for result in results:
             for item in result.get('organic_results', []):
