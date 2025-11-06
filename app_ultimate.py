@@ -470,17 +470,29 @@ def auto_find_booking_url(hotel_name: str, city: str = "") -> str:
 
     try:
         search_query = f"{hotel_name} {city} site:booking.com".strip()
+        st.info(f"🔍 DEBUG: Booking.com Suche mit: '{search_query}'")
+
         results = outscraper_client.google_search(search_query)
+        st.info(f"🔍 DEBUG: Google Search hat {len(results) if results else 0} Ergebnisse zurückgegeben")
 
         for result in results:
-            for item in result.get('organic_results', []):
+            organic = result.get('organic_results', [])
+            st.info(f"🔍 DEBUG: {len(organic)} organische Ergebnisse gefunden")
+
+            for item in organic:
                 url = item.get('link', '')
+                st.info(f"🔍 DEBUG: Prüfe URL: {url[:100]}")
+
                 if 'booking.com/hotel' in url.lower():
+                    st.success(f"✅ DEBUG: Booking.com URL gefunden!")
                     return url
 
+        st.warning("⚠️ DEBUG: Keine Booking.com Hotel-URL in den Suchergebnissen gefunden")
         return ""
     except Exception as e:
-        st.warning(f"⚠️ Automatische Booking.com Suche fehlgeschlagen: {e}")
+        st.error(f"⚠️ Automatische Booking.com Suche fehlgeschlagen: {e}")
+        import traceback
+        st.error(traceback.format_exc())
         return ""
 
 def auto_find_tripadvisor_url(hotel_name: str, city: str = "") -> str:
@@ -490,25 +502,40 @@ def auto_find_tripadvisor_url(hotel_name: str, city: str = "") -> str:
 
     try:
         search_query = f"{hotel_name} {city} site:tripadvisor.com hotel review".strip()
+        st.info(f"🔍 DEBUG: TripAdvisor Suche mit: '{search_query}'")
+
         results = outscraper_client.google_search(search_query)
+        st.info(f"🔍 DEBUG: Google Search hat {len(results) if results else 0} Ergebnisse zurückgegeben")
 
         for result in results:
-            for item in result.get('organic_results', []):
+            organic = result.get('organic_results', [])
+            st.info(f"🔍 DEBUG: {len(organic)} organische Ergebnisse gefunden")
+
+            for item in organic:
                 url = item.get('link', '')
+                st.info(f"🔍 DEBUG: Prüfe URL: {url[:100]}")
+
                 if 'tripadvisor.com' in url.lower() and 'hotel_review' in url.lower():
+                    st.success(f"✅ DEBUG: TripAdvisor URL gefunden!")
                     return url
 
+        st.warning("⚠️ DEBUG: Keine TripAdvisor Hotel-URL in den Suchergebnissen gefunden")
         return ""
     except Exception as e:
-        st.warning(f"⚠️ Automatische TripAdvisor Suche fehlgeschlagen: {e}")
+        st.error(f"⚠️ Automatische TripAdvisor Suche fehlgeschlagen: {e}")
+        import traceback
+        st.error(traceback.format_exc())
         return ""
 
 def fetch_outscraper_booking_reviews(hotel_url: str, limit: int = 500) -> pd.DataFrame:
     """Fetch Booking.com Reviews via Outscraper REST API"""
     if not USE_OUTSCRAPER or not OUTSCRAPER_API_KEY:
+        st.warning("⚠️ DEBUG: USE_OUTSCRAPER oder OUTSCRAPER_API_KEY nicht gesetzt")
         return pd.DataFrame()
 
     try:
+        st.info(f"🔍 DEBUG: Lade Booking.com Reviews von: {hotel_url[:80]}...")
+
         # Use Outscraper REST API directly
         api_url = "https://api.outscraper.com/booking-reviews"
         params = {
@@ -520,18 +547,26 @@ def fetch_outscraper_booking_reviews(hotel_url: str, limit: int = 500) -> pd.Dat
             'X-API-KEY': OUTSCRAPER_API_KEY
         }
 
+        st.info(f"🔍 DEBUG: Calling API: {api_url} with limit={limit}")
         response = requests.get(api_url, params=params, headers=headers, timeout=120)
 
+        st.info(f"🔍 DEBUG: HTTP Status: {response.status_code}")
+
         if response.status_code != 200:
-            st.warning(f"⚠️ Booking.com API Fehler: HTTP {response.status_code}")
+            st.error(f"⚠️ Booking.com API Fehler: HTTP {response.status_code}")
+            st.error(f"Response: {response.text[:500]}")
             return pd.DataFrame()
 
         data = response.json()
+        st.info(f"🔍 DEBUG: Response type: {type(data)}, length: {len(data) if isinstance(data, list) else 'N/A'}")
 
         rows = []
         if isinstance(data, list) and len(data) > 0:
             for hotel in data:
-                for review in hotel.get('reviews_data', []):
+                reviews_data = hotel.get('reviews_data', [])
+                st.info(f"🔍 DEBUG: Hotel hat {len(reviews_data)} reviews_data")
+
+                for review in reviews_data:
                     review_date_str = review.get('review_datetime', '')
                     try:
                         d = datetime.fromisoformat(review_date_str.replace('Z', '+00:00')).date()
@@ -552,17 +587,23 @@ def fetch_outscraper_booking_reviews(hotel_url: str, limit: int = 500) -> pd.Dat
                         "author_url": hotel_url
                     })
 
+        st.info(f"🔍 DEBUG: {len(rows)} Booking.com Reviews geparst")
         return pd.DataFrame(rows)
     except Exception as e:
-        st.warning(f"⚠️ Outscraper Booking error: {e}")
+        st.error(f"⚠️ Outscraper Booking error: {e}")
+        import traceback
+        st.error(traceback.format_exc())
         return pd.DataFrame()
 
 def fetch_outscraper_tripadvisor_reviews(hotel_url: str, limit: int = 500) -> pd.DataFrame:
     """Fetch TripAdvisor Reviews via Outscraper REST API"""
     if not USE_OUTSCRAPER or not OUTSCRAPER_API_KEY:
+        st.warning("⚠️ DEBUG: USE_OUTSCRAPER oder OUTSCRAPER_API_KEY nicht gesetzt")
         return pd.DataFrame()
 
     try:
+        st.info(f"🔍 DEBUG: Lade TripAdvisor Reviews von: {hotel_url[:80]}...")
+
         # Use Outscraper REST API directly
         api_url = "https://api.outscraper.com/tripadvisor-reviews"
         params = {
@@ -574,18 +615,26 @@ def fetch_outscraper_tripadvisor_reviews(hotel_url: str, limit: int = 500) -> pd
             'X-API-KEY': OUTSCRAPER_API_KEY
         }
 
+        st.info(f"🔍 DEBUG: Calling API: {api_url} with limit={limit}")
         response = requests.get(api_url, params=params, headers=headers, timeout=120)
 
+        st.info(f"🔍 DEBUG: HTTP Status: {response.status_code}")
+
         if response.status_code != 200:
-            st.warning(f"⚠️ TripAdvisor API Fehler: HTTP {response.status_code}")
+            st.error(f"⚠️ TripAdvisor API Fehler: HTTP {response.status_code}")
+            st.error(f"Response: {response.text[:500]}")
             return pd.DataFrame()
 
         data = response.json()
+        st.info(f"🔍 DEBUG: Response type: {type(data)}, length: {len(data) if isinstance(data, list) else 'N/A'}")
 
         rows = []
         if isinstance(data, list) and len(data) > 0:
             for location in data:
-                for review in location.get('reviews_data', []):
+                reviews_data = location.get('reviews_data', [])
+                st.info(f"🔍 DEBUG: Location hat {len(reviews_data)} reviews_data")
+
+                for review in reviews_data:
                     review_date_str = review.get('review_datetime', '')
                     try:
                         d = datetime.fromisoformat(review_date_str.replace('Z', '+00:00')).date()
@@ -605,9 +654,12 @@ def fetch_outscraper_tripadvisor_reviews(hotel_url: str, limit: int = 500) -> pd
                         "author_url": review.get('author_url', hotel_url)
                     })
 
+        st.info(f"🔍 DEBUG: {len(rows)} TripAdvisor Reviews geparst")
         return pd.DataFrame(rows)
     except Exception as e:
-        st.warning(f"⚠️ Outscraper TripAdvisor error: {e}")
+        st.error(f"⚠️ Outscraper TripAdvisor error: {e}")
+        import traceback
+        st.error(traceback.format_exc())
         return pd.DataFrame()
 
 # ✅ REMOVED: No more mock data!
