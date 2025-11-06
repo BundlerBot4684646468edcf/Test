@@ -463,6 +463,46 @@ def fetch_outscraper_google_reviews(place_id: str, limit: int = 500) -> pd.DataF
         st.warning(f"⚠️ Outscraper Google error: {e}")
         return pd.DataFrame()
 
+def auto_find_booking_url(hotel_name: str, city: str = "") -> str:
+    """Automatically find Booking.com URL for a hotel using Google Search"""
+    if not USE_OUTSCRAPER:
+        return ""
+
+    try:
+        search_query = f"{hotel_name} {city} site:booking.com".strip()
+        results = outscraper_client.google_search(search_query, limit=5)
+
+        for result in results:
+            for item in result.get('organic_results', []):
+                url = item.get('link', '')
+                if 'booking.com/hotel' in url.lower():
+                    return url
+
+        return ""
+    except Exception as e:
+        st.warning(f"⚠️ Automatische Booking.com Suche fehlgeschlagen: {e}")
+        return ""
+
+def auto_find_tripadvisor_url(hotel_name: str, city: str = "") -> str:
+    """Automatically find TripAdvisor URL for a hotel using Google Search"""
+    if not USE_OUTSCRAPER:
+        return ""
+
+    try:
+        search_query = f"{hotel_name} {city} site:tripadvisor.com hotel review".strip()
+        results = outscraper_client.google_search(search_query, limit=5)
+
+        for result in results:
+            for item in result.get('organic_results', []):
+                url = item.get('link', '')
+                if 'tripadvisor.com' in url.lower() and 'hotel_review' in url.lower():
+                    return url
+
+        return ""
+    except Exception as e:
+        st.warning(f"⚠️ Automatische TripAdvisor Suche fehlgeschlagen: {e}")
+        return ""
+
 def fetch_outscraper_booking_reviews(hotel_url: str, limit: int = 500) -> pd.DataFrame:
     """Fetch Booking.com Reviews via Outscraper"""
     if not USE_OUTSCRAPER:
@@ -786,29 +826,15 @@ if not st.session_state.analysis_done:
         st.write("")
         analyze_btn = st.button("🚀 Analysieren", use_container_width=True)
 
-    # ✅ Outscraper Multi-Platform Option
-    booking_url = ""
-    tripadvisor_url = ""
+    # ✅ Outscraper Multi-Platform Option (AUTOMATIC)
     reviews_limit = 1000
 
     if USE_OUTSCRAPER:
         st.markdown("---")
-        st.markdown("### 🌐 Outscraper Multi-Platform Reviews")
-        st.markdown("Automatisch Reviews von mehreren Plattformen laden (benötigt Outscraper API Key)")
-
-        col_a, col_b = st.columns(2)
-        with col_a:
-            booking_url = st.text_input(
-                "🏨 Booking.com URL (Optional)",
-                placeholder="https://www.booking.com/hotel/...",
-                help="Komplette URL zum Hotel auf Booking.com"
-            )
-        with col_b:
-            tripadvisor_url = st.text_input(
-                "✈️ TripAdvisor URL (Optional)",
-                placeholder="https://www.tripadvisor.com/Hotel_Review-...",
-                help="Komplette URL zum Hotel auf TripAdvisor"
-            )
+        st.markdown("### 🌐 Automatische Multi-Plattform Analyse")
+        st.markdown("✅ **Google Reviews** (via Outscraper)")
+        st.markdown("✅ **Booking.com Reviews** (automatisch gesucht)")
+        st.markdown("✅ **TripAdvisor Reviews** (automatisch gesucht)")
 
         reviews_limit = st.slider("Max. Reviews pro Plattform", 100, 5000, 1000, 100)
 
@@ -846,34 +872,68 @@ if not st.session_state.analysis_done:
                     st.success(f"✅ {len(df_google)} Google Reviews geladen (Google Places API)")
 
         # Load Google Reviews via Outscraper (UNLIMITED!)
-        if USE_OUTSCRAPER and pid:
-            progress_bar.progress(0.2)
-            status_text.text("📥 Lade ALLE Google Reviews via Outscraper...")
+        if USE_OUTSCRAPER:
+            # If no Place ID found via Google Places API, search via Outscraper
+            if not pid:
+                progress_bar.progress(0.15)
+                status_text.text("🔍 Suche Hotel auf Google Maps...")
+                try:
+                    search_results = outscraper_client.google_maps_search(
+                        f"{hotel_name} {hotel_city}",
+                        limit=1,
+                        language='de'
+                    )
+                    if search_results and len(search_results) > 0:
+                        pid = search_results[0].get('place_id')
+                        if pid:
+                            st.info(f"🎯 Hotel auf Google Maps gefunden: {search_results[0].get('name', '')}")
+                except Exception as e:
+                    st.warning(f"⚠️ Google Maps Suche fehlgeschlagen: {e}")
 
-            df_outscraper_google = fetch_outscraper_google_reviews(pid, limit=reviews_limit)
-            if not df_outscraper_google.empty:
-                all_dataframes.append(df_outscraper_google)
-                st.success(f"✅ {len(df_outscraper_google)} Google Reviews geladen (Outscraper)")
+            if pid:
+                progress_bar.progress(0.2)
+                status_text.text("📥 Lade ALLE Google Reviews via Outscraper...")
 
-        # Load Booking.com Reviews via Outscraper
-        if USE_OUTSCRAPER and booking_url:
+                df_outscraper_google = fetch_outscraper_google_reviews(pid, limit=reviews_limit)
+                if not df_outscraper_google.empty:
+                    all_dataframes.append(df_outscraper_google)
+                    st.success(f"✅ {len(df_outscraper_google)} Google Reviews geladen (Outscraper)")
+            else:
+                st.warning("⚠️ Hotel auf Google Maps nicht gefunden")
+
+        # Load Booking.com Reviews via Outscraper (AUTOMATIC SEARCH)
+        if USE_OUTSCRAPER:
             progress_bar.progress(0.4)
-            status_text.text("📥 Lade Booking.com Reviews via Outscraper...")
+            status_text.text("🔍 Suche Hotel auf Booking.com...")
 
-            df_booking = fetch_outscraper_booking_reviews(booking_url, limit=reviews_limit)
-            if not df_booking.empty:
-                all_dataframes.append(df_booking)
-                st.success(f"✅ {len(df_booking)} Booking.com Reviews geladen")
+            booking_url = auto_find_booking_url(hotel_name, hotel_city)
+            if booking_url:
+                st.info(f"🎯 Booking.com gefunden: {booking_url[:80]}...")
+                status_text.text("📥 Lade Booking.com Reviews via Outscraper...")
 
-        # Load TripAdvisor Reviews via Outscraper
-        if USE_OUTSCRAPER and tripadvisor_url:
+                df_booking = fetch_outscraper_booking_reviews(booking_url, limit=reviews_limit)
+                if not df_booking.empty:
+                    all_dataframes.append(df_booking)
+                    st.success(f"✅ {len(df_booking)} Booking.com Reviews geladen")
+            else:
+                st.warning("⚠️ Hotel auf Booking.com nicht automatisch gefunden")
+
+        # Load TripAdvisor Reviews via Outscraper (AUTOMATIC SEARCH)
+        if USE_OUTSCRAPER:
             progress_bar.progress(0.6)
-            status_text.text("📥 Lade TripAdvisor Reviews via Outscraper...")
+            status_text.text("🔍 Suche Hotel auf TripAdvisor...")
 
-            df_tripadvisor = fetch_outscraper_tripadvisor_reviews(tripadvisor_url, limit=reviews_limit)
-            if not df_tripadvisor.empty:
-                all_dataframes.append(df_tripadvisor)
-                st.success(f"✅ {len(df_tripadvisor)} TripAdvisor Reviews geladen")
+            tripadvisor_url = auto_find_tripadvisor_url(hotel_name, hotel_city)
+            if tripadvisor_url:
+                st.info(f"🎯 TripAdvisor gefunden: {tripadvisor_url[:80]}...")
+                status_text.text("📥 Lade TripAdvisor Reviews via Outscraper...")
+
+                df_tripadvisor = fetch_outscraper_tripadvisor_reviews(tripadvisor_url, limit=reviews_limit)
+                if not df_tripadvisor.empty:
+                    all_dataframes.append(df_tripadvisor)
+                    st.success(f"✅ {len(df_tripadvisor)} TripAdvisor Reviews geladen")
+            else:
+                st.warning("⚠️ Hotel auf TripAdvisor nicht automatisch gefunden")
 
         # Load uploaded CSV files (REAL DATA from user)
         if uploaded_files:
