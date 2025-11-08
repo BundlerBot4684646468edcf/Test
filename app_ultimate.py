@@ -615,8 +615,8 @@ def fetch_outscraper_booking_reviews(hotel_url: str, limit: int = 500) -> pd.Dat
             'X-API-KEY': OUTSCRAPER_API_KEY
         }
 
-        with st.spinner("⏳ Warte auf Booking.com API Antwort (kann bis zu 2 Minuten dauern)..."):
-            response = requests.get(api_url, params=params, headers=headers, timeout=120)
+        with st.spinner("⏳ Warte auf Booking.com API Antwort (kann bis zu 5 Minuten dauern)..."):
+            response = requests.get(api_url, params=params, headers=headers, timeout=300)
 
         st.info(f"📊 HTTP Status: {response.status_code}")
 
@@ -633,15 +633,72 @@ def fetch_outscraper_booking_reviews(hotel_url: str, limit: int = 500) -> pd.Dat
         # DEBUG: Show response structure
         if isinstance(data, dict):
             st.info(f"🔍 DICT Keys: {list(data.keys())[:10]}")
-            with st.expander("🔍 Vollständige Response Struktur (erste 500 Zeichen)"):
-                st.code(str(data)[:500])
+            with st.expander("🔍 Vollständige Response Struktur (erste 1000 Zeichen)"):
+                st.code(str(data)[:1000])
 
         rows = []
 
-        # Handle DICT response (single hotel)
-        if isinstance(data, dict):
+        # Handle response with 'data' key (Outscraper wrapped format)
+        if isinstance(data, dict) and 'data' in data:
+            inner_data = data['data']
+            st.info(f"📦 Inner data type: {type(inner_data)}")
+
+            # If inner data is a list
+            if isinstance(inner_data, list) and len(inner_data) > 0:
+                for hotel in inner_data:
+                    if isinstance(hotel, dict):
+                        reviews_data = hotel.get('reviews_data', hotel.get('reviews', []))
+                        st.info(f"📝 {len(reviews_data)} Reviews gefunden")
+
+                        for review in reviews_data:
+                            review_date_str = review.get('review_datetime', review.get('date', ''))
+                            try:
+                                d = datetime.fromisoformat(review_date_str.replace('Z', '+00:00')).date()
+                            except:
+                                d = date.today()
+
+                            rating = review.get('review_rating', review.get('rating', 10))
+                            rating_5 = float(rating) / 2
+
+                            rows.append({
+                                "date": d,
+                                "platform": "Booking.com",
+                                "language": (review.get('review_language', review.get('language', 'de')) or "de").upper()[:2],
+                                "rating": rating_5,
+                                "review_text": (review.get('review_positive', '') + ' ' + review.get('review_negative', '')).strip(),
+                                "author_name": review.get('author_name', review.get('author', 'Anonymous')),
+                                "author_url": hotel_url
+                            })
+
+            # If inner data is a dict with reviews_data
+            elif isinstance(inner_data, dict):
+                reviews_data = inner_data.get('reviews_data', inner_data.get('reviews', []))
+                st.info(f"📝 {len(reviews_data)} Reviews gefunden")
+
+                for review in reviews_data:
+                    review_date_str = review.get('review_datetime', review.get('date', ''))
+                    try:
+                        d = datetime.fromisoformat(review_date_str.replace('Z', '+00:00')).date()
+                    except:
+                        d = date.today()
+
+                    rating = review.get('review_rating', review.get('rating', 10))
+                    rating_5 = float(rating) / 2
+
+                    rows.append({
+                        "date": d,
+                        "platform": "Booking.com",
+                        "language": (review.get('review_language', review.get('language', 'de')) or "de").upper()[:2],
+                        "rating": rating_5,
+                        "review_text": (review.get('review_positive', '') + ' ' + review.get('review_negative', '')).strip(),
+                        "author_name": review.get('author_name', review.get('author', 'Anonymous')),
+                        "author_url": hotel_url
+                    })
+
+        # Fallback: Handle direct DICT response (old format)
+        elif isinstance(data, dict):
             reviews_data = data.get('reviews_data', [])
-            st.info(f"📝 {len(reviews_data)} Reviews in Response gefunden (DICT)")
+            st.info(f"📝 {len(reviews_data)} Reviews in Response gefunden (DICT - old format)")
 
             for review in reviews_data:
                 review_date_str = review.get('review_datetime', '')
@@ -737,15 +794,70 @@ def fetch_outscraper_tripadvisor_reviews(hotel_url: str, limit: int = 500) -> pd
         # DEBUG: Show response structure
         if isinstance(data, dict):
             st.info(f"🔍 DICT Keys: {list(data.keys())[:10]}")
-            with st.expander("🔍 Vollständige Response Struktur (erste 500 Zeichen)"):
-                st.code(str(data)[:500])
+            with st.expander("🔍 Vollständige Response Struktur (erste 1000 Zeichen)"):
+                st.code(str(data)[:1000])
 
         rows = []
 
-        # Handle DICT response (single location)
-        if isinstance(data, dict):
+        # Handle response with 'data' key (Outscraper wrapped format)
+        if isinstance(data, dict) and 'data' in data:
+            inner_data = data['data']
+            st.info(f"📦 Inner data type: {type(inner_data)}")
+
+            # If inner data is a list
+            if isinstance(inner_data, list) and len(inner_data) > 0:
+                for location in inner_data:
+                    if isinstance(location, dict):
+                        reviews_data = location.get('reviews_data', location.get('reviews', []))
+                        st.info(f"📝 {len(reviews_data)} Reviews gefunden")
+
+                        for review in reviews_data:
+                            review_date_str = review.get('review_datetime', review.get('date', ''))
+                            try:
+                                d = datetime.fromisoformat(review_date_str.replace('Z', '+00:00')).date()
+                            except:
+                                d = date.today()
+
+                            rating = review.get('review_rating', review.get('rating', 5))
+
+                            rows.append({
+                                "date": d,
+                                "platform": "TripAdvisor",
+                                "language": (review.get('review_language', review.get('language', 'en')) or "en").upper()[:2],
+                                "rating": float(rating),
+                                "review_text": review.get('review_text', review.get('text', '')),
+                                "author_name": review.get('author_name', review.get('author', 'Anonymous')),
+                                "author_url": review.get('author_url', hotel_url)
+                            })
+
+            # If inner data is a dict with reviews_data
+            elif isinstance(inner_data, dict):
+                reviews_data = inner_data.get('reviews_data', inner_data.get('reviews', []))
+                st.info(f"📝 {len(reviews_data)} Reviews gefunden")
+
+                for review in reviews_data:
+                    review_date_str = review.get('review_datetime', review.get('date', ''))
+                    try:
+                        d = datetime.fromisoformat(review_date_str.replace('Z', '+00:00')).date()
+                    except:
+                        d = date.today()
+
+                    rating = review.get('review_rating', review.get('rating', 5))
+
+                    rows.append({
+                        "date": d,
+                        "platform": "TripAdvisor",
+                        "language": (review.get('review_language', review.get('language', 'en')) or "en").upper()[:2],
+                        "rating": float(rating),
+                        "review_text": review.get('review_text', review.get('text', '')),
+                        "author_name": review.get('author_name', review.get('author', 'Anonymous')),
+                        "author_url": review.get('author_url', hotel_url)
+                    })
+
+        # Fallback: Handle direct DICT response (old format)
+        elif isinstance(data, dict):
             reviews_data = data.get('reviews_data', [])
-            st.info(f"📝 {len(reviews_data)} Reviews in Response gefunden (DICT)")
+            st.info(f"📝 {len(reviews_data)} Reviews in Response gefunden (DICT - old format)")
 
             for review in reviews_data:
                 review_date_str = review.get('review_datetime', '')
