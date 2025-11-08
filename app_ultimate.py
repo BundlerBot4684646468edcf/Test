@@ -631,10 +631,38 @@ def fetch_outscraper_booking_reviews(hotel_url: str, limit: int = 500) -> pd.Dat
         st.info(f"📦 Response Typ: {type(data)}, Länge: {len(data) if isinstance(data, list) else 'N/A'}")
 
         rows = []
-        if isinstance(data, list) and len(data) > 0:
+
+        # Handle DICT response (single hotel)
+        if isinstance(data, dict):
+            reviews_data = data.get('reviews_data', [])
+            st.info(f"📝 {len(reviews_data)} Reviews in Response gefunden (DICT)")
+
+            for review in reviews_data:
+                review_date_str = review.get('review_datetime', '')
+                try:
+                    d = datetime.fromisoformat(review_date_str.replace('Z', '+00:00')).date()
+                except:
+                    d = date.today()
+
+                # Booking.com uses 10-point scale, convert to 5-point
+                rating = review.get('review_rating', 10)
+                rating_5 = float(rating) / 2
+
+                rows.append({
+                    "date": d,
+                    "platform": "Booking.com",
+                    "language": (review.get('review_language') or "de").upper()[:2],
+                    "rating": rating_5,
+                    "review_text": (review.get('review_positive', '') + ' ' + review.get('review_negative', '')).strip(),
+                    "author_name": review.get('author_name', 'Anonymous'),
+                    "author_url": hotel_url
+                })
+
+        # Handle LIST response (multiple hotels)
+        elif isinstance(data, list) and len(data) > 0:
             for hotel in data:
                 reviews_data = hotel.get('reviews_data', [])
-                st.info(f"📝 {len(reviews_data)} Reviews in Response gefunden")
+                st.info(f"📝 {len(reviews_data)} Reviews in Response gefunden (LIST)")
 
                 for review in reviews_data:
                     review_date_str = review.get('review_datetime', '')
@@ -701,10 +729,37 @@ def fetch_outscraper_tripadvisor_reviews(hotel_url: str, limit: int = 500) -> pd
         st.info(f"📦 Response Typ: {type(data)}, Länge: {len(data) if isinstance(data, list) else 'N/A'}")
 
         rows = []
-        if isinstance(data, list) and len(data) > 0:
+
+        # Handle DICT response (single location)
+        if isinstance(data, dict):
+            reviews_data = data.get('reviews_data', [])
+            st.info(f"📝 {len(reviews_data)} Reviews in Response gefunden (DICT)")
+
+            for review in reviews_data:
+                review_date_str = review.get('review_datetime', '')
+                try:
+                    d = datetime.fromisoformat(review_date_str.replace('Z', '+00:00')).date()
+                except:
+                    d = date.today()
+
+                # TripAdvisor uses bubble rating (1-5)
+                rating = review.get('review_rating', 5)
+
+                rows.append({
+                    "date": d,
+                    "platform": "TripAdvisor",
+                    "language": (review.get('review_language') or "en").upper()[:2],
+                    "rating": float(rating),
+                    "review_text": review.get('review_text', ''),
+                    "author_name": review.get('author_name', 'Anonymous'),
+                    "author_url": review.get('author_url', hotel_url)
+                })
+
+        # Handle LIST response (multiple locations)
+        elif isinstance(data, list) and len(data) > 0:
             for location in data:
                 reviews_data = location.get('reviews_data', [])
-                st.info(f"📝 {len(reviews_data)} Reviews in Response gefunden")
+                st.info(f"📝 {len(reviews_data)} Reviews in Response gefunden (LIST)")
 
                 for review in reviews_data:
                     review_date_str = review.get('review_datetime', '')
