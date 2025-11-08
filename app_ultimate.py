@@ -199,6 +199,39 @@ st.markdown("""
         border-left-color: #667eea;
     }
 
+    /* Evidence Card - for clickable review quotes */
+    .evidence-card {
+        background: white;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 0.75rem;
+        border-left: 3px solid #667eea;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .evidence-card:hover {
+        box-shadow: 0 4px 12px rgba(102,126,234,0.3);
+        transform: translateY(-2px);
+    }
+
+    /* Review Card - for full review cards */
+    .review-card-hover {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+        border-left: 4px solid #2563eb;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    .review-card-hover:hover {
+        box-shadow: 0 8px 20px rgba(37,99,235,0.25);
+        transform: translateY(-3px);
+    }
+
     .category-name {
         font-weight: 700;
         font-size: 1.05rem;
@@ -1437,7 +1470,7 @@ else:
                     with st.container():
                         st.markdown(f"""
                         <a href="{review_url}" target="_blank" style="text-decoration: none;">
-                            <div style='background: white; padding: 1rem; border-radius: 8px; margin-bottom: 0.75rem; border-left: 3px solid #667eea; cursor: pointer; transition: all 0.3s ease;' onmouseover="this.style.boxShadow='0 4px 12px rgba(102,126,234,0.3)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.boxShadow=''; this.style.transform='translateY(0)';">
+                            <div class="evidence-card">
                                 <p style='font-style: italic; color: #1e293b; margin-bottom: 0.5rem; font-weight: 500;'>"{quote.get('text', '')}"</p>
                                 <p style='font-size: 0.875rem; color: #64748b;'><strong>{author_name}</strong> • {quote.get('source', 'Google')} • {quote.get('date', '2024')} • ⭐ {quote.get('rating', 5)}/10</p>
                                 <p style='font-size: 0.75rem; color: #667eea; margin-top: 0.5rem; font-weight: 600;'>🔗 Zum Original-Review →</p>
@@ -1498,7 +1531,7 @@ else:
 
         st.markdown(f"""
         <a href="{author_url}" target="_blank" style="text-decoration: none;">
-            <div style='background: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 1rem; border-left: 4px solid #2563eb; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.06);' onmouseover="this.style.boxShadow='0 8px 20px rgba(37,99,235,0.25)'; this.style.transform='translateY(-3px)';" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.06)'; this.style.transform='translateY(0)';">
+            <div class="review-card-hover">
                 <div style='display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;'>
                     <div>
                         <p style='font-weight: 700; color: #1e293b; font-size: 1.1rem; margin-bottom: 0.25rem;'>{review.get('author_name', 'Anonymous')}</p>
