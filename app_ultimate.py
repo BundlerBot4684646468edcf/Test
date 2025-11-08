@@ -630,6 +630,12 @@ def fetch_outscraper_booking_reviews(hotel_url: str, limit: int = 500) -> pd.Dat
         data = response.json()
         st.info(f"📦 Response Typ: {type(data)}, Länge: {len(data) if isinstance(data, list) else 'N/A'}")
 
+        # DEBUG: Show response structure
+        if isinstance(data, dict):
+            st.info(f"🔍 DICT Keys: {list(data.keys())[:10]}")
+            with st.expander("🔍 Vollständige Response Struktur (erste 500 Zeichen)"):
+                st.code(str(data)[:500])
+
         rows = []
 
         # Handle DICT response (single hotel)
@@ -727,6 +733,12 @@ def fetch_outscraper_tripadvisor_reviews(hotel_url: str, limit: int = 500) -> pd
 
         data = response.json()
         st.info(f"📦 Response Typ: {type(data)}, Länge: {len(data) if isinstance(data, list) else 'N/A'}")
+
+        # DEBUG: Show response structure
+        if isinstance(data, dict):
+            st.info(f"🔍 DICT Keys: {list(data.keys())[:10]}")
+            with st.expander("🔍 Vollständige Response Struktur (erste 500 Zeichen)"):
+                st.code(str(data)[:500])
 
         rows = []
 
