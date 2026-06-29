@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AM Studio — KI-Assistenten, die buchen, bestätigen & anrufen</title>
+  <meta name="description" content="AM Studio baut KI-Assistenten für lokale Unternehmen: Chatbot + Telefon-Agent, der Termine bucht, SMS-Bestätigungen sendet, anruft und Bewertungen sammelt. Jetzt live testen." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🟣</text></svg>" />
+</head>
+<body>
+  <!-- Animated background -->
+  <div class="bg-mesh" aria-hidden="true">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="grid-overlay"></div>
+  </div>
+
+  <!-- Navbar -->
+  <header class="nav" id="nav">
+    <a class="brand" href="#top" aria-label="AM Studio Startseite">
+      <span class="brand-mark">AM</span>
+      <span class="brand-name">Studio<span class="dot">.</span></span>
+    </a>
+    <nav class="nav-links" aria-label="Hauptnavigation">
+      <a href="#loesungen">Lösungen</a>
+      <a href="#demo">Live-Demo</a>
+      <a href="#video">Video</a>
+      <a href="#prozess">Ablauf</a>
+      <a href="#kontakt">Kontakt</a>
+    </nav>
+    <div class="nav-actions">
+      <div class="lang-switch" role="group" aria-label="Sprache wählen">
+        <button class="lang-btn active" data-lang="de">DE</button>
+        <button class="lang-btn" data-lang="it">IT</button>
+      </div>
+      <a href="#demo" class="btn btn-primary btn-sm">Jetzt testen</a>
+    </div>
+    <button class="nav-burger" id="burger" aria-label="Menü öffnen"><span></span><span></span><span></span></button>
+  </header>
+
+  <main id="top">
+    <!-- ============ HERO ============ -->
+    <section class="hero">
+      <div class="hero-inner">
+        <div class="badge-pill reveal">
+          <span class="ping"></span>
+          KI-Agentur · Südtirol · Alto Adige
+        </div>
+        <h1 class="hero-title reveal" data-i18n="hero.title">
+          KI-Assistenten, die <span class="grad">buchen,<br/>bestätigen</span> und <span class="grad-2">anrufen</span>.
+        </h1>
+        <p class="hero-sub reveal" data-i18n="hero.sub">
+          Wir bauen Chatbots & Telefon-Agenten, die rund um die Uhr Termine annehmen,
+          SMS-Bestätigungen mit Kalender senden, zurückrufen und automatisch Bewertungen sammeln —
+          damit dein Team sich auf die Gäste konzentriert.
+        </p>
+        <div class="hero-cta reveal">
+          <a href="#demo" class="btn btn-primary btn-lg">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            Live-Demo starten
+          </a>
+          <a href="#kontakt" class="btn btn-ghost btn-lg">Beratung buchen</a>
+        </div>
+        <div class="hero-stats reveal">
+          <div class="stat"><b>24/7</b><span>erreichbar</span></div>
+          <div class="stat-sep"></div>
+          <div class="stat"><b>&lt; 3 Sek</b><span>Antwortzeit</span></div>
+          <div class="stat-sep"></div>
+          <div class="stat"><b>DE · IT · EN</b><span>mehrsprachig</span></div>
+        </div>
+      </div>
+
+      <!-- Floating preview card -->
+      <div class="hero-visual reveal">
+        <div class="float-card fc-chat">
+          <div class="fc-head"><span class="fc-dot"></span> AI Assistant</div>
+          <div class="fc-bubble in">Buongiorno! Möchtest du einen Tisch reservieren?</div>
+          <div class="fc-bubble out">appuntamento</div>
+          <div class="fc-typing"><span></span><span></span><span></span></div>
+        </div>
+        <div class="float-card fc-sms">
+          <div class="fc-sms-icon">✉️</div>
+          <div>
+            <strong>SMS gesendet</strong>
+            <small>Termin bestätigt · 19:30</small>
+          </div>
+        </div>
+        <div class="float-card fc-call">
+          <div class="fc-call-pulse"></div>
+          <div class="fc-call-icon">📞</div>
+          <div>
+            <strong>Rückruf</strong>
+            <small>+39 0473 ··· Gerola</small>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ LOGOS / TRUST ============ -->
+    <section class="marquee-wrap" aria-hidden="true">
+      <div class="marquee">
+        <span>Ristoranti</span><span>•</span><span>Hotels</span><span>•</span><span>Zahnärzte</span><span>•</span><span>Friseure</span><span>•</span><span>Physiotherapie</span><span>•</span><span>Beauty &amp; Spa</span><span>•</span><span>Werkstätten</span><span>•</span>
+        <span>Ristoranti</span><span>•</span><span>Hotels</span><span>•</span><span>Zahnärzte</span><span>•</span><span>Friseure</span><span>•</span><span>Physiotherapie</span><span>•</span><span>Beauty &amp; Spa</span><span>•</span><span>Werkstätten</span><span>•</span>
+      </div>
+    </section>
+
+    <!-- ============ LÖSUNGEN ============ -->
+    <section class="section" id="loesungen">
+      <div class="section-head">
+        <span class="kicker">Lösungen</span>
+        <h2>Ein Assistent. Jeder Kanal. Null verpasste Anfragen.</h2>
+        <p>Vom ersten „Hallo" bis zur fertigen Buchung — alles automatisch, in deinem Ton, in jeder Sprache.</p>
+      </div>
+      <div class="cards">
+        <article class="card">
+          <div class="card-ic">💬</div>
+          <h3>Chatbot</h3>
+          <p>Auf Website, WhatsApp & Instagram. Beantwortet Fragen, schlägt freie Slots vor und schließt die Buchung ab.</p>
+        </article>
+        <article class="card">
+          <div class="card-ic">📞</div>
+          <h3>Telefon-Agent</h3>
+          <p>Nimmt Anrufe entgegen, spricht natürlich, bucht Termine und ruft bei Bedarf zurück — auch außerhalb der Öffnungszeiten.</p>
+        </article>
+        <article class="card">
+          <div class="card-ic">📅</div>
+          <h3>Auto-Buchung</h3>
+          <p>Synchron mit deinem Kalender. Doppelbuchungen ausgeschlossen, SMS-/E-Mail-Bestätigung inklusive.</p>
+        </article>
+        <article class="card">
+          <div class="card-ic">⭐</div>
+          <h3>Bewertungen</h3>
+          <p>Nach dem Besuch wird automatisch eine Bewertung angefragt — mehr 5-Sterne, weniger Aufwand.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============ LIVE DEMO ============ -->
+    <section class="section demo" id="demo">
+      <div class="section-head">
+        <span class="kicker">Live-Demo · zum Testen</span>
+        <h2>Schreib <span class="grad">„appuntamento"</span> — und sieh zu.</h2>
+        <p>Tippe unten in den Chat (oder nutz die Buttons). Der Assistent bucht, sendet die SMS mit Kalender, fragt eine Bewertung an und ruft zurück — genau wie bei einem echten Gast.</p>
+      </div>
+
+      <div class="demo-grid">
+        <!-- Chat side -->
+        <div class="chat" id="chat">
+          <div class="chat-head">
+            <div class="chat-avatar">AM</div>
+            <div class="chat-id">
+              <strong>Ristorante Gerola · Assistant</strong>
+              <small><span class="online"></span> Online · antwortet sofort</small>
+            </div>
+          </div>
+          <div class="chat-body" id="chatBody" aria-live="polite">
+            <div class="msg bot">
+              <p>Ciao &amp; hallo! 👋 Ich bin der KI-Assistent vom Ristorante Gerola. Wie kann ich helfen?</p>
+            </div>
+          </div>
+          <div class="chat-quick" id="quick">
+            <button class="chip" data-send="appuntamento">appuntamento</button>
+            <button class="chip" data-send="Tisch reservieren">Tisch reservieren</button>
+            <button class="chip" data-send="Öffnungszeiten">Öffnungszeiten?</button>
+          </div>
+          <form class="chat-input" id="chatForm" autocomplete="off">
+            <input type="text" id="chatInput" placeholder="Nachricht schreiben…" aria-label="Nachricht" />
+            <button type="submit" class="send" aria-label="Senden">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+            </button>
+          </form>
+        </div>
+
+        <!-- Phone side -->
+        <div class="phone-wrap">
+          <div class="phone" id="phone">
+            <div class="phone-notch"></div>
+            <div class="phone-screen" id="phoneScreen">
+              <!-- Default home -->
+              <div class="ph-home" id="phHome">
+                <div class="ph-time">19:24</div>
+                <div class="ph-hint">
+                  <div class="ph-hint-ic">📲</div>
+                  <p>Starte die Demo im Chat —<br/>hier erscheint, was passiert.</p>
+                </div>
+              </div>
+            </div>
+            <!-- Incoming-call overlay -->
+            <div class="call-overlay" id="callOverlay">
+              <div class="call-pulse"></div>
+              <div class="call-avatar">GR</div>
+              <div class="call-name">Ristorante Gerola</div>
+              <div class="call-sub">+39 0473 555 018 · eingehender Anruf</div>
+              <div class="call-actions">
+                <button class="call-btn decline" aria-label="Ablehnen">✕</button>
+                <button class="call-btn accept" id="acceptCall" aria-label="Annehmen">📞</button>
+              </div>
+            </div>
+          </div>
+          <button class="btn btn-ghost btn-sm reset" id="resetDemo">↻ Demo zurücksetzen</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ VIDEO ============ -->
+    <section class="section video-sec" id="video">
+      <div class="section-head">
+        <span class="kicker">In 90 Sekunden</span>
+        <h2>So klingt ein Anruf mit dem AI-Agenten.</h2>
+        <p>Echtes Gespräch, echte Buchung — vom Klingeln bis zur SMS-Bestätigung.</p>
+      </div>
+      <div class="video-frame" id="videoFrame">
+        <div class="video-poster">
+          <button class="play-btn" id="playBtn" aria-label="Video abspielen">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          </button>
+          <span class="video-label">Demo-Anruf · Ristorante Gerola</span>
+        </div>
+        <div class="video-bars" aria-hidden="true">
+          <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PROZESS ============ -->
+    <section class="section" id="prozess">
+      <div class="section-head">
+        <span class="kicker">Ablauf</span>
+        <h2>In 3 Schritten live.</h2>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-n">01</div>
+          <h3>Kennenlernen</h3>
+          <p>Wir analysieren deine Anfragen, Sprachen und Buchungslogik. Kostenloses Erstgespräch.</p>
+        </div>
+        <div class="step">
+          <div class="step-n">02</div>
+          <h3>Aufbau & Training</h3>
+          <p>Wir trainieren den Assistenten auf deinen Ton, verbinden Kalender, Telefon & SMS.</p>
+        </div>
+        <div class="step">
+          <div class="step-n">03</div>
+          <h3>Live & Optimierung</h3>
+          <p>Go-live in Tagen, nicht Monaten. Wir überwachen, verbessern und reporten monatlich.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ STATS ============ -->
+    <section class="section stats-sec">
+      <div class="stats-grid">
+        <div class="stat-big"><b data-count="100">0</b><span>% beantwortete Anfragen</span></div>
+        <div class="stat-big"><b data-count="38">0</b><span>% mehr Buchungen</span></div>
+        <div class="stat-big"><b data-count="7">0</b><span>Tage bis Go-Live</span></div>
+        <div class="stat-big"><b data-count="3">0</b><span>Sprachen out-of-the-box</span></div>
+      </div>
+    </section>
+
+    <!-- ============ CTA / KONTAKT ============ -->
+    <section class="section cta-sec" id="kontakt">
+      <div class="cta-box">
+        <h2>Bereit, keine Anfrage mehr zu verpassen?</h2>
+        <p>Buch ein kostenloses Erstgespräch — wir zeigen dir deinen eigenen Assistenten live.</p>
+        <form class="cta-form" id="leadForm">
+          <input type="text" placeholder="Dein Name" required aria-label="Name" />
+          <input type="email" placeholder="E-Mail" required aria-label="E-Mail" />
+          <button type="submit" class="btn btn-primary btn-lg">Erstgespräch buchen</button>
+        </form>
+        <p class="cta-note" id="leadNote" hidden>✅ Grazie! Wir melden uns innerhalb von 24 Stunden.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="foot-grid">
+      <div>
+        <a class="brand" href="#top"><span class="brand-mark">AM</span><span class="brand-name">Studio<span class="dot">.</span></span></a>
+        <p class="foot-tag">KI-Assistenten für lokale Unternehmen.<br/>Südtirol · Alto Adige</p>
+      </div>
+      <div>
+        <h4>Lösungen</h4>
+        <a href="#loesungen">Chatbot</a>
+        <a href="#loesungen">Telefon-Agent</a>
+        <a href="#loesungen">Auto-Buchung</a>
+        <a href="#loesungen">Bewertungen</a>
+      </div>
+      <div>
+        <h4>Studio</h4>
+        <a href="#demo">Live-Demo</a>
+        <a href="#video">Video</a>
+        <a href="#prozess">Ablauf</a>
+        <a href="#kontakt">Kontakt</a>
+      </div>
+      <div>
+        <h4>Kontakt</h4>
+        <a href="mailto:hello@amstudio.ink">hello@amstudio.ink</a>
+        <a href="https://amstudio.ink">amstudio.ink</a>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© <span id="year"></span> AM Studio. Tutti i diritti riservati.</span>
+      <span>Made with AI · Powered by AM Studio</span>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
