@@ -15,12 +15,21 @@ class ServiceIn(BaseModel):
     price_cents: int = 0
 
 
+class EmployeeServiceIn(BaseModel):
+    employee_name: str
+    service_name: str
+    duration_min: Optional[int] = None  # overrides the service default for this employee
+
+
 class SalonOnboardIn(BaseModel):
     name: str
     slug: str
     timezone: str = "Europe/Berlin"
     employees: list[EmployeeIn]
     services: list[ServiceIn]
+    # who can perform what, and how long it takes them; if omitted, every
+    # employee is assumed to offer every service at the service's default duration
+    qualifications: list[EmployeeServiceIn] = []
 
 
 class AvailabilityQuery(BaseModel):

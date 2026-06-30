@@ -31,15 +31,31 @@ class CalComClient:
         return self._request("POST", f"/teams/{team_id}/memberships", json={"email": email})
 
     def create_event_type(
-        self, team_id: str, title: str, slug: str, length_min: int, host_user_ids: list[str]
+        self,
+        team_id: str,
+        title: str,
+        slug: str,
+        length_min: int,
+        host_user_ids: list[str],
+        scheduling_type: str | None = None,
     ) -> dict:
+        """Create a team event type.
+
+        scheduling_type="ROUND_ROBIN" with multiple hosts lets Cal.com pick
+        any available host automatically ("egal wer"). Omit it (single host,
+        fixed) for a direct-to-employee event type.
+        """
         payload = {
             "title": title,
             "slug": slug,
             "lengthInMinutes": length_min,
             "teamId": team_id,
-            "hosts": [{"userId": uid} for uid in host_user_ids],
+            "hosts": [
+                {"userId": uid, "isFixed": scheduling_type != "ROUND_ROBIN"} for uid in host_user_ids
+            ],
         }
+        if scheduling_type:
+            payload["schedulingType"] = scheduling_type
         return self._request("POST", "/event-types", json=payload)
 
     def get_slots(self, event_type_id: str, date_from: str, date_to: str, timezone: str) -> dict:

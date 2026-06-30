@@ -39,6 +39,23 @@ class Service(Base):
     duration_min = Column(Integer, nullable=False)
     buffer_min = Column(Integer, default=0)
     price_cents = Column(Integer, default=0)
+    # Round-Robin team event type used when the customer has no employee preference.
     cal_event_type_id = Column(String, nullable=True)
 
     salon = relationship("Salon", back_populates="services")
+
+
+class EmployeeService(Base):
+    """Qualifies one employee to perform one service, with its own duration
+    and a dedicated fixed-host Cal.com event type for direct booking."""
+
+    __tablename__ = "employee_services"
+
+    id = Column(Integer, primary_key=True)
+    employee_id = Column(Integer, ForeignKey("employees.id"), nullable=False)
+    service_id = Column(Integer, ForeignKey("services.id"), nullable=False)
+    duration_min = Column(Integer, nullable=False)
+    cal_event_type_id = Column(String, nullable=True)
+
+    employee = relationship("Employee")
+    service = relationship("Service")
