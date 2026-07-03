@@ -85,11 +85,36 @@ class CalComClient:
         return self._request("GET", "/slots", params=params)
 
     def create_booking(
-        self, event_type_id: str, start_at: str, attendee_name: str, attendee_email: str, timezone: str
+        self,
+        event_type_id: str,
+        start_at: str,
+        attendee_name: str,
+        attendee_email: str,
+        timezone: str,
+        attendee_phone: str | None = None,
     ) -> dict:
+        attendee = {"name": attendee_name, "email": attendee_email, "timeZone": timezone}
+        # Cal.com's SMS workflows (confirmation, reminder, review) send to the
+        # attendee's phoneNumber — without it no SMS ever goes out.
+        if attendee_phone:
+            attendee["phoneNumber"] = attendee_phone
         payload = {
             "eventTypeId": int(event_type_id),
             "start": start_at,
-            "attendee": {"name": attendee_name, "email": attendee_email, "timeZone": timezone},
+            "attendee": attendee,
         }
         return self._request("POST", "/bookings", json=payload)
+
+    def get_bookings(self, event_type_ids: list[str], after_start: str, before_end: str) -> list[dict]:
+        """List bookings for the given event types within a time window.
+        Cal.com v2 returns the list directly inside the response envelope."""
+        params = {
+            "eventTypeIds": ",".join(str(i) for i in event_type_ids if i),
+            "afterStart": after_start,
+            "beforeEnd": before_end,
+            "take": 250,
+        }
+        data = self._request("GET", "/bookings", params=params)
+        if isinstance(data, dict):
+            return data.get("bookings", [])
+        return data

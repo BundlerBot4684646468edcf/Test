@@ -32,6 +32,10 @@ class SalonOnboardIn(BaseModel):
     qualifications: list[EmployeeServiceIn] = []
 
 
+class CurrentDatetimeQuery(BaseModel):
+    salon_slug: str
+
+
 class AvailabilityQuery(BaseModel):
     salon_slug: str
     service_name: str

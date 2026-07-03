@@ -1,11 +1,18 @@
 from fastapi import Depends, FastAPI, HTTPException
+from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 
-from . import schemas
+from . import models, schemas
 from .cal_client import CalComClient
+from .calendar_ui import list_salon_bookings, render_calendar_page
 from .config import CAL_API_KEY
 from .db import Base, engine, get_db
-from .famulor_tools import FAMULOR_TOOLS, handle_book_appointment, handle_get_availability
+from .famulor_tools import (
+    FAMULOR_TOOLS,
+    handle_book_appointment,
+    handle_get_availability,
+    handle_get_current_datetime,
+)
 from .onboarding import onboard_salon
 
 Base.metadata.create_all(bind=engine)
@@ -51,6 +58,17 @@ def list_tools():
     return FAMULOR_TOOLS
 
 
+@app.post("/famulor/tools/get_current_datetime")
+def get_current_datetime(
+    payload: schemas.CurrentDatetimeQuery,
+    db: Session = Depends(get_db),
+):
+    try:
+        return handle_get_current_datetime(db, payload.salon_slug)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
 @app.post("/famulor/tools/get_availability")
 def get_availability(
     payload: schemas.AvailabilityQuery,
@@ -77,3 +95,31 @@ def book_appointment(
         raise HTTPException(status_code=404, detail=str(e))
     except RuntimeError as e:
         raise _cal_error(e)
+
+
+def _find_salon_or_404(db: Session, salon_slug: str) -> models.Salon:
+    salon = db.query(models.Salon).filter_by(slug=salon_slug).first()
+    if not salon:
+        raise HTTPException(status_code=404, detail=f"Unknown salon: {salon_slug}")
+    return salon
+
+
+@app.get("/salons/{salon_slug}/bookings")
+def salon_bookings(
+    salon_slug: str,
+    date_from: str,
+    date_to: str,
+    db: Session = Depends(get_db),
+    cal: CalComClient = Depends(get_cal_client),
+):
+    salon = _find_salon_or_404(db, salon_slug)
+    try:
+        return list_salon_bookings(db, cal, salon, date_from, date_to)
+    except RuntimeError as e:
+        raise _cal_error(e)
+
+
+@app.get("/salons/{salon_slug}/calendar", response_class=HTMLResponse)
+def salon_calendar(salon_slug: str, db: Session = Depends(get_db)):
+    salon = _find_salon_or_404(db, salon_slug)
+    return render_calendar_page(salon)

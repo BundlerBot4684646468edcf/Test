@@ -1,10 +1,23 @@
+from datetime import date, timedelta
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from salon import schemas
 from salon.db import Base
-from salon.famulor_tools import handle_book_appointment, handle_get_availability
+from salon.famulor_tools import (
+    handle_book_appointment,
+    handle_get_availability,
+    handle_get_current_datetime,
+    normalize_phone,
+)
 from salon.onboarding import onboard_salon
+
+# Bookings/availability must lie in the future now that past dates are
+# rejected, so tests derive their dates from today.
+DATE_FROM = (date.today() + timedelta(days=7)).isoformat()
+DATE_TO = (date.today() + timedelta(days=13)).isoformat()
+START_AT = f"{DATE_FROM}T09:00:00"
 
 
 class FakeCalClient:
@@ -42,10 +55,22 @@ class FakeCalClient:
     def get_slots(self, event_type_id, date_from, date_to, timezone):
         return {"event_type_id": event_type_id, "slots": [f"{date_from}T09:00:00"]}
 
-    def create_booking(self, event_type_id, start_at, attendee_name, attendee_email, timezone):
-        booking = {"id": self._id(), "event_type_id": event_type_id, "status": "ACCEPTED"}
+    def create_booking(self, event_type_id, start_at, attendee_name, attendee_email, timezone, attendee_phone=None):
+        booking = {
+            "id": self._id(),
+            "event_type_id": event_type_id,
+            "status": "ACCEPTED",
+            "start": start_at,
+            "end": start_at,
+            "attendee_phone": attendee_phone,
+            "attendees": [{"name": attendee_name, "email": attendee_email}],
+            "title": self.event_types.get(event_type_id, {}).get("title", ""),
+        }
         self.bookings.append(booking)
         return booking
+
+    def get_bookings(self, event_type_ids, after_start, before_end):
+        return [b for b in self.bookings if b["event_type_id"] in set(event_type_ids)]
 
 
 def make_session():
@@ -84,11 +109,11 @@ def test_famulor_tools_resolve_service_and_call_cal():
     )
     onboard_salon(db, payload, cal)
 
-    slots = handle_get_availability(db, cal, "salon-mueller", "Haarschnitt", "2026-07-01", "2026-07-07")
-    assert slots["slots"] == ["2026-07-01T09:00:00"]
+    slots = handle_get_availability(db, cal, "salon-mueller", "Haarschnitt", DATE_FROM, DATE_TO)
+    assert slots["slots"] == [f"{DATE_FROM}T09:00:00"]
 
     booking = handle_book_appointment(
-        db, cal, "salon-mueller", "Haarschnitt", "2026-07-01T09:00:00",
+        db, cal, "salon-mueller", "Haarschnitt", START_AT,
         "Max Mustermann", "max@example.com",
     )
     assert booking["status"] == "ACCEPTED"
@@ -98,7 +123,7 @@ def test_famulor_tools_unknown_salon_raises():
     db = make_session()
     cal = FakeCalClient()
     try:
-        handle_get_availability(db, cal, "does-not-exist", "Haarschnitt", "2026-07-01", "2026-07-07")
+        handle_get_availability(db, cal, "does-not-exist", "Haarschnitt", DATE_FROM, DATE_TO)
         assert False, "expected ValueError"
     except ValueError:
         pass
@@ -128,13 +153,13 @@ def test_employee_specific_event_type_carries_its_own_duration():
     _onboard_salon_with_two_stylists(db, cal)
 
     slots = handle_get_availability(
-        db, cal, "salon-mueller", "Coloration", "2026-07-01", "2026-07-07", employee_name="Lena"
+        db, cal, "salon-mueller", "Coloration", DATE_FROM, DATE_TO, employee_name="Lena"
     )
     lena_event_type_id = slots["event_type_id"]
     assert cal.event_types[lena_event_type_id]["length_min"] == 45
 
     slots = handle_get_availability(
-        db, cal, "salon-mueller", "Coloration", "2026-07-01", "2026-07-07", employee_name="Tom"
+        db, cal, "salon-mueller", "Coloration", DATE_FROM, DATE_TO, employee_name="Tom"
     )
     tom_event_type_id = slots["event_type_id"]
     assert cal.event_types[tom_event_type_id]["length_min"] == 90
@@ -147,7 +172,7 @@ def test_no_employee_preference_uses_round_robin_event_type():
     salon = _onboard_salon_with_two_stylists(db, cal)
     any_event_type_id = salon.services[0].cal_event_type_id
 
-    slots = handle_get_availability(db, cal, "salon-mueller", "Coloration", "2026-07-01", "2026-07-07")
+    slots = handle_get_availability(db, cal, "salon-mueller", "Coloration", DATE_FROM, DATE_TO)
 
     assert slots["event_type_id"] == any_event_type_id
     event_type = cal.event_types[any_event_type_id]
@@ -162,8 +187,92 @@ def test_unqualified_employee_raises_clear_error():
 
     try:
         handle_get_availability(
-            db, cal, "salon-mueller", "Coloration", "2026-07-01", "2026-07-07", employee_name="Nina"
+            db, cal, "salon-mueller", "Coloration", DATE_FROM, DATE_TO, employee_name="Nina"
         )
         assert False, "expected ValueError"
     except ValueError as e:
         assert "Coloration" in str(e)
+
+
+# ----------------- Date awareness ("Samstag war gestern"-Bug) -----------------
+
+def test_get_current_datetime_reports_today_and_weekdays():
+    db = make_session()
+    cal = FakeCalClient()
+    _onboard_salon_with_two_stylists(db, cal)
+
+    info = handle_get_current_datetime(db, "salon-mueller")
+
+    assert info["today"] == date.today().isoformat()
+    assert info["timezone"] == "Europe/Berlin"
+    assert len(info["next_days"]) == 7
+    assert info["next_days"][0]["date"] == (date.today() + timedelta(days=1)).isoformat()
+    # weekday names must be consistent with the date, in German and English
+    assert info["today_weekday_de"] in {"Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"}
+
+
+def test_availability_range_fully_in_past_is_rejected_with_today_hint():
+    db = make_session()
+    cal = FakeCalClient()
+    _onboard_salon_with_two_stylists(db, cal)
+
+    past_from = (date.today() - timedelta(days=8)).isoformat()
+    past_to = (date.today() - timedelta(days=2)).isoformat()
+    try:
+        handle_get_availability(db, cal, "salon-mueller", "Coloration", past_from, past_to)
+        assert False, "expected ValueError"
+    except ValueError as e:
+        assert date.today().isoformat() in str(e)  # tells the bot what today is
+
+
+def test_availability_start_in_past_is_clamped_to_today():
+    db = make_session()
+    cal = FakeCalClient()
+    _onboard_salon_with_two_stylists(db, cal)
+
+    past_from = (date.today() - timedelta(days=2)).isoformat()
+    future_to = (date.today() + timedelta(days=5)).isoformat()
+    slots = handle_get_availability(db, cal, "salon-mueller", "Coloration", past_from, future_to)
+
+    assert slots["slots"] == [f"{date.today().isoformat()}T09:00:00"]
+    assert slots["today"] == date.today().isoformat()
+
+
+def test_booking_in_the_past_is_rejected():
+    db = make_session()
+    cal = FakeCalClient()
+    _onboard_salon_with_two_stylists(db, cal)
+
+    yesterday = (date.today() - timedelta(days=1)).isoformat()
+    try:
+        handle_book_appointment(
+            db, cal, "salon-mueller", "Coloration", f"{yesterday}T09:00:00",
+            "Max Mustermann", "max@example.com",
+        )
+        assert False, "expected ValueError"
+    except ValueError as e:
+        assert "Vergangenheit" in str(e)
+    assert cal.bookings == []
+
+
+# ----------------- SMS: phone number must reach Cal.com -----------------
+
+def test_booking_passes_normalized_phone_to_cal():
+    db = make_session()
+    cal = FakeCalClient()
+    _onboard_salon_with_two_stylists(db, cal)
+
+    handle_book_appointment(
+        db, cal, "salon-mueller", "Coloration", START_AT,
+        "Max Mustermann", "max@example.com", customer_phone="0176 123 45678",
+    )
+
+    assert cal.bookings[-1]["attendee_phone"] == "+4917612345678"
+
+
+def test_phone_normalization_variants():
+    assert normalize_phone("+49 176 1234567") == "+491761234567"
+    assert normalize_phone("0049 176 1234567") == "+491761234567"
+    assert normalize_phone("0176/1234567") == "+491761234567"
+    assert normalize_phone(None) is None
+    assert normalize_phone("") is None

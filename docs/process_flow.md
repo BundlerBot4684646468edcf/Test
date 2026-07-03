@@ -80,6 +80,13 @@ gibt keinen Konflikt. So werden sie pro Salon (= Cal.com Team) angelegt:
 **Voraussetzung:** Team-Plan für das jeweilige Salon-Team (Free-Plan hat
 keine Workflows) + SMS-Guthaben/-Credits in Cal.com.
 
+**Voraussetzung im Backend (war der Grund, warum SMS nicht funktionierten):**
+Die Kundennummer muss als `attendee.phoneNumber` in der Buchung ankommen —
+ohne sie verschickt Cal.com schlicht keine SMS. `book_appointment` reicht
+`customer_phone` jetzt E.164-normalisiert (`0176…` → `+49176…`) an Cal.com
+durch, und das Famulor-Tool-Schema markiert die Nummer als required, damit
+der Bot sie im Gespräch immer erfragt.
+
 ### Workflow 1 — Booking Confirmation (sofort)
 1. Cal.com → Team des Salons → **Workflows** → "+ New Workflow"
 2. **Trigger**: "When booking is created"

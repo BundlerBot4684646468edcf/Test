@@ -87,11 +87,14 @@ salon/
   db.py             SQLAlchemy Engine/Session (SQLite lokal, austauschbar gegen Postgres)
   models.py         Salon, Employee, Service, EmployeeService (Qualifikation+eigene Dauer+Event-Type)
   schemas.py        Pydantic-Schemas für die API (SalonOnboardIn, AvailabilityQuery, BookingIn, ...)
-  cal_client.py      Wrapper um die Cal.com v2 API (Team/Host/Event-Type anlegen, Slots, Buchung)
+  cal_client.py      Wrapper um die Cal.com v2 API (Team/Host/Event-Type anlegen, Slots, Buchung, Buchungsliste)
   onboarding.py      onboard_salon(): provisioniert einen neuen Salon komplett in Cal.com
   famulor_tools.py   FAMULOR_TOOLS Schema (Function-Calling) + Handler, die Namen auf Cal.com-IDs auflösen
+  calendar_ui.py     Read-only Wochen-Kalender (HTML) + Buchungs-Normalisierung für die Admin-Ansicht
   main.py            FastAPI-App: POST /salons, GET /famulor/tools,
-                      POST /famulor/tools/get_availability, POST /famulor/tools/book_appointment
+                      POST /famulor/tools/get_current_datetime,
+                      POST /famulor/tools/get_availability, POST /famulor/tools/book_appointment,
+                      GET /salons/{slug}/bookings, GET /salons/{slug}/calendar
 
 tests/
   test_salon_onboarding.py   Unit-Tests gegen FakeCalClient (kein Netzwerk nötig)
@@ -104,9 +107,45 @@ app.py              UNVERWANDTE Alt-App (Hotel-Reputation-MVP) — nicht anfasse
 zu einem völlig anderen, älteren Projekt in diesem Repo (Hotel-Bewertungs-
 Analyse) und haben mit der Salon-Buchung nichts zu tun.
 
+## Datums-Sicherheit ("Samstag war gestern"-Bug, gefixt)
+
+Der Voice-Bot kannte das aktuelle Datum nicht und hat Wochentage/relative
+Daten ("morgen", "Samstag") falsch aufgelöst. Dagegen gibt es jetzt drei
+Schichten:
+
+1. **Tool `get_current_datetime`** (laut Tool-Beschreibung vor jeder
+   Datumsinterpretation aufzurufen): heutiges Datum, Uhrzeit, Wochentag
+   (DE/EN) in der Salon-Zeitzone plus die Wochentage der nächsten 7 Tage.
+2. **`get_availability`**: Zeitraum komplett in der Vergangenheit → Fehler
+   mit Klartext-Hinweis, welcher Tag heute ist; nur Start in der
+   Vergangenheit → wird auf heute geklemmt. Antwort enthält immer
+   `today`/`today_weekday_de`.
+3. **`book_appointment`**: Termin-Start in der Vergangenheit → Fehler mit
+   demselben Hinweis, Buchung erreicht Cal.com nie.
+
+## SMS-Fix
+
+SMS (Bestätigung/Reminder/Review über Cal.com Workflows) gingen nie raus,
+weil `handle_book_appointment` die `customer_phone` verworfen hat — sie
+kam nie bei Cal.com an. Jetzt wird sie best-effort auf E.164 normalisiert
+(`0176…` → `+49176…`, Zielmarkt DE) und als `attendee.phoneNumber` in die
+Buchung geschrieben. `customer_phone` ist im Famulor-Tool-Schema jetzt
+required, damit der Bot die Nummer aktiv erfragt; das Backend selbst
+bleibt tolerant und bucht auch ohne Nummer (dann ohne SMS).
+
+## Kalender-UI
+
+`GET /salons/{slug}/calendar` liefert eine selbst-enthaltene HTML-
+Wochenansicht (Mo–So, 08–20 Uhr, Prev/Heute/Next-Navigation, stornierte
+Termine durchgestrichen). Die Seite holt die Daten client-seitig von
+`GET /salons/{slug}/bookings?date_from=…&date_to=…`, das alle Cal.com-
+Buchungen über sämtliche Event-Types des Salons einsammelt
+(`calendar_ui.py`) und die Zeiten in die Salon-Zeitzone konvertiert.
+Read-only — gebucht/storniert wird weiterhin über Famulor bzw. Cal.com.
+
 ## Aktueller Stand
 
-- Vollständiges Skeleton steht, **10/10 Tests grün** (`python -m pytest tests/ -v`)
+- Vollständiges Skeleton steht, **20/20 Tests grün** (`python -m pytest tests/ -v`)
 - Alles bisher nur gegen einen **gemockten** Cal.com-Client getestet — **noch
   nie gegen die echte Cal.com-API verifiziert**, da kein API-Key vorhanden war
 - `cal_client.py`-Endpunkt-Pfade/Payload-Felder (`lengthInMinutes`,
@@ -115,7 +154,8 @@ Analyse) und haben mit der Salon-Buchung nichts zu tun.
   echten Account/echte API-Doku gegenchecken, sobald Zugriff da ist
 - Kein Hosting/Deployment, läuft nur lokal
 - Keine Anbindung an Famulor selbst (nur das Tool-Schema dafür existiert)
-- Kein Kunden-/Admin-Dashboard (nur die API)
+- Admin-Kalender (Wochenansicht) existiert unter `/salons/{slug}/calendar`;
+  ein volles Dashboard (Onboarding-Formulare, Mitarbeiterverwaltung) fehlt weiter
 
 ## Offene Punkte / Was als Nächstes gebraucht wird
 
