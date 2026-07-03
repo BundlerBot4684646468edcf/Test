@@ -1,6 +1,0 @@
-# Nur das Salon-Buchungs-Backend (salon/) — schlankes Set fürs Deployment.
-# Die volle requirements.txt enthält zusätzlich die alte Streamlit-App (app.py).
-fastapi==0.115.0
-uvicorn[standard]==0.31.0
-sqlalchemy==2.0.35
-email-validator==2.2.0

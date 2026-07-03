@@ -1,0 +1,10 @@
+app.py
+tests
+docs
+Dockerfile
+.dockerignore
+requirements-hotel-app.txt
+requirements-backend.txt
+*.png
+salon.db
+__pycache__

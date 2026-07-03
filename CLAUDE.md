@@ -169,12 +169,25 @@ Start neu angelegt).
     Header `X-Admin-Key`.
 - Keine Extra-Dependencies: PBKDF2 + HMAC aus der Stdlib.
 
-## Deployment (docs/deploy.md, Dockerfile)
+## Deployment (docs/deploy.md)
 
-Fertiges `Dockerfile` (schlanke `requirements-backend.txt`, SQLite auf
-Volume `/data`, PORT-Env wird respektiert) + Schritt-für-Schritt-Anleitung
-für Railway/Render in `docs/deploy.md`. Das eigentliche Hosten braucht
-einen Account beim Anbieter — aus einer KI-Session heraus nicht möglich.
+Zwei fertige Wege, Anleitung in `docs/deploy.md`:
+
+- **Vercel** (Wunsch des Nutzers): `api/index.py` exponiert die
+  FastAPI-App als Serverless Function, `vercel.json` routet alles dorthin.
+  **Zwingend nötig:** `SALON_DATABASE_URL` auf Postgres (Neon/Vercel
+  Postgres) — Vercels Dateisystem ist ephemer, SQLite würde alle
+  Buchungen verlieren. `postgres://`-URLs werden in `config.py`
+  automatisch auf `postgresql://` (psycopg2) umgeschrieben. Außerdem
+  `SESSION_SECRET` fest setzen (mehrere Serverless-Instanzen!). Die
+  Root-`requirements.txt` enthält deshalb NUR das Backend; die Alt-App-
+  Dependencies liegen in `requirements-hotel-app.txt`.
+- **Docker** (Railway/Render/eigener Server): `Dockerfile`, SQLite auf
+  Volume `/data`, PORT-Env wird respektiert.
+
+Das eigentliche Hosten braucht einen Account beim Anbieter (bzw. ein
+`VERCEL_TOKEN` in der Session) — ohne das kann eine KI-Session nur
+vorbereiten, nicht deployen.
 
 ## Kalender-UI (`GET /salons/{slug}/calendar`)
 
@@ -203,10 +216,10 @@ stornieren (`cancel_appointment`: Startzeit + Telefonnummer oder Name).
    entfallen. Nummern liegen normalisiert an jeder Buchung
    (`Booking.customer_phone`), ein Versand-Hook gehört am saubersten in
    `booking.create_booking`/`cancel_booking` + ein Scheduler für Reminder.
-2. **Hosting durchführen**: Dockerfile + Anleitung liegen bereit
-   (docs/deploy.md) — es fehlt nur ein Railway/Render-Account; danach
-   `SESSION_SECRET`, `FAMULOR_API_KEY`, `PLATFORM_ADMIN_KEY` setzen und
-   Volume für `/data` mounten.
+2. **Hosting durchführen**: Vercel-Setup + Dockerfile liegen bereit
+   (docs/deploy.md) — es fehlt nur der Vercel-Login des Nutzers (Repo
+   importieren, Neon-Postgres anlegen, Env-Vars setzen) oder ein
+   `VERCEL_TOKEN`, mit dem eine KI-Session selbst deployen kann.
 3. **Famulor-Account-Zugang** + Doku, wie dort Custom-Tools
    (Function-Calling) konfiguriert werden — `GET /famulor/tools` liefert
    das Schema; `X-API-Key`-Header mitkonfigurieren.
