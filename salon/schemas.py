@@ -25,6 +25,8 @@ class SalonOnboardIn(BaseModel):
     name: str
     slug: str
     timezone: str = "Europe/Berlin"
+    # dashboard login; auto-generated and returned once if omitted
+    admin_password: Optional[str] = None
     employees: list[EmployeeIn]
     services: list[ServiceIn]
     # who can perform what, and how long it takes them; if omitted, every
@@ -76,6 +78,10 @@ class BookingIn(BaseModel):
     customer_email: EmailStr
     employee_name: Optional[str] = None
     customer_phone: Optional[str] = None
+
+
+class LoginIn(BaseModel):
+    password: str
 
 
 class CancelIn(BaseModel):

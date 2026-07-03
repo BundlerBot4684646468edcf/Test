@@ -33,10 +33,16 @@ def make_client():
     return TestClient(app)
 
 
+def login(client, slug="schoenheitssalon-test", password="geheim123"):
+    r = client.post(f"/salons/{slug}/login", json={"password": password})
+    assert r.status_code == 200, r.text
+
+
 TEST_SALON_PAYLOAD = {
     "name": "Schoenheitssalon Test",
     "slug": "schoenheitssalon-test",
     "timezone": "Europe/Berlin",
+    "admin_password": "geheim123",
     "employees": [
         {"name": "Lena", "email": "lena@example.com"},
         {"name": "Tom", "email": "tom@example.com"},
@@ -168,6 +174,7 @@ def _book(client, **overrides):
 def test_calendar_page_and_bookings_endpoint():
     client = make_client()
     client.post("/salons", json=TEST_SALON_PAYLOAD)
+    login(client)
     _book(client)
 
     r = client.get("/salons/schoenheitssalon-test/calendar")
@@ -189,6 +196,7 @@ def test_calendar_page_and_bookings_endpoint():
 def test_cancel_booking_via_calendar_endpoint():
     client = make_client()
     client.post("/salons", json=TEST_SALON_PAYLOAD)
+    login(client)
     booking = _book(client)
 
     r = client.delete(f"/salons/schoenheitssalon-test/bookings/{booking['id']}")
@@ -220,6 +228,7 @@ def test_cancel_appointment_tool():
 def test_admin_page_and_config():
     client = make_client()
     client.post("/salons", json=TEST_SALON_PAYLOAD)
+    login(client)
 
     r = client.get("/salons/schoenheitssalon-test/admin")
     assert r.status_code == 200
@@ -236,6 +245,7 @@ def test_admin_page_and_config():
 def test_admin_service_duration_change_affects_availability():
     client = make_client()
     client.post("/salons", json=TEST_SALON_PAYLOAD)
+    login(client)
     config = client.get("/salons/schoenheitssalon-test/config").json()
     waschen_id = next(s["id"] for s in config["services"] if s["name"] == "Waschen Foenen")
 
@@ -254,6 +264,7 @@ def test_admin_service_duration_change_affects_availability():
 def test_admin_remove_employee_with_booking_gives_409_then_force_works():
     client = make_client()
     client.post("/salons", json=TEST_SALON_PAYLOAD)
+    login(client)
     _book(client)
     config = client.get("/salons/schoenheitssalon-test/config").json()
     lena_id = next(e["id"] for e in config["employees"] if e["name"] == "Lena")
@@ -276,6 +287,7 @@ def test_admin_remove_employee_with_booking_gives_409_then_force_works():
 def test_admin_opening_hours_roundtrip():
     client = make_client()
     client.post("/salons", json=TEST_SALON_PAYLOAD)
+    login(client)
 
     hours = [
         {"weekday": w, "open_time": "08:00", "close_time": "16:00", "closed": False}
@@ -298,6 +310,7 @@ def test_admin_opening_hours_roundtrip():
 def test_admin_qualifications_matrix_roundtrip():
     client = make_client()
     client.post("/salons", json=TEST_SALON_PAYLOAD)
+    login(client)
 
     r = client.put("/salons/schoenheitssalon-test/qualifications", json={
         "qualifications": [

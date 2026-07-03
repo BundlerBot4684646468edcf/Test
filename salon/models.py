@@ -13,6 +13,8 @@ class Salon(Base):
     name = Column(String, nullable=False)
     slug = Column(String, unique=True, nullable=False)
     timezone = Column(String, default="Europe/Berlin")
+    # PBKDF2 hash (salon/auth.py); guards the admin/calendar dashboard
+    admin_password_hash = Column(String, nullable=True)
 
     employees = relationship("Employee", back_populates="salon")
     services = relationship("Service", back_populates="salon")

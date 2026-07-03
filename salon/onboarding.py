@@ -17,12 +17,19 @@ DEFAULT_OPENING_HOURS = [
 ]
 
 
-def onboard_salon(db: Session, data: schemas.SalonOnboardIn) -> models.Salon:
+def onboard_salon(
+    db: Session, data: schemas.SalonOnboardIn, admin_password_hash: str | None = None
+) -> models.Salon:
     """Create a new salon with employees, services, the who-does-what matrix
     (with per-employee durations) and default opening hours. Everything lives
     in our own database — availability and double-booking protection are
     handled by salon/booking.py."""
-    salon = models.Salon(name=data.name, slug=data.slug, timezone=data.timezone)
+    salon = models.Salon(
+        name=data.name,
+        slug=data.slug,
+        timezone=data.timezone,
+        admin_password_hash=admin_password_hash,
+    )
     db.add(salon)
     db.flush()
 

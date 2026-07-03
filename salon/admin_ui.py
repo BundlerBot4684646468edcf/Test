@@ -65,6 +65,7 @@ ADMIN_HTML = """<!doctype html>
 <header>
   <h1>__SALON_NAME__ <small>Verwaltung</small></h1>
   <a href="/salons/__SALON_SLUG__/calendar">Kalender ansehen &rarr;</a>
+  <a href="/salons/__SALON_SLUG__/logout">Abmelden</a>
 </header>
 <main>
   <section>

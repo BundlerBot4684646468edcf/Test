@@ -116,6 +116,7 @@ CALENDAR_HTML = """<!doctype html>
 <header>
   <h1>__SALON_NAME__ <small>Terminkalender</small></h1>
   <a href="/salons/__SALON_SLUG__/admin">Verwaltung &rarr;</a>
+  <a href="/salons/__SALON_SLUG__/logout">Abmelden</a>
   <div class="nav">
     <button id="prev" aria-label="Vorherige Woche">&#8592;</button>
     <button id="todayBtn">Heute</button>
