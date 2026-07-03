@@ -2,7 +2,8 @@ from fastapi import Depends, FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 
-from . import models, schemas
+from . import admin, models, schemas
+from .admin_ui import render_admin_page
 from .cal_client import CalComClient
 from .calendar_ui import list_salon_bookings, render_calendar_page
 from .config import CAL_API_KEY
@@ -123,3 +124,101 @@ def salon_bookings(
 def salon_calendar(salon_slug: str, db: Session = Depends(get_db)):
     salon = _find_salon_or_404(db, salon_slug)
     return render_calendar_page(salon)
+
+
+# ----------------- Admin: manage services/employees/qualifications -----------------
+
+def _run_admin(fn, *args, **kwargs):
+    """Map admin-layer errors onto HTTP: unknown things -> 404, deletions that
+    would orphan upcoming bookings -> 409, Cal.com failures -> 502."""
+    try:
+        return fn(*args, **kwargs)
+    except admin.UpcomingBookingsError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except RuntimeError as e:
+        raise _cal_error(e)
+
+
+@app.get("/salons/{salon_slug}/admin", response_class=HTMLResponse)
+def salon_admin(salon_slug: str, db: Session = Depends(get_db)):
+    salon = _find_salon_or_404(db, salon_slug)
+    return render_admin_page(salon)
+
+
+@app.get("/salons/{salon_slug}/config")
+def salon_config(salon_slug: str, db: Session = Depends(get_db)):
+    salon = _find_salon_or_404(db, salon_slug)
+    return admin.get_salon_config(db, salon)
+
+
+@app.post("/salons/{salon_slug}/services")
+def add_service(
+    salon_slug: str,
+    payload: schemas.ServiceIn,
+    db: Session = Depends(get_db),
+    cal: CalComClient = Depends(get_cal_client),
+):
+    salon = _find_salon_or_404(db, salon_slug)
+    return _run_admin(admin.add_service, db, cal, salon, payload)
+
+
+@app.patch("/salons/{salon_slug}/services/{service_id}")
+def update_service(
+    salon_slug: str,
+    service_id: int,
+    payload: schemas.ServicePatch,
+    db: Session = Depends(get_db),
+    cal: CalComClient = Depends(get_cal_client),
+):
+    salon = _find_salon_or_404(db, salon_slug)
+    return _run_admin(admin.update_service, db, cal, salon, service_id, payload)
+
+
+@app.delete("/salons/{salon_slug}/services/{service_id}")
+def delete_service(
+    salon_slug: str,
+    service_id: int,
+    force: bool = False,
+    db: Session = Depends(get_db),
+    cal: CalComClient = Depends(get_cal_client),
+):
+    salon = _find_salon_or_404(db, salon_slug)
+    return _run_admin(admin.delete_service, db, cal, salon, service_id, force)
+
+
+@app.post("/salons/{salon_slug}/employees")
+def add_employee(
+    salon_slug: str,
+    payload: schemas.EmployeeIn,
+    db: Session = Depends(get_db),
+    cal: CalComClient = Depends(get_cal_client),
+):
+    salon = _find_salon_or_404(db, salon_slug)
+    return _run_admin(admin.add_employee, db, cal, salon, payload)
+
+
+@app.delete("/salons/{salon_slug}/employees/{employee_id}")
+def remove_employee(
+    salon_slug: str,
+    employee_id: int,
+    force: bool = False,
+    db: Session = Depends(get_db),
+    cal: CalComClient = Depends(get_cal_client),
+):
+    salon = _find_salon_or_404(db, salon_slug)
+    return _run_admin(admin.remove_employee, db, cal, salon, employee_id, force)
+
+
+@app.put("/salons/{salon_slug}/qualifications")
+def set_qualifications(
+    salon_slug: str,
+    payload: schemas.QualificationsIn,
+    db: Session = Depends(get_db),
+    cal: CalComClient = Depends(get_cal_client),
+):
+    salon = _find_salon_or_404(db, salon_slug)
+    return _run_admin(
+        admin.set_qualifications, db, cal, salon, payload.qualifications, payload.force
+    )

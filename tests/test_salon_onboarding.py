@@ -31,6 +31,7 @@ class FakeCalClient:
         self._next_id = 1
         self.event_types: dict[str, dict] = {}
         self.bookings: list[dict] = []
+        self.deleted_event_types: list[str] = []
 
     def _id(self) -> str:
         self._next_id += 1
@@ -42,15 +43,33 @@ class FakeCalClient:
     def invite_team_member(self, team_id, email):
         return {"userId": self._id()}
 
-    def create_event_type(self, team_id, title, slug, length_min, host_user_ids, scheduling_type=None):
+    def create_event_type(self, team_id, title, slug, length_min, host_user_ids, scheduling_type=None, buffer_min=0):
         event_id = self._id()
         self.event_types[event_id] = {
             "title": title,
             "length_min": length_min,
             "host_user_ids": list(host_user_ids),
             "scheduling_type": scheduling_type,
+            "buffer_min": buffer_min,
         }
         return {"id": event_id}
+
+    def update_event_type(self, team_id, event_type_id, payload):
+        et = self.event_types[event_type_id]
+        if "title" in payload:
+            et["title"] = payload["title"]
+        if "lengthInMinutes" in payload:
+            et["length_min"] = payload["lengthInMinutes"]
+        if "afterEventBuffer" in payload:
+            et["buffer_min"] = payload["afterEventBuffer"]
+        if "hosts" in payload:
+            et["host_user_ids"] = [str(h["userId"]) for h in payload["hosts"]]
+        return {"id": event_type_id}
+
+    def delete_event_type(self, team_id, event_type_id):
+        self.event_types.pop(event_type_id, None)
+        self.deleted_event_types.append(event_type_id)
+        return {}
 
     def get_slots(self, event_type_id, date_from, date_to, timezone):
         return {"event_type_id": event_type_id, "slots": [f"{date_from}T09:00:00"]}

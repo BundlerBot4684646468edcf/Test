@@ -91,10 +91,16 @@ salon/
   onboarding.py      onboard_salon(): provisioniert einen neuen Salon komplett in Cal.com
   famulor_tools.py   FAMULOR_TOOLS Schema (Function-Calling) + Handler, die Namen auf Cal.com-IDs auflösen
   calendar_ui.py     Read-only Wochen-Kalender (HTML) + Buchungs-Normalisierung für die Admin-Ansicht
+  admin.py           Pflege-Logik nach dem Onboarding (Services/Mitarbeiter/Zuordnung) + Cal.com-Sync
+  admin_ui.py        Admin-Seite (HTML): Mitarbeiter, Services, Wer-macht-was-Matrix
   main.py            FastAPI-App: POST /salons, GET /famulor/tools,
                       POST /famulor/tools/get_current_datetime,
                       POST /famulor/tools/get_availability, POST /famulor/tools/book_appointment,
-                      GET /salons/{slug}/bookings, GET /salons/{slug}/calendar
+                      GET /salons/{slug}/bookings, GET /salons/{slug}/calendar,
+                      GET /salons/{slug}/admin, GET /salons/{slug}/config,
+                      POST/PATCH/DELETE /salons/{slug}/services[/{id}],
+                      POST/DELETE /salons/{slug}/employees[/{id}],
+                      PUT /salons/{slug}/qualifications
 
 tests/
   test_salon_onboarding.py   Unit-Tests gegen FakeCalClient (kein Netzwerk nötig)
@@ -135,6 +141,33 @@ Tool-Beschreibung weist Famulor an, die Anrufer-Nummer aus dem Gespräch zu
 nutzen oder sonst danach zu fragen. Ohne Nummer wird trotzdem gebucht —
 dann nur ohne SMS.
 
+## Admin-UI: Selbstverwaltung nach dem Onboarding
+
+`GET /salons/{slug}/admin` ist die Verwaltungsseite für den Salon-Inhaber:
+Mitarbeiter anlegen/entfernen, Services (Name, Standard-Dauer, Puffer,
+Preis) pflegen und die "Wer macht was"-Matrix inkl. eigener Dauer pro
+Mitarbeiter setzen. Jede Änderung synchronisiert `salon/admin.py` sofort
+nach Cal.com, damit Verfügbarkeit und Doppelbuchungs-Schutz stimmen:
+
+- Service-Dauer geändert → Round-Robin-Event-Type + alle *erbenden*
+  Mitarbeiter-Event-Types werden gePATCHt (eigene Dauern bleiben).
+  `EmployeeService.duration_min` ist dafür jetzt nullable: NULL = erbt
+  den Service-Standard (lokale `salon.db` von vorher ggf. löschen).
+- Puffer (Aufräumzeit) wird jetzt als `afterEventBuffer` an Cal.com
+  übertragen — vorher wurde er nur lokal gespeichert und hatte **keine**
+  Wirkung auf die Konfliktprüfung.
+- Matrix-Änderungen legen fehlende Event-Types an, löschen abgewählte und
+  halten die Round-Robin-Hosts synchron; verliert ein Service den letzten
+  Mitarbeiter, wird sein Round-Robin-Event-Type gelöscht ("egal wer" dann
+  nicht mehr buchbar, im UI als Badge sichtbar).
+- Löschen von Mitarbeitern/Services/Zuordnungen prüft zuerst, ob noch
+  **zukünftige Termine** daran hängen → HTTP 409 mit Klartext; das UI
+  fragt dann, ob trotzdem (force) gelöscht werden soll. Mitarbeiter werden
+  soft-deleted (`active=False`), damit alte Buchungen zuordenbar bleiben;
+  der Cal.com-Team-Sitz muss manuell in Cal.com entfernt werden.
+
+Noch offen: keinerlei Auth vor den Admin-Endpoints (wie beim Rest).
+
 ## Kalender-UI
 
 `GET /salons/{slug}/calendar` liefert eine selbst-enthaltene HTML-
@@ -147,7 +180,7 @@ Read-only — gebucht/storniert wird weiterhin über Famulor bzw. Cal.com.
 
 ## Aktueller Stand
 
-- Vollständiges Skeleton steht, **20/20 Tests grün** (`python -m pytest tests/ -v`)
+- Vollständiges Skeleton steht, **35/35 Tests grün** (`python -m pytest tests/ -v`)
 - Alles bisher nur gegen einen **gemockten** Cal.com-Client getestet — **noch
   nie gegen die echte Cal.com-API verifiziert**, da kein API-Key vorhanden war
 - `cal_client.py`-Endpunkt-Pfade/Payload-Felder (`lengthInMinutes`,
@@ -156,8 +189,10 @@ Read-only — gebucht/storniert wird weiterhin über Famulor bzw. Cal.com.
   echten Account/echte API-Doku gegenchecken, sobald Zugriff da ist
 - Kein Hosting/Deployment, läuft nur lokal
 - Keine Anbindung an Famulor selbst (nur das Tool-Schema dafür existiert)
-- Admin-Kalender (Wochenansicht) existiert unter `/salons/{slug}/calendar`;
-  ein volles Dashboard (Onboarding-Formulare, Mitarbeiterverwaltung) fehlt weiter
+- Admin-Kalender (Wochenansicht) unter `/salons/{slug}/calendar` und
+  Verwaltungsseite (Mitarbeiter/Services/Zuordnung) unter
+  `/salons/{slug}/admin`; es fehlt noch ein Onboarding-Formular für neue
+  Salons (bisher nur `POST /salons`) und jegliche Authentifizierung
 
 ## Offene Punkte / Was als Nächstes gebraucht wird
 

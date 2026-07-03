@@ -29,6 +29,8 @@ class CalComClient:
                 raise RuntimeError(
                     f"Cal.com {method} {path} returned {exc.response.status_code}: {exc.response.text}"
                 ) from exc
+            if not resp.content:
+                return {}
             payload = resp.json()
             # Unwrap Cal.com v2 envelope: {"status": "success", "data": {...}}
             if isinstance(payload, dict) and "data" in payload:
@@ -53,12 +55,15 @@ class CalComClient:
         length_min: int,
         host_user_ids: list[str],
         scheduling_type: str | None = None,
+        buffer_min: int = 0,
     ) -> dict:
         """Create a team event type.
 
         scheduling_type="ROUND_ROBIN" with multiple hosts lets Cal.com pick
         any available host automatically ("egal wer"). Omit for a single
         fixed-host event type. userId must be int for the Cal.com API.
+        buffer_min becomes Cal.com's afterEventBuffer, so cleanup time
+        between appointments is part of the conflict check.
         """
         payload = {
             "title": title,
@@ -72,8 +77,18 @@ class CalComClient:
         }
         if scheduling_type:
             payload["schedulingType"] = scheduling_type
+        if buffer_min:
+            payload["afterEventBuffer"] = buffer_min
         # Correct v2 endpoint: /teams/{teamId}/event-types  (not /event-types with teamId in body)
         return self._request("POST", f"/teams/{team_id}/event-types", json=payload)
+
+    def update_event_type(self, team_id: str, event_type_id: str, payload: dict) -> dict:
+        return self._request(
+            "PATCH", f"/teams/{team_id}/event-types/{event_type_id}", json=payload
+        )
+
+    def delete_event_type(self, team_id: str, event_type_id: str) -> dict:
+        return self._request("DELETE", f"/teams/{team_id}/event-types/{event_type_id}")
 
     def get_slots(self, event_type_id: str, date_from: str, date_to: str, timezone: str) -> dict:
         params = {

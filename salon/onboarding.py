@@ -64,7 +64,8 @@ def onboard_salon(db: Session, data: schemas.SalonOnboardIn, cal: CalComClient) 
         if host_ids:
             any_slug = f"{service.name}-any".lower().replace(" ", "-")
             any_event_type = cal.create_event_type(
-                team_id, service.name, any_slug, service.duration_min, host_ids, scheduling_type="ROUND_ROBIN"
+                team_id, service.name, any_slug, service.duration_min, host_ids,
+                scheduling_type="ROUND_ROBIN", buffer_min=service.buffer_min,
             )
             service.cal_event_type_id = str(any_event_type.get("id", ""))
 
@@ -73,13 +74,14 @@ def onboard_salon(db: Session, data: schemas.SalonOnboardIn, cal: CalComClient) 
             duration = q.duration_min or service.duration_min
             slug = f"{service.name}-{employee.name}".lower().replace(" ", "-")
             event_type = cal.create_event_type(
-                team_id, f"{service.name} mit {employee.name}", slug, duration, [employee.cal_user_id]
+                team_id, f"{service.name} mit {employee.name}", slug, duration,
+                [employee.cal_user_id], buffer_min=service.buffer_min,
             )
             db.add(
                 models.EmployeeService(
                     employee_id=employee.id,
                     service_id=service.id,
-                    duration_min=duration,
+                    duration_min=q.duration_min,
                     cal_event_type_id=str(event_type.get("id", "")),
                 )
             )

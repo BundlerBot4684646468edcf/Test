@@ -54,8 +54,14 @@ class EmployeeService(Base):
     id = Column(Integer, primary_key=True)
     employee_id = Column(Integer, ForeignKey("employees.id"), nullable=False)
     service_id = Column(Integer, ForeignKey("services.id"), nullable=False)
-    duration_min = Column(Integer, nullable=False)
+    # NULL = inherits the service default; changing the service duration then
+    # automatically re-syncs this employee's event type too.
+    duration_min = Column(Integer, nullable=True)
     cal_event_type_id = Column(String, nullable=True)
 
     employee = relationship("Employee")
     service = relationship("Service")
+
+    @property
+    def effective_duration_min(self) -> int:
+        return self.duration_min or self.service.duration_min

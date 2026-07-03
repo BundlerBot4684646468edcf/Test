@@ -176,6 +176,97 @@ def test_booking_in_past_returns_error_with_today_hint():
     assert fake_cal.bookings == []
 
 
+# ----------------- Admin UI + endpoints -----------------
+
+def test_admin_page_renders_and_config_endpoint_works():
+    client, _ = make_client()
+    client.post("/salons", json=TEST_SALON_PAYLOAD)
+
+    r = client.get("/salons/schoenheitssalon-test/admin")
+    assert r.status_code == 200
+    assert "Verwaltung" in r.text
+
+    r = client.get("/salons/schoenheitssalon-test/config")
+    assert r.status_code == 200
+    config = r.json()
+    assert {e["name"] for e in config["employees"]} == {"Lena", "Tom"}
+    assert len(config["qualifications"]) == 4
+
+
+def test_admin_service_duration_change_updates_availability_slot_length():
+    client, fake_cal = make_client()
+    client.post("/salons", json=TEST_SALON_PAYLOAD)
+    service_id = client.get("/salons/schoenheitssalon-test/config").json()["services"][0]["id"]
+
+    r = client.patch(f"/salons/schoenheitssalon-test/services/{service_id}", json={"duration_min": 75})
+    assert r.status_code == 200, r.text
+
+    r = client.post("/famulor/tools/get_availability", json={
+        "salon_slug": "schoenheitssalon-test",
+        "service_name": "Coloration",
+        "date_from": DATE_FROM,
+        "date_to": DATE_TO,
+    })
+    event_type_id = r.json()["event_type_id"]
+    assert fake_cal.event_types[event_type_id]["length_min"] == 75
+
+
+def test_admin_remove_employee_with_booking_gives_409_then_force_works():
+    client, _ = make_client()
+    client.post("/salons", json=TEST_SALON_PAYLOAD)
+    client.post("/famulor/tools/book_appointment", json={
+        "salon_slug": "schoenheitssalon-test",
+        "service_name": "Coloration",
+        "employee_name": "Lena",
+        "start_at": START_AT,
+        "customer_name": "Max Mustermann",
+        "customer_email": "max@example.com",
+    })
+    config = client.get("/salons/schoenheitssalon-test/config").json()
+    lena_id = next(e["id"] for e in config["employees"] if e["name"] == "Lena")
+
+    r = client.delete(f"/salons/schoenheitssalon-test/employees/{lena_id}")
+    assert r.status_code == 409
+    assert "Termin" in r.json()["detail"]
+
+    r = client.delete(f"/salons/schoenheitssalon-test/employees/{lena_id}?force=true")
+    assert r.status_code == 200
+    assert {e["name"] for e in r.json()["employees"]} == {"Tom"}
+
+    # booking for Lena by name must now fail with a clear message
+    r = client.post("/famulor/tools/get_availability", json={
+        "salon_slug": "schoenheitssalon-test",
+        "service_name": "Coloration",
+        "employee_name": "Lena",
+        "date_from": DATE_FROM,
+        "date_to": DATE_TO,
+    })
+    assert r.status_code == 404
+
+
+def test_admin_qualifications_matrix_roundtrip():
+    client, fake_cal = make_client()
+    client.post("/salons", json=TEST_SALON_PAYLOAD)
+
+    r = client.put("/salons/schoenheitssalon-test/qualifications", json={
+        "qualifications": [
+            {"employee_name": "Lena", "service_name": "Coloration", "duration_min": 45},
+            {"employee_name": "Tom", "service_name": "Coloration", "duration_min": 90},
+            {"employee_name": "Lena", "service_name": "Waschen Foenen"},
+        ],
+    })
+    assert r.status_code == 200, r.text
+    config = r.json()
+    assert len(config["qualifications"]) == 3
+    waschen = next(s for s in config["services"] if s["name"] == "Waschen Foenen")
+    assert waschen["bookable_any"] is True
+    rr = next(
+        et for et in fake_cal.event_types.values()
+        if et["scheduling_type"] == "ROUND_ROBIN" and et["title"] == "Waschen Foenen"
+    )
+    assert len(rr["host_user_ids"]) == 1  # only Lena offers it now
+
+
 # ----------------- Calendar UI -----------------
 
 def test_calendar_page_renders_for_salon():

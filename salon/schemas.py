@@ -32,6 +32,19 @@ class SalonOnboardIn(BaseModel):
     qualifications: list[EmployeeServiceIn] = []
 
 
+class ServicePatch(BaseModel):
+    name: Optional[str] = None
+    duration_min: Optional[int] = None
+    buffer_min: Optional[int] = None
+    price_cents: Optional[int] = None
+
+
+class QualificationsIn(BaseModel):
+    # full desired matrix; the backend reconciles additions/removals/changes
+    qualifications: list[EmployeeServiceIn]
+    force: bool = False
+
+
 class CurrentDatetimeQuery(BaseModel):
     salon_slug: str
 
