@@ -45,6 +45,17 @@ class QualificationsIn(BaseModel):
     force: bool = False
 
 
+class OpeningHoursIn(BaseModel):
+    weekday: int  # 0 = Montag .. 6 = Sonntag
+    open_time: str = "09:00"
+    close_time: str = "18:00"
+    closed: bool = False
+
+
+class OpeningHoursUpdate(BaseModel):
+    opening_hours: list[OpeningHoursIn]
+
+
 class CurrentDatetimeQuery(BaseModel):
     salon_slug: str
 
@@ -65,3 +76,10 @@ class BookingIn(BaseModel):
     customer_email: EmailStr
     employee_name: Optional[str] = None
     customer_phone: Optional[str] = None
+
+
+class CancelIn(BaseModel):
+    salon_slug: str
+    start_at: str
+    customer_phone: Optional[str] = None
+    customer_name: Optional[str] = None

@@ -4,15 +4,14 @@ from zoneinfo import ZoneInfo
 
 from sqlalchemy.orm import Session
 
-from . import models
-from .cal_client import CalComClient
+from . import booking, models
 
 WEEKDAYS_DE = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"]
 WEEKDAYS_EN = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
 # Function-calling schema for Famulor (voice/chat AI). Famulor invokes these
 # as tools during a call/chat; the handlers below resolve salon/service names
-# to Cal.com IDs and delegate to the Cal.com API.
+# and delegate to our own booking engine (salon/booking.py).
 FAMULOR_TOOLS = [
     {
         "name": "get_current_datetime",
@@ -61,13 +60,30 @@ FAMULOR_TOOLS = [
                 "customer_phone": {
                     "type": "string",
                     "description": (
-                        "Customer's mobile number, used for the SMS booking "
-                        "confirmation and reminders. Use the caller's number "
-                        "from the call if known, otherwise ask for it."
+                        "Customer's mobile number, used for SMS notifications. "
+                        "Use the caller's number from the call if known, "
+                        "otherwise ask for it."
                     ),
                 },
             },
             "required": ["salon_slug", "service_name", "start_at", "customer_name", "customer_email"],
+        },
+    },
+    {
+        "name": "cancel_appointment",
+        "description": (
+            "Cancel an existing appointment. Identify it by its start time "
+            "plus the customer's phone number (preferred) or name."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "salon_slug": {"type": "string"},
+                "start_at": {"type": "string", "description": "ISO datetime of the appointment"},
+                "customer_phone": {"type": "string"},
+                "customer_name": {"type": "string"},
+            },
+            "required": ["salon_slug", "start_at"],
         },
     },
 ]
@@ -91,33 +107,19 @@ def _find_service(db: Session, salon: models.Salon, service_name: str) -> models
     return service
 
 
-def _resolve_event_type(
-    db: Session, service: models.Service, employee_name: str | None
-) -> str:
-    """Pick the Round-Robin "any employee" event type, or a specific
-    employee's fixed-host event type (which carries that employee's own
-    duration) when one is named."""
-    if not employee_name:
-        if not service.cal_event_type_id:
-            raise ValueError(f"No employee currently offers '{service.name}'")
-        return service.cal_event_type_id
-
-    link = (
-        db.query(models.EmployeeService)
-        .join(models.Employee)
+def _find_employee(db: Session, salon: models.Salon, employee_name: str) -> models.Employee:
+    employee = (
+        db.query(models.Employee)
         .filter(
-            models.EmployeeService.service_id == service.id,
+            models.Employee.salon_id == salon.id,
+            models.Employee.active.is_(True),
             models.Employee.name.ilike(employee_name),
         )
         .first()
     )
-    if not link:
-        raise ValueError(f"{employee_name} bietet '{service.name}' nicht an")
-    return link.cal_event_type_id
-
-
-def _salon_now(salon: models.Salon) -> datetime:
-    return datetime.now(ZoneInfo(salon.timezone or "Europe/Berlin"))
+    if not employee:
+        raise ValueError(f"Unbekannter Mitarbeiter: {employee_name}")
+    return employee
 
 
 def _parse_iso_date(value: str, field: str) -> date:
@@ -137,9 +139,9 @@ def _today_context(now: datetime) -> dict:
 
 
 def normalize_phone(phone: str | None) -> str | None:
-    """Best-effort E.164 normalization; Cal.com silently skips SMS for
-    numbers it can't parse. Target market is Germany, so a bare leading 0
-    (as customers dictate their number on the phone) is treated as +49."""
+    """Best-effort E.164 normalization for storage/SMS later. Target market
+    is Germany, so a bare leading 0 (as customers dictate their number on
+    the phone) is treated as +49."""
     if not phone:
         return None
     p = re.sub(r"[\s\-().\/]", "", phone)
@@ -152,10 +154,10 @@ def normalize_phone(phone: str | None) -> str | None:
 
 def handle_get_current_datetime(db: Session, salon_slug: str) -> dict:
     salon = _find_salon(db, salon_slug)
-    now = _salon_now(salon)
+    now = datetime.now(ZoneInfo(salon.timezone or "Europe/Berlin"))
     today = now.date()
     return {
-        **_today_context(now),
+        **_today_context(now.replace(tzinfo=None)),
         "now": now.isoformat(timespec="minutes"),
         "time": now.strftime("%H:%M"),
         "timezone": salon.timezone,
@@ -172,7 +174,6 @@ def handle_get_current_datetime(db: Session, salon_slug: str) -> dict:
 
 def handle_get_availability(
     db: Session,
-    cal: CalComClient,
     salon_slug: str,
     service_name: str,
     date_from: str,
@@ -181,9 +182,9 @@ def handle_get_availability(
 ) -> dict:
     salon = _find_salon(db, salon_slug)
     service = _find_service(db, salon, service_name)
-    event_type_id = _resolve_event_type(db, service, employee_name)
+    employee = _find_employee(db, salon, employee_name) if employee_name else None
 
-    now = _salon_now(salon)
+    now = booking.salon_now(salon)
     today = now.date()
     from_d = _parse_iso_date(date_from, "date_from")
     to_d = _parse_iso_date(date_to, "date_to")
@@ -200,14 +201,13 @@ def handle_get_availability(
     if from_d < today:
         from_d = today
 
-    result = cal.get_slots(event_type_id, from_d.isoformat(), to_d.isoformat(), salon.timezone)
+    result = booking.available_slots(db, salon, service, from_d, to_d, employee=employee)
     result.update(_today_context(now))
     return result
 
 
 def handle_book_appointment(
     db: Session,
-    cal: CalComClient,
     salon_slug: str,
     service_name: str,
     start_at: str,
@@ -218,16 +218,11 @@ def handle_book_appointment(
 ) -> dict:
     salon = _find_salon(db, salon_slug)
     service = _find_service(db, salon, service_name)
-    event_type_id = _resolve_event_type(db, service, employee_name)
+    employee = _find_employee(db, salon, employee_name) if employee_name else None
 
-    now = _salon_now(salon)
-    try:
-        start_dt = datetime.fromisoformat(start_at.replace("Z", "+00:00"))
-    except ValueError:
-        raise ValueError(f"start_at must be an ISO datetime, got: {start_at!r}")
-    if start_dt.tzinfo is None:
-        start_dt = start_dt.replace(tzinfo=ZoneInfo(salon.timezone or "Europe/Berlin"))
-    if start_dt < now:
+    now = booking.salon_now(salon)
+    start = booking.parse_local(start_at, salon)
+    if start < now:
         raise ValueError(
             f"Der Termin {start_at} liegt in der Vergangenheit. Heute ist "
             f"{WEEKDAYS_DE[now.date().weekday()]}, der {now.date().isoformat()}, "
@@ -235,11 +230,42 @@ def handle_book_appointment(
             "(get_current_datetime nutzen)."
         )
 
-    return cal.create_booking(
-        event_type_id,
-        start_at,
-        customer_name,
-        customer_email,
-        salon.timezone,
-        attendee_phone=normalize_phone(customer_phone),
+    b = booking.create_booking(
+        db, salon, service, start,
+        customer_name=customer_name,
+        customer_email=customer_email,
+        customer_phone=normalize_phone(customer_phone),
+        employee=employee,
     )
+    return {
+        "id": b.id,
+        "status": b.status,
+        "service": service.name,
+        "employee": b.employee.name,
+        "start": b.start.isoformat(timespec="minutes"),
+        "end": b.end.isoformat(timespec="minutes"),
+        "customer": b.customer_name,
+    }
+
+
+def handle_cancel_appointment(
+    db: Session,
+    salon_slug: str,
+    start_at: str,
+    customer_phone: str | None = None,
+    customer_name: str | None = None,
+) -> dict:
+    salon = _find_salon(db, salon_slug)
+    start = booking.parse_local(start_at, salon)
+    b = booking.cancel_booking(
+        db, salon, start,
+        customer_phone=normalize_phone(customer_phone),
+        customer_name=customer_name,
+    )
+    return {
+        "id": b.id,
+        "status": b.status,
+        "service": b.service.name,
+        "employee": b.employee.name,
+        "start": b.start.isoformat(timespec="minutes"),
+    }

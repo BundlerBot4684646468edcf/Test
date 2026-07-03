@@ -1,7 +1,5 @@
-"""End-to-end test against the real HTTP endpoints (FastAPI TestClient),
-with the Cal.com client swapped for a fake so no network/API key is needed.
-Exercises serialization/routing that the unit tests in
-test_salon_onboarding.py don't cover."""
+"""End-to-end tests against the real HTTP endpoints (FastAPI TestClient).
+No external services involved — the booking engine is our own."""
 
 from datetime import date, timedelta
 
@@ -11,8 +9,8 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from salon.db import Base
-from salon.main import app, get_cal_client, get_db
-from tests.test_salon_onboarding import DATE_FROM, DATE_TO, START_AT, FakeCalClient
+from salon.main import app, get_db
+from tests.test_salon_onboarding import DATE_FROM, DATE_TO, START_AT
 
 
 def make_client():
@@ -23,7 +21,6 @@ def make_client():
     )
     Base.metadata.create_all(engine)
     TestSession = sessionmaker(bind=engine)
-    fake_cal = FakeCalClient()
 
     def override_get_db():
         db = TestSession()
@@ -33,9 +30,7 @@ def make_client():
             db.close()
 
     app.dependency_overrides[get_db] = override_get_db
-    app.dependency_overrides[get_cal_client] = lambda: fake_cal
-    client = TestClient(app)
-    return client, fake_cal
+    return TestClient(app)
 
 
 TEST_SALON_PAYLOAD = {
@@ -59,19 +54,21 @@ TEST_SALON_PAYLOAD = {
 }
 
 
-def test_full_flow_onboard_then_book_specific_employee():
-    client, fake_cal = make_client()
+def test_full_flow_onboard_availability_book_conflict():
+    client = make_client()
 
     r = client.post("/salons", json=TEST_SALON_PAYLOAD)
     assert r.status_code == 200, r.text
-    salon = r.json()
-    assert salon["slug"] == "schoenheitssalon-test"
-    assert salon["cal_team_id"] is not None
+    assert r.json()["slug"] == "schoenheitssalon-test"
+
+    r = client.post("/salons", json=TEST_SALON_PAYLOAD)
+    assert r.status_code == 409  # duplicate slug
 
     r = client.get("/famulor/tools")
-    assert r.status_code == 200
     tool_names = {t["name"] for t in r.json()}
-    assert tool_names == {"get_current_datetime", "get_availability", "book_appointment"}
+    assert tool_names == {
+        "get_current_datetime", "get_availability", "book_appointment", "cancel_appointment",
+    }
 
     r = client.post("/famulor/tools/get_availability", json={
         "salon_slug": "schoenheitssalon-test",
@@ -81,72 +78,38 @@ def test_full_flow_onboard_then_book_specific_employee():
         "date_to": DATE_TO,
     })
     assert r.status_code == 200, r.text
-    lena_event_type_id = r.json()["event_type_id"]
-    assert fake_cal.event_types[lena_event_type_id]["length_min"] == 45
+    assert r.json()["duration_min"] == 45
+    first_slot = r.json()["slots"][0]
 
     r = client.post("/famulor/tools/book_appointment", json={
         "salon_slug": "schoenheitssalon-test",
         "service_name": "Coloration",
         "employee_name": "Lena",
-        "start_at": START_AT,
+        "start_at": first_slot,
         "customer_name": "Max Mustermann",
         "customer_email": "max@example.com",
         "customer_phone": "0176 1234567",
     })
     assert r.status_code == 200, r.text
     booking = r.json()
-    assert booking["status"] == "ACCEPTED"
-    assert booking["event_type_id"] == lena_event_type_id
-    # the phone number must reach Cal.com, otherwise no confirmation/reminder SMS
-    assert fake_cal.bookings[-1]["attendee_phone"] == "+491761234567"
+    assert booking["status"] == "confirmed"
+    assert booking["employee"] == "Lena"
 
-
-def test_full_flow_any_employee_uses_round_robin():
-    client, fake_cal = make_client()
-    client.post("/salons", json=TEST_SALON_PAYLOAD)
-
-    r = client.post("/famulor/tools/get_availability", json={
-        "salon_slug": "schoenheitssalon-test",
-        "service_name": "Waschen Foenen",
-        "date_from": DATE_FROM,
-        "date_to": DATE_TO,
-    })
-    assert r.status_code == 200, r.text
-    event_type_id = r.json()["event_type_id"]
-    event_type = fake_cal.event_types[event_type_id]
-    assert event_type["scheduling_type"] == "ROUND_ROBIN"
-    assert len(event_type["host_user_ids"]) == 2
-
-
-def test_unknown_employee_returns_404_with_clear_message():
-    client, _ = make_client()
-    client.post("/salons", json=TEST_SALON_PAYLOAD)
-
-    r = client.post("/famulor/tools/get_availability", json={
+    # same slot again for Lena -> conflict, HTTP 409 with a spoken-word reason
+    r = client.post("/famulor/tools/book_appointment", json={
         "salon_slug": "schoenheitssalon-test",
         "service_name": "Coloration",
-        "employee_name": "Nina",
-        "date_from": DATE_FROM,
-        "date_to": DATE_TO,
+        "employee_name": "Lena",
+        "start_at": first_slot,
+        "customer_name": "Kunde Zwei",
+        "customer_email": "zwei@example.com",
     })
-    assert r.status_code == 404
-    assert "Coloration" in r.json()["detail"]
-
-
-def test_unknown_salon_returns_404():
-    client, _ = make_client()
-
-    r = client.post("/famulor/tools/get_availability", json={
-        "salon_slug": "does-not-exist",
-        "service_name": "Coloration",
-        "date_from": DATE_FROM,
-        "date_to": DATE_TO,
-    })
-    assert r.status_code == 404
+    assert r.status_code == 409
+    assert "vergeben" in r.json()["detail"]
 
 
 def test_get_current_datetime_endpoint():
-    client, _ = make_client()
+    client = make_client()
     client.post("/salons", json=TEST_SALON_PAYLOAD)
 
     r = client.post("/famulor/tools/get_current_datetime", json={
@@ -155,12 +118,11 @@ def test_get_current_datetime_endpoint():
     assert r.status_code == 200, r.text
     info = r.json()
     assert info["today"] == date.today().isoformat()
-    assert info["timezone"] == "Europe/Berlin"
     assert len(info["next_days"]) == 7
 
 
 def test_booking_in_past_returns_error_with_today_hint():
-    client, fake_cal = make_client()
+    client = make_client()
     client.post("/salons", json=TEST_SALON_PAYLOAD)
 
     yesterday = (date.today() - timedelta(days=1)).isoformat()
@@ -173,55 +135,126 @@ def test_booking_in_past_returns_error_with_today_hint():
     })
     assert r.status_code == 404
     assert date.today().isoformat() in r.json()["detail"]
-    assert fake_cal.bookings == []
 
 
-# ----------------- Admin UI + endpoints -----------------
-
-def test_admin_page_renders_and_config_endpoint_works():
-    client, _ = make_client()
-    client.post("/salons", json=TEST_SALON_PAYLOAD)
-
-    r = client.get("/salons/schoenheitssalon-test/admin")
-    assert r.status_code == 200
-    assert "Verwaltung" in r.text
-
-    r = client.get("/salons/schoenheitssalon-test/config")
-    assert r.status_code == 200
-    config = r.json()
-    assert {e["name"] for e in config["employees"]} == {"Lena", "Tom"}
-    assert len(config["qualifications"]) == 4
-
-
-def test_admin_service_duration_change_updates_availability_slot_length():
-    client, fake_cal = make_client()
-    client.post("/salons", json=TEST_SALON_PAYLOAD)
-    service_id = client.get("/salons/schoenheitssalon-test/config").json()["services"][0]["id"]
-
-    r = client.patch(f"/salons/schoenheitssalon-test/services/{service_id}", json={"duration_min": 75})
-    assert r.status_code == 200, r.text
-
+def test_unknown_salon_returns_404():
+    client = make_client()
     r = client.post("/famulor/tools/get_availability", json={
-        "salon_slug": "schoenheitssalon-test",
+        "salon_slug": "does-not-exist",
         "service_name": "Coloration",
         "date_from": DATE_FROM,
         "date_to": DATE_TO,
     })
-    event_type_id = r.json()["event_type_id"]
-    assert fake_cal.event_types[event_type_id]["length_min"] == 75
+    assert r.status_code == 404
 
 
-def test_admin_remove_employee_with_booking_gives_409_then_force_works():
-    client, _ = make_client()
-    client.post("/salons", json=TEST_SALON_PAYLOAD)
-    client.post("/famulor/tools/book_appointment", json={
+# ----------------- Calendar -----------------
+
+def _book(client, **overrides):
+    payload = {
         "salon_slug": "schoenheitssalon-test",
         "service_name": "Coloration",
         "employee_name": "Lena",
         "start_at": START_AT,
         "customer_name": "Max Mustermann",
         "customer_email": "max@example.com",
+    }
+    payload.update(overrides)
+    r = client.post("/famulor/tools/book_appointment", json=payload)
+    assert r.status_code == 200, r.text
+    return r.json()
+
+
+def test_calendar_page_and_bookings_endpoint():
+    client = make_client()
+    client.post("/salons", json=TEST_SALON_PAYLOAD)
+    _book(client)
+
+    r = client.get("/salons/schoenheitssalon-test/calendar")
+    assert r.status_code == 200
+    assert "Schoenheitssalon Test" in r.text
+
+    r = client.get(
+        f"/salons/schoenheitssalon-test/bookings?date_from={DATE_FROM}&date_to={DATE_TO}"
+    )
+    assert r.status_code == 200, r.text
+    bookings = r.json()
+    assert len(bookings) == 1
+    assert bookings[0]["customer"] == "Max Mustermann"
+    assert bookings[0]["employee"] == "Lena"
+    assert bookings[0]["title"] == "Coloration"
+    assert bookings[0]["start"] == f"{DATE_FROM}T09:00"
+
+
+def test_cancel_booking_via_calendar_endpoint():
+    client = make_client()
+    client.post("/salons", json=TEST_SALON_PAYLOAD)
+    booking = _book(client)
+
+    r = client.delete(f"/salons/schoenheitssalon-test/bookings/{booking['id']}")
+    assert r.status_code == 200
+    assert r.json()["status"] == "cancelled"
+
+    r = client.get(
+        f"/salons/schoenheitssalon-test/bookings?date_from={DATE_FROM}&date_to={DATE_TO}"
+    )
+    assert r.json()[0]["status"] == "cancelled"
+
+
+def test_cancel_appointment_tool():
+    client = make_client()
+    client.post("/salons", json=TEST_SALON_PAYLOAD)
+    _book(client, customer_phone="0176 1234567")
+
+    r = client.post("/famulor/tools/cancel_appointment", json={
+        "salon_slug": "schoenheitssalon-test",
+        "start_at": START_AT,
+        "customer_phone": "0176 1234567",
     })
+    assert r.status_code == 200, r.text
+    assert r.json()["status"] == "cancelled"
+
+
+# ----------------- Admin -----------------
+
+def test_admin_page_and_config():
+    client = make_client()
+    client.post("/salons", json=TEST_SALON_PAYLOAD)
+
+    r = client.get("/salons/schoenheitssalon-test/admin")
+    assert r.status_code == 200
+    assert "Verwaltung" in r.text
+    assert "Öffnungszeiten" in r.text
+
+    r = client.get("/salons/schoenheitssalon-test/config")
+    config = r.json()
+    assert {e["name"] for e in config["employees"]} == {"Lena", "Tom"}
+    assert len(config["qualifications"]) == 4
+    assert len(config["opening_hours"]) == 7
+
+
+def test_admin_service_duration_change_affects_availability():
+    client = make_client()
+    client.post("/salons", json=TEST_SALON_PAYLOAD)
+    config = client.get("/salons/schoenheitssalon-test/config").json()
+    waschen_id = next(s["id"] for s in config["services"] if s["name"] == "Waschen Foenen")
+
+    r = client.patch(f"/salons/schoenheitssalon-test/services/{waschen_id}", json={"duration_min": 35})
+    assert r.status_code == 200, r.text
+
+    r = client.post("/famulor/tools/get_availability", json={
+        "salon_slug": "schoenheitssalon-test",
+        "service_name": "Waschen Foenen",
+        "date_from": DATE_FROM,
+        "date_to": DATE_TO,
+    })
+    assert r.json()["duration_min"] == 35
+
+
+def test_admin_remove_employee_with_booking_gives_409_then_force_works():
+    client = make_client()
+    client.post("/salons", json=TEST_SALON_PAYLOAD)
+    _book(client)
     config = client.get("/salons/schoenheitssalon-test/config").json()
     lena_id = next(e["id"] for e in config["employees"] if e["name"] == "Lena")
 
@@ -233,19 +266,37 @@ def test_admin_remove_employee_with_booking_gives_409_then_force_works():
     assert r.status_code == 200
     assert {e["name"] for e in r.json()["employees"]} == {"Tom"}
 
-    # booking for Lena by name must now fail with a clear message
+    # the forced removal cancelled Lena's booking -> visible in the calendar
+    r = client.get(
+        f"/salons/schoenheitssalon-test/bookings?date_from={DATE_FROM}&date_to={DATE_TO}"
+    )
+    assert r.json()[0]["status"] == "cancelled"
+
+
+def test_admin_opening_hours_roundtrip():
+    client = make_client()
+    client.post("/salons", json=TEST_SALON_PAYLOAD)
+
+    hours = [
+        {"weekday": w, "open_time": "08:00", "close_time": "16:00", "closed": False}
+        for w in range(7)
+    ]
+    r = client.put("/salons/schoenheitssalon-test/opening-hours", json={"opening_hours": hours})
+    assert r.status_code == 200, r.text
+    assert all(h["open_time"] == "08:00" for h in r.json()["opening_hours"])
+
     r = client.post("/famulor/tools/get_availability", json={
         "salon_slug": "schoenheitssalon-test",
         "service_name": "Coloration",
         "employee_name": "Lena",
         "date_from": DATE_FROM,
-        "date_to": DATE_TO,
+        "date_to": DATE_FROM,
     })
-    assert r.status_code == 404
+    assert r.json()["slots"][0] == f"{DATE_FROM}T08:00"
 
 
 def test_admin_qualifications_matrix_roundtrip():
-    client, fake_cal = make_client()
+    client = make_client()
     client.post("/salons", json=TEST_SALON_PAYLOAD)
 
     r = client.put("/salons/schoenheitssalon-test/qualifications", json={
@@ -258,52 +309,13 @@ def test_admin_qualifications_matrix_roundtrip():
     assert r.status_code == 200, r.text
     config = r.json()
     assert len(config["qualifications"]) == 3
-    waschen = next(s for s in config["services"] if s["name"] == "Waschen Foenen")
-    assert waschen["bookable_any"] is True
-    rr = next(
-        et for et in fake_cal.event_types.values()
-        if et["scheduling_type"] == "ROUND_ROBIN" and et["title"] == "Waschen Foenen"
-    )
-    assert len(rr["host_user_ids"]) == 1  # only Lena offers it now
 
-
-# ----------------- Calendar UI -----------------
-
-def test_calendar_page_renders_for_salon():
-    client, _ = make_client()
-    client.post("/salons", json=TEST_SALON_PAYLOAD)
-
-    r = client.get("/salons/schoenheitssalon-test/calendar")
-    assert r.status_code == 200
-    assert "text/html" in r.headers["content-type"]
-    assert "Schoenheitssalon Test" in r.text
-    assert "/bookings?date_from=" in r.text  # page fetches our bookings endpoint
-
-    r = client.get("/salons/does-not-exist/calendar")
-    assert r.status_code == 404
-
-
-def test_bookings_endpoint_returns_bookings_for_calendar():
-    client, _ = make_client()
-    client.post("/salons", json=TEST_SALON_PAYLOAD)
-
-    client.post("/famulor/tools/book_appointment", json={
+    # Tom no longer offers Waschen Foenen
+    r = client.post("/famulor/tools/get_availability", json={
         "salon_slug": "schoenheitssalon-test",
-        "service_name": "Coloration",
-        "employee_name": "Lena",
-        "start_at": START_AT,
-        "customer_name": "Max Mustermann",
-        "customer_email": "max@example.com",
-        "customer_phone": "+491761234567",
+        "service_name": "Waschen Foenen",
+        "employee_name": "Tom",
+        "date_from": DATE_FROM,
+        "date_to": DATE_TO,
     })
-
-    r = client.get(
-        f"/salons/schoenheitssalon-test/bookings?date_from={DATE_FROM}&date_to={DATE_TO}"
-    )
-    assert r.status_code == 200, r.text
-    bookings = r.json()
-    assert len(bookings) == 1
-    b = bookings[0]
-    assert b["customer"] == "Max Mustermann"
-    assert b["start"].startswith(DATE_FROM)
-    assert b["status"] == "ACCEPTED"
+    assert r.status_code == 404

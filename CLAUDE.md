@@ -8,115 +8,74 @@ warum genau so, was schon existiert, und was als Nächstes fehlt.
 
 Ein SaaS, mit dem mehrere Friseursalons (Mandanten) Termine für
 verschiedene Mitarbeiter mit unterschiedlichen Service-Dauern anbieten
-können. Kunden sollen sowohl per **KI-Telefon-/Chat-Rezeptionist (Famulor)**
-als auch ggf. manuell durch Salon-Personal buchen können.
+können. Kunden buchen per **KI-Telefon-/Chat-Rezeptionist (Famulor)**;
+das Salon-Personal verwaltet alles über die eigene Admin-Seite und den
+eigenen Kalender.
 
-Zielgruppe/Umfang: **Multi-Tenant SaaS** (beliebig viele fremde Salons,
-nicht nur ein Standort).
+## Architektur: EIGENE Buchungs-Engine (Cal.com wurde entfernt)
 
-## Zentrale Architektur-Entscheidung: Cal.com als Buchungs-Engine
-
-Wir bauen die Verfügbarkeits-/Kalenderlogik **nicht selbst**, sondern
-nutzen **Cal.com** dafür. Begründung: Konfliktprüfung, Pufferzeiten,
-Zeitzonen, Kalender-Sync sind dort fertig und gut getestet — das selbst zu
-bauen ist wochenlange Arbeit und eine klassische Bug-Quelle
-(Doppelbuchungen, Race Conditions).
+**Historie:** Ursprünglich lief die Verfügbarkeits-/Kalenderlogik über
+Cal.com (Team pro Salon, Event-Types pro Service/Mitarbeiter). Auf
+Wunsch des Nutzers wurde Cal.com komplett entfernt — wir haben ein
+eigenes Backend mit Kalender, also passiert jetzt alles hier im Repo:
 
 ```
 Kunde ──(Anruf/Chat/WhatsApp)──> Famulor (Voice/Chat AI)
                                       │
-                                      ▼  Function-Calling: get_availability / book_appointment
+                                      ▼  Function-Calling:
+                                      │  get_current_datetime / get_availability /
+                                      │  book_appointment / cancel_appointment
                                   Unser FastAPI-Backend (salon/)
                                       │
-                                      ▼  Cal.com v2 API
-                                  Cal.com  (1 Team pro Salon, unter UNSEREM eigenen Account)
+                                      ▼
+                              Eigene Buchungs-Engine (salon/booking.py)
+                              + eigene DB (Bookings, Öffnungszeiten, ...)
                                       │
-                                      ▼  Workflows (intern in Cal.com)
-                              SMS-Reminder, No-Show-Follow-up
+                                      ▼
+                        Kalender-UI + Admin-UI (selbst gehostet, HTML)
 ```
 
-**Wichtig:** Automatisierungen (Erinnerungen, No-Show, Review-Anfragen)
-laufen **in Cal.com selbst** über deren "Workflows"-Feature — wir bauen
-dafür keine eigene Automatisierungs-Schicht. SMS läuft über Cal.coms
-eingebautes Credit-System (kein eigener Twilio-Account nötig), erfordert
-aber den Cal.com **Team-Plan** pro Salon (Free-Plan hat keine Workflows).
+Konsequenz: **Keine externen Abhängigkeiten** mehr für die Buchung —
+kein API-Key, keine Kosten pro Salon-Team. Dafür sind SMS
+(Bestätigung/Reminder) jetzt **nicht mehr abgedeckt** (liefen vorher
+über Cal.com-Workflows) → braucht einen eigenen Anbieter (z. B.
+Twilio/Seven), siehe offene Punkte. Die Kundennummer wird dafür bereits
+E.164-normalisiert an jeder Buchung gespeichert.
 
-## Multi-Tenancy: Team pro Salon, nicht Managed Users
+## Die Buchungs-Engine (salon/booking.py)
 
-Jeder Salon = ein **Cal.com Team** unter unserem eigenen Cal.com-Account
-(nicht ein separater Cal.com-Account pro Kunde). Mitarbeiter werden zwar
-technisch als Cal.com-Nutzer eingeladen, müssen sich aber nie einloggen —
-Famulor und unser Backend steuern alles über die API. Der Salon-Inhaber
-sieht nie Cal.com direkt, nur unser eigenes Dashboard (noch nicht gebaut).
-
-Cal.com bietet zusätzlich ein "Managed Users"/"Platform"-Feature für noch
-saubereres White-Labeling (isolierte Schatten-Accounts pro Kunde, kein
-Cal.com-Branding sichtbar). **Unbestätigtes Rechercheergebnis:** Cal.com
-scheint dieses Platform-Angebot seit Dez. 2025 nicht mehr für neue
-Signups offen zu haben (auf Partnerschaftsmodell umgestellt) — das wurde
-**nicht verifiziert** (Cal.com blockt automatisiertes Abrufen ihrer
-Doku-Seiten). Falls später volles White-Labeling gebraucht wird: zuerst
-direkt mit Cal.com-Sales klären, ob/wie das noch geht, bevor Aufwand
-reingesteckt wird. Für jetzt: Team-pro-Salon-Lösung reicht und ist bereits
-gebaut.
-
-## Der Kniff bei unterschiedlichen Dauern pro Mitarbeiter
-
-Cal.com speichert die Termin-Dauer **am Event-Type, nicht am Host**. Ein
-einzelner Event-Type kann also nicht "Lena 45 Min, Tom 90 Min" für
-denselben Service gleichzeitig abbilden. Deshalb legt das Onboarding pro
-Service **zwei Arten von Event-Types** an:
-
-1. **Ein Round-Robin-Team-Event-Type** mit allen qualifizierten
-   Mitarbeitern als Hosts, Standarddauer des Service → genutzt, wenn der
-   Kunde keinen Mitarbeiter-Wunsch hat ("egal wer").
-2. **Pro (Mitarbeiter, Service) ein eigener Event-Type mit fixem Host**,
-   dessen Dauer den Service-Standard überschreiben kann → genutzt, wenn
-   ein Mitarbeiter namentlich gewünscht wird.
-
-Famulor übergibt einfach `employee_name` (oder lässt es weg); unser
-Backend löst daraus den richtigen `cal_event_type_id` auf
-(`salon/famulor_tools.py::_resolve_event_type`). Die Slot-Länge ist dann
-automatisch korrekt — kein Laufzeit-Rechnen nötig.
-
-## Codebase-Struktur
-
-```
-salon/
-  config.py        Env-Vars: CAL_API_KEY, CAL_API_BASE, SALON_DATABASE_URL
-  db.py             SQLAlchemy Engine/Session (SQLite lokal, austauschbar gegen Postgres)
-  models.py         Salon, Employee, Service, EmployeeService (Qualifikation+eigene Dauer+Event-Type)
-  schemas.py        Pydantic-Schemas für die API (SalonOnboardIn, AvailabilityQuery, BookingIn, ...)
-  cal_client.py      Wrapper um die Cal.com v2 API (Team/Host/Event-Type anlegen, Slots, Buchung, Buchungsliste)
-  onboarding.py      onboard_salon(): provisioniert einen neuen Salon komplett in Cal.com
-  famulor_tools.py   FAMULOR_TOOLS Schema (Function-Calling) + Handler, die Namen auf Cal.com-IDs auflösen
-  calendar_ui.py     Read-only Wochen-Kalender (HTML) + Buchungs-Normalisierung für die Admin-Ansicht
-  admin.py           Pflege-Logik nach dem Onboarding (Services/Mitarbeiter/Zuordnung) + Cal.com-Sync
-  admin_ui.py        Admin-Seite (HTML): Mitarbeiter, Services, Wer-macht-was-Matrix
-  main.py            FastAPI-App: POST /salons, GET /famulor/tools,
-                      POST /famulor/tools/get_current_datetime,
-                      POST /famulor/tools/get_availability, POST /famulor/tools/book_appointment,
-                      GET /salons/{slug}/bookings, GET /salons/{slug}/calendar,
-                      GET /salons/{slug}/admin, GET /salons/{slug}/config,
-                      POST/PATCH/DELETE /salons/{slug}/services[/{id}],
-                      POST/DELETE /salons/{slug}/employees[/{id}],
-                      PUT /salons/{slug}/qualifications
-
-tests/
-  test_salon_onboarding.py   Unit-Tests gegen FakeCalClient (kein Netzwerk nötig)
-  test_api_e2e.py             E2E-Tests über die echten HTTP-Endpoints (FastAPI TestClient + gemockter Cal.com)
-
-app.py              UNVERWANDTE Alt-App (Hotel-Reputation-MVP) — nicht anfassen, nicht Teil dieses Projekts
-```
-
-`app.py` und `requirements.txt`-Einträge für Streamlit/Plotly/etc. gehören
-zu einem völlig anderen, älteren Projekt in diesem Repo (Hotel-Bewertungs-
-Analyse) und haben mit der Salon-Buchung nichts zu tun.
+- **Slots**: 15-Minuten-Raster innerhalb der Öffnungszeiten des Salons
+  (pro Wochentag konfigurierbar, Standard Mo–Fr 09–18, Sa 09–14, So zu).
+  Ein Slot wird angeboten, wenn der Termin (mit der Dauer des jeweiligen
+  Mitarbeiters!) noch vor Ladenschluss endet.
+- **Dauern**: Service hat eine Standard-Dauer; pro (Mitarbeiter, Service)
+  kann eine eigene Dauer gesetzt sein (`EmployeeService.duration_min`,
+  NULL = erbt den Standard). "Lena färbt in 45, Tom braucht 90" ist damit
+  nativ abgebildet — kein Event-Type-Trick mehr nötig.
+- **Puffer**: `Service.buffer_min` (Aufräumzeit) blockiert nach jedem
+  Termin; wird beim Buchen **snapshotted** (`Booking.buffer_min`), damit
+  spätere Service-Änderungen bestehende Termine nicht umdeuten.
+- **Doppelbuchungs-Schutz**: Der Konflikt-Check (Überlappung inkl. Puffer
+  beider Seiten) läuft beim Buchen **noch einmal in derselben
+  Transaktion** — der klassische Race (Slot wird zwischen Abfrage und
+  Buchung weggeschnappt) endet als `SlotUnavailableError` → HTTP 409 mit
+  vorlesbarer Begründung für den Bot. (Annahme: ein Server-Prozess;
+  SQLite serialisiert Writes. Bei Multi-Prozess-Deployment später DB-Lock
+  oder Unique-Constraint ergänzen.)
+- **Round-Robin ("egal wer")**: Ohne Mitarbeiter-Wunsch ist ein Slot
+  buchbar, sobald *irgendein* qualifizierter Mitarbeiter frei ist. Beim
+  Buchen bekommt ihn der an dem Tag am wenigsten ausgelastete freie
+  Mitarbeiter (Load Balancing), bei Gleichstand der mit der niedrigeren
+  ID. Namentliche Buchungen und "egal wer" teilen sich denselben
+  Kalender pro Mitarbeiter → blockieren sich gegenseitig korrekt.
+- **Zeiten**: Alle Buchungszeiten sind naive datetimes in der
+  **Salon-Zeitzone** (`Salon.timezone`). Eingehende ISO-Zeiten mit
+  Offset werden konvertiert; die UIs zeigen Salon-Lokalzeit.
 
 ## Datums-Sicherheit ("Samstag war gestern"-Bug, gefixt)
 
 Der Voice-Bot kannte das aktuelle Datum nicht und hat Wochentage/relative
-Daten ("morgen", "Samstag") falsch aufgelöst. Dagegen gibt es jetzt drei
+Daten ("morgen", "Samstag") falsch aufgelöst. Dagegen gibt es drei
 Schichten:
 
 1. **Tool `get_current_datetime`** (laut Tool-Beschreibung vor jeder
@@ -127,96 +86,102 @@ Schichten:
    Vergangenheit → wird auf heute geklemmt. Antwort enthält immer
    `today`/`today_weekday_de`.
 3. **`book_appointment`**: Termin-Start in der Vergangenheit → Fehler mit
-   demselben Hinweis, Buchung erreicht Cal.com nie.
+   demselben Hinweis, es wird nichts gebucht.
 
-## SMS: Telefonnummer-Durchreichung
+## Codebase-Struktur
 
-Bei Buchungen über den Bot hat `handle_book_appointment` die
-`customer_phone` verworfen — sie kam nie als `attendee.phoneNumber` bei
-Cal.com an (SMS bei direkten Cal.com-Buchungen waren davon nicht
-betroffen, dort sammelt Cal.coms eigenes Formular die Nummer). Jetzt wird
-sie best-effort auf E.164 normalisiert (`0176…` → `+49176…`, Zielmarkt DE)
-und in die Buchung geschrieben. `customer_phone` bleibt optional; die
-Tool-Beschreibung weist Famulor an, die Anrufer-Nummer aus dem Gespräch zu
-nutzen oder sonst danach zu fragen. Ohne Nummer wird trotzdem gebucht —
-dann nur ohne SMS.
+```
+salon/
+  config.py         Env-Var: SALON_DATABASE_URL
+  db.py              SQLAlchemy Engine/Session (SQLite lokal, austauschbar gegen Postgres)
+  models.py          Salon, Employee, Service, EmployeeService, OpeningHours, Booking
+  schemas.py         Pydantic-Schemas für die API
+  booking.py         DIE Buchungs-Engine: Slots, Konfliktprüfung, Round-Robin, Storno
+  onboarding.py      onboard_salon(): Salon + Mitarbeiter + Services + Matrix + Standard-Öffnungszeiten
+  famulor_tools.py   FAMULOR_TOOLS Schema (Function-Calling) + Handler (inkl. cancel_appointment)
+  calendar_ui.py     Wochen-Kalender (HTML) mit Storno-Button, liest aus eigener DB
+  admin.py           Pflege-Logik: Services/Mitarbeiter/Zuordnung/Öffnungszeiten + Buchungs-Guards
+  admin_ui.py        Admin-Seite (HTML): Öffnungszeiten, Mitarbeiter, Services, Wer-macht-was-Matrix
+  main.py            FastAPI-App: POST /salons, GET /famulor/tools,
+                      POST /famulor/tools/{get_current_datetime,get_availability,
+                                           book_appointment,cancel_appointment},
+                      GET /salons/{slug}/bookings, DELETE /salons/{slug}/bookings/{id},
+                      GET /salons/{slug}/calendar, GET /salons/{slug}/admin,
+                      GET /salons/{slug}/config,
+                      POST/PATCH/DELETE /salons/{slug}/services[/{id}],
+                      POST/DELETE /salons/{slug}/employees[/{id}],
+                      PUT /salons/{slug}/qualifications,
+                      PUT /salons/{slug}/opening-hours
 
-## Admin-UI: Selbstverwaltung nach dem Onboarding
+tests/
+  test_salon_onboarding.py   Onboarding + Famulor-Tool-Handler (Datum, Telefon, Storno)
+  test_booking_engine.py      Engine-Garantien: Doppelbuchung, Puffer, Öffnungszeiten, Round-Robin, Race
+  test_admin.py               Admin-Layer inkl. Guards für bevorstehende Termine
+  test_api_e2e.py             E2E über die echten HTTP-Endpoints (FastAPI TestClient)
 
-`GET /salons/{slug}/admin` ist die Verwaltungsseite für den Salon-Inhaber:
-Mitarbeiter anlegen/entfernen, Services (Name, Standard-Dauer, Puffer,
-Preis) pflegen und die "Wer macht was"-Matrix inkl. eigener Dauer pro
-Mitarbeiter setzen. Jede Änderung synchronisiert `salon/admin.py` sofort
-nach Cal.com, damit Verfügbarkeit und Doppelbuchungs-Schutz stimmen:
+app.py              UNVERWANDTE Alt-App (Hotel-Reputation-MVP) — nicht anfassen, nicht Teil dieses Projekts
+```
 
-- Service-Dauer geändert → Round-Robin-Event-Type + alle *erbenden*
-  Mitarbeiter-Event-Types werden gePATCHt (eigene Dauern bleiben).
-  `EmployeeService.duration_min` ist dafür jetzt nullable: NULL = erbt
-  den Service-Standard (lokale `salon.db` von vorher ggf. löschen).
-- Puffer (Aufräumzeit) wird jetzt als `afterEventBuffer` an Cal.com
-  übertragen — vorher wurde er nur lokal gespeichert und hatte **keine**
-  Wirkung auf die Konfliktprüfung.
-- Matrix-Änderungen legen fehlende Event-Types an, löschen abgewählte und
-  halten die Round-Robin-Hosts synchron; verliert ein Service den letzten
-  Mitarbeiter, wird sein Round-Robin-Event-Type gelöscht ("egal wer" dann
-  nicht mehr buchbar, im UI als Badge sichtbar).
-- Löschen von Mitarbeitern/Services/Zuordnungen prüft zuerst, ob noch
-  **zukünftige Termine** daran hängen → HTTP 409 mit Klartext; das UI
-  fragt dann, ob trotzdem (force) gelöscht werden soll. Mitarbeiter werden
-  soft-deleted (`active=False`), damit alte Buchungen zuordenbar bleiben;
-  der Cal.com-Team-Sitz muss manuell in Cal.com entfernt werden.
+`app.py` und `requirements.txt`-Einträge für Streamlit/Plotly/etc. gehören
+zu einem völlig anderen, älteren Projekt in diesem Repo und haben mit der
+Salon-Buchung nichts zu tun.
 
-Noch offen: keinerlei Auth vor den Admin-Endpoints (wie beim Rest).
+**Achtung Schema-Änderung:** Die DB hat kein Migrations-Setup; nach dem
+Cal.com-Umbau eine evtl. vorhandene lokale `salon.db` löschen (wird beim
+Start neu angelegt).
 
-## Kalender-UI
+## Admin-UI: Selbstverwaltung (`GET /salons/{slug}/admin`)
 
-`GET /salons/{slug}/calendar` liefert eine selbst-enthaltene HTML-
-Wochenansicht (Mo–So, 08–20 Uhr, Prev/Heute/Next-Navigation, stornierte
-Termine durchgestrichen). Die Seite holt die Daten client-seitig von
-`GET /salons/{slug}/bookings?date_from=…&date_to=…`, das alle Cal.com-
-Buchungen über sämtliche Event-Types des Salons einsammelt
-(`calendar_ui.py`) und die Zeiten in die Salon-Zeitzone konvertiert.
-Read-only — gebucht/storniert wird weiterhin über Famulor bzw. Cal.com.
+- **Öffnungszeiten** pro Wochentag (geöffnet/zu, von, bis) — wirken sofort
+  auf die angebotenen Slots, bestehende Termine bleiben unberührt.
+- **Mitarbeiter** anlegen/entfernen. Entfernen = Soft-Delete
+  (`active=False`), vergangene Termine bleiben zuordenbar.
+- **Services**: Name, Standard-Dauer, Puffer, Preis.
+- **"Wer macht was"-Matrix** inkl. eigener Dauer pro Mitarbeiter
+  (leer = erbt Standard; Standard-Änderung wirkt dann automatisch mit).
+- **Guards**: Jede Lösch-/Abwahl-Aktion, an der noch zukünftige Termine
+  hängen, liefert HTTP 409 mit Klartext; das UI fragt nach und wiederholt
+  mit `force=true` — die betroffenen Termine werden dann **explizit
+  storniert** (sichtbar im Kalender), nie stillschweigend verwaist.
+
+## Kalender-UI (`GET /salons/{slug}/calendar`)
+
+Selbst-enthaltene HTML-Wochenansicht (Mo–So, 08–20 Uhr, Prev/Heute/Next),
+Daten client-seitig von `GET /salons/{slug}/bookings?date_from&date_to`.
+Stornierte Termine durchgestrichen; ×-Button storniert mit Rückfrage
+(`DELETE /salons/{slug}/bookings/{id}`). Der Bot kann ebenfalls
+stornieren (`cancel_appointment`: Startzeit + Telefonnummer oder Name).
 
 ## Aktueller Stand
 
-- Vollständiges Skeleton steht, **35/35 Tests grün** (`python -m pytest tests/ -v`)
-- Alles bisher nur gegen einen **gemockten** Cal.com-Client getestet — **noch
-  nie gegen die echte Cal.com-API verifiziert**, da kein API-Key vorhanden war
-- `cal_client.py`-Endpunkt-Pfade/Payload-Felder (`lengthInMinutes`,
-  `schedulingType`, `hosts[].isFixed` etc.) basieren auf Cal.coms
-  dokumentierter v2-API, aber **nicht live verifiziert** — unbedingt gegen
-  echten Account/echte API-Doku gegenchecken, sobald Zugriff da ist
+- **43/43 Tests grün** (`python -m pytest tests/ -v`), komplett ohne
+  externe Abhängigkeiten — die Engine ist unsere eigene
+- UIs (Kalender + Admin) im Browser verifiziert (Playwright-Screenshots)
 - Kein Hosting/Deployment, läuft nur lokal
-- Keine Anbindung an Famulor selbst (nur das Tool-Schema dafür existiert)
-- Admin-Kalender (Wochenansicht) unter `/salons/{slug}/calendar` und
-  Verwaltungsseite (Mitarbeiter/Services/Zuordnung) unter
-  `/salons/{slug}/admin`; es fehlt noch ein Onboarding-Formular für neue
-  Salons (bisher nur `POST /salons`) und jegliche Authentifizierung
+- Keine Anbindung an Famulor selbst (nur das Tool-Schema existiert)
+- Keinerlei Authentifizierung (Admin-Seite, Kalender, API sind offen!)
+- Kein Onboarding-Formular für neue Salons (nur `POST /salons`)
 
 ## Offene Punkte / Was als Nächstes gebraucht wird
 
-1. **Cal.com Team-Plan-Account + `CAL_API_KEY`** — kommt laut Nutzer "heute
-   Abend" zusammen mit weiteren Zugängen
-2. Echten API-Call gegen Cal.com machen und `cal_client.py` ggf. an die
-   tatsächliche Payload-Struktur anpassen
-3. **Hosting-URL** für das FastAPI-Backend (Railway/Render/Fly.io/eigener
-   Server) — muss von Famulor und Cal.com-Webhooks von außen erreichbar sein
-4. **Famulor-Account-Zugang** + Doku/Screenshots, wie dort Custom-Tools
-   (Function-Calling) konfiguriert werden — bisher unbekannt, wie genau
-   Famulor `FAMULOR_TOOLS` einbinden will
-5. Echte Pilot-Salon-Daten (Mitarbeiter, Services, Qualifikationen/Dauern)
-6. Klären: was passiert bei Konflikt, wenn ein Slot zwischen Verfügbarkeits-
-   Abfrage und Buchung weg ist (Cal.com sollte das beim `create_booking`
-   selbst ablehnen — verifizieren, sobald live getestet werden kann)
-7. **Round-Robin live durchspielen** (Ansatz ist vom Nutzer bestätigt, so
-   bleibt es): (a) Lena direkt buchen → ist derselbe Slot danach auch im
-   Round-Robin-Event-Type weg? (b) In der Cal.com-UI pro Round-Robin-
-   Event-Type die Verteilungsstrategie wählen — "Load Balancing"
-   (gleichmäßige Verteilung im Team) vs. "Maximize Availability" (erster
-   freier gewinnt)
-8. Falls später gebraucht: Cal.com-Sales fragen, ob Managed Users/Platform
-   für neue Kunden noch verfügbar ist (siehe oben)
+1. **SMS-Anbieter** (Twilio, Seven, etc.) für Bestätigungs-/Reminder-SMS —
+   vorher liefen SMS über Cal.com-Workflows, das ist mit dem Umbau
+   entfallen. Nummern liegen normalisiert an jeder Buchung
+   (`Booking.customer_phone`), ein Versand-Hook gehört am saubersten in
+   `booking.create_booking`/`cancel_booking` + ein Scheduler für Reminder.
+2. **Hosting-URL** für das FastAPI-Backend (Railway/Render/Fly.io/eigener
+   Server) — muss von Famulor von außen erreichbar sein.
+3. **Famulor-Account-Zugang** + Doku, wie dort Custom-Tools
+   (Function-Calling) konfiguriert werden — `GET /famulor/tools` liefert
+   das Schema.
+4. **Auth** für Admin/Kalender (mindestens Token/Login pro Salon) — ohne
+   das darf das nicht öffentlich deployed werden.
+5. Echte Pilot-Salon-Daten (Mitarbeiter, Services, Dauern, Öffnungszeiten).
+6. Später bei Multi-Prozess-Deployment: Doppelbuchungs-Schutz über
+   DB-Constraint/Locking härten (aktuell: Re-Check in derselben
+   Transaktion, reicht für einen Prozess).
+7. Nice-to-have: Urlaubs-/Abwesenheitszeiten pro Mitarbeiter,
+   Mittagspausen, Termin-Verschieben (statt Storno+Neubuchung).
 
 ## Wie testen
 
@@ -225,5 +190,11 @@ pip install -r requirements.txt
 python -m pytest tests/ -v
 ```
 
-Alle Tests laufen ohne externe Abhängigkeiten (Cal.com wird durch
-`FakeCalClient` in `tests/test_salon_onboarding.py` ersetzt).
+Lokal starten:
+
+```bash
+uvicorn salon.main:app --reload
+# dann z.B. POST /salons (siehe tests/test_api_e2e.py für ein Beispiel-Payload)
+# Admin:    http://127.0.0.1:8000/salons/<slug>/admin
+# Kalender: http://127.0.0.1:8000/salons/<slug>/calendar
+```

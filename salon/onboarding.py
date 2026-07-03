@@ -3,32 +3,38 @@ from collections import defaultdict
 from sqlalchemy.orm import Session
 
 from . import models, schemas
-from .cal_client import CalComClient
+
+# Default weekly opening hours for new salons; editable in the admin UI.
+DEFAULT_OPENING_HOURS = [
+    # (weekday 0=Mo, open, close, closed)
+    (0, "09:00", "18:00", False),
+    (1, "09:00", "18:00", False),
+    (2, "09:00", "18:00", False),
+    (3, "09:00", "18:00", False),
+    (4, "09:00", "18:00", False),
+    (5, "09:00", "14:00", False),
+    (6, "09:00", "18:00", True),
+]
 
 
-def onboard_salon(db: Session, data: schemas.SalonOnboardIn, cal: CalComClient) -> models.Salon:
-    """Provision a new salon in Cal.com.
-
-    For each service this creates:
-    - one Round-Robin team event type covering every qualified employee, used
-      when the customer has no employee preference ("egal wer")
-    - one individual fixed-host event type per (employee, service), used when
-      Famulor/the customer names a specific employee. Its duration can
-      override the service default, since the same service can take a
-      different amount of time depending on who performs it.
-    """
-    team = cal.create_team(data.name)
-    team_id = str(team["id"])
-
-    salon = models.Salon(name=data.name, slug=data.slug, timezone=data.timezone, cal_team_id=team_id)
+def onboard_salon(db: Session, data: schemas.SalonOnboardIn) -> models.Salon:
+    """Create a new salon with employees, services, the who-does-what matrix
+    (with per-employee durations) and default opening hours. Everything lives
+    in our own database — availability and double-booking protection are
+    handled by salon/booking.py."""
+    salon = models.Salon(name=data.name, slug=data.slug, timezone=data.timezone)
     db.add(salon)
     db.flush()
 
+    for weekday, open_time, close_time, closed in DEFAULT_OPENING_HOURS:
+        db.add(models.OpeningHours(
+            salon_id=salon.id, weekday=weekday,
+            open_time=open_time, close_time=close_time, closed=closed,
+        ))
+
     employees_by_name: dict[str, models.Employee] = {}
     for emp in data.employees:
-        membership = cal.invite_team_member(team_id, emp.email)
-        cal_user_id = str(membership.get("userId", ""))
-        employee = models.Employee(salon_id=salon.id, name=emp.name, email=emp.email, cal_user_id=cal_user_id)
+        employee = models.Employee(salon_id=salon.id, name=emp.name, email=emp.email)
         db.add(employee)
         db.flush()
         employees_by_name[emp.name.lower()] = employee
@@ -58,31 +64,13 @@ def onboard_salon(db: Session, data: schemas.SalonOnboardIn, cal: CalComClient) 
         quals_by_service[service.id].append(q)
 
     for service in services_by_name.values():
-        quals = quals_by_service.get(service.id, [])
-        host_ids = [employees_by_name[q.employee_name.lower()].cal_user_id for q in quals]
-
-        if host_ids:
-            any_slug = f"{service.name}-any".lower().replace(" ", "-")
-            any_event_type = cal.create_event_type(
-                team_id, service.name, any_slug, service.duration_min, host_ids,
-                scheduling_type="ROUND_ROBIN", buffer_min=service.buffer_min,
-            )
-            service.cal_event_type_id = str(any_event_type.get("id", ""))
-
-        for q in quals:
+        for q in quals_by_service.get(service.id, []):
             employee = employees_by_name[q.employee_name.lower()]
-            duration = q.duration_min or service.duration_min
-            slug = f"{service.name}-{employee.name}".lower().replace(" ", "-")
-            event_type = cal.create_event_type(
-                team_id, f"{service.name} mit {employee.name}", slug, duration,
-                [employee.cal_user_id], buffer_min=service.buffer_min,
-            )
             db.add(
                 models.EmployeeService(
                     employee_id=employee.id,
                     service_id=service.id,
                     duration_min=q.duration_min,
-                    cal_event_type_id=str(event_type.get("id", "")),
                 )
             )
 

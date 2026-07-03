@@ -1,75 +1,45 @@
-"""Simple admin calendar for a salon: a week view of all Cal.com bookings
-across the salon's event types. Read-only — booking/cancelling still goes
-through Famulor or Cal.com itself."""
+"""Admin calendar for a salon: a week view of all bookings from our own
+database, with a cancel action per appointment."""
 
-from datetime import datetime
-from zoneinfo import ZoneInfo
+from datetime import date, datetime, time
 
 from sqlalchemy.orm import Session
 
 from . import models
-from .cal_client import CalComClient
-
-
-def salon_event_type_ids(db: Session, salon: models.Salon) -> list[str]:
-    """All Cal.com event types belonging to this salon: the Round-Robin
-    'any employee' type per service plus every (employee, service) type."""
-    ids = [s.cal_event_type_id for s in salon.services if s.cal_event_type_id]
-    links = (
-        db.query(models.EmployeeService)
-        .join(models.Service)
-        .filter(models.Service.salon_id == salon.id)
-        .all()
-    )
-    ids += [l.cal_event_type_id for l in links if l.cal_event_type_id]
-    return ids
-
-
-def _to_local_iso(value: str | None, tz: ZoneInfo) -> str | None:
-    if not value:
-        return None
-    try:
-        dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
-    except ValueError:
-        return value
-    if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=ZoneInfo("UTC"))
-    return dt.astimezone(tz).isoformat()
-
-
-def normalize_bookings(raw_bookings: list[dict], timezone: str) -> list[dict]:
-    """Reduce Cal.com booking objects to what the calendar needs, with
-    start/end converted into the salon's timezone."""
-    tz = ZoneInfo(timezone or "Europe/Berlin")
-    out = []
-    for b in raw_bookings:
-        attendees = b.get("attendees") or []
-        hosts = b.get("hosts") or []
-        out.append({
-            "id": b.get("id") or b.get("uid"),
-            "title": b.get("title") or "",
-            "start": _to_local_iso(b.get("start"), tz),
-            "end": _to_local_iso(b.get("end"), tz),
-            "status": b.get("status") or "",
-            "customer": (attendees[0].get("name") if attendees else "") or "",
-            "employee": (hosts[0].get("name") if hosts else "") or "",
-        })
-    return out
 
 
 def list_salon_bookings(
-    db: Session, cal: CalComClient, salon: models.Salon, date_from: str, date_to: str
+    db: Session, salon: models.Salon, date_from: str, date_to: str
 ) -> list[dict]:
-    event_type_ids = salon_event_type_ids(db, salon)
-    if not event_type_ids:
-        return []
-    raw = cal.get_bookings(event_type_ids, f"{date_from}T00:00:00Z", f"{date_to}T23:59:59Z")
-    return normalize_bookings(raw, salon.timezone)
+    start = datetime.combine(date.fromisoformat(date_from[:10]), time.min)
+    end = datetime.combine(date.fromisoformat(date_to[:10]), time.max)
+    rows = (
+        db.query(models.Booking)
+        .filter(
+            models.Booking.salon_id == salon.id,
+            models.Booking.start <= end,
+            models.Booking.end >= start,
+        )
+        .order_by(models.Booking.start)
+        .all()
+    )
+    return [
+        {
+            "id": b.id,
+            "title": b.service.name,
+            "start": b.start.isoformat(timespec="minutes"),
+            "end": b.end.isoformat(timespec="minutes"),
+            "status": b.status,
+            "customer": b.customer_name,
+            "employee": b.employee.name,
+        }
+        for b in rows
+    ]
 
 
 def render_calendar_page(salon: models.Salon) -> str:
     """Self-contained HTML week calendar; fetches bookings from our own
-    /salons/{slug}/bookings endpoint client-side."""
+    /salons/{slug}/bookings endpoint client-side. Times are salon-local."""
     return CALENDAR_HTML.replace("__SALON_NAME__", salon.name).replace("__SALON_SLUG__", salon.slug)
 
 
@@ -93,6 +63,7 @@ CALENDAR_HTML = """<!doctype html>
   }
   header h1 { font-size: 18px; font-weight: 600; margin-right: auto; }
   header h1 small { color: var(--muted); font-weight: 400; margin-left: 8px; }
+  header a { color: var(--accent); font-size: 14px; text-decoration: none; }
   .nav { display: flex; align-items: center; gap: 8px; }
   .nav button {
     border: 1px solid var(--line); background: #fff; color: var(--ink);
@@ -128,18 +99,23 @@ CALENDAR_HTML = """<!doctype html>
   .booking {
     position: absolute; left: 3px; right: 3px; overflow: hidden;
     background: var(--accent-soft); border-left: 3px solid var(--accent);
-    border-radius: 6px; padding: 3px 6px; font-size: 12px; line-height: 1.3;
-    cursor: default;
+    border-radius: 6px; padding: 3px 18px 3px 6px; font-size: 12px; line-height: 1.3;
   }
   .booking .who { font-weight: 600; }
   .booking .what, .booking .time { color: var(--muted); white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
   .booking.cancelled { border-left-color: var(--cancel); background: #f6e9e3; text-decoration: line-through; }
+  .booking .x {
+    position: absolute; top: 2px; right: 4px; cursor: pointer; border: none;
+    background: none; color: var(--muted); font-size: 13px; padding: 0 2px;
+  }
+  .booking .x:hover { color: var(--cancel); }
   .empty-note { padding: 24px; color: var(--muted); font-size: 14px; }
 </style>
 </head>
 <body>
 <header>
   <h1>__SALON_NAME__ <small>Terminkalender</small></h1>
+  <a href="/salons/__SALON_SLUG__/admin">Verwaltung &rarr;</a>
   <div class="nav">
     <button id="prev" aria-label="Vorherige Woche">&#8592;</button>
     <button id="todayBtn">Heute</button>
@@ -207,6 +183,18 @@ CALENDAR_HTML = """<!doctype html>
     return cols;
   }
 
+  async function cancelBooking(b) {
+    if (!confirm("Termin von " + (b.customer || "?") + " am " + b.start.replace("T", " ") + " stornieren?")) return;
+    const resp = await fetch("/salons/" + SLUG + "/bookings/" + b.id, { method: "DELETE" });
+    if (!resp.ok) {
+      const data = await resp.json().catch(() => ({}));
+      statusEl.textContent = "Stornieren fehlgeschlagen: " + (data.detail || resp.statusText);
+      statusEl.classList.add("error");
+      return;
+    }
+    load();
+  }
+
   function place(cols, b) {
     if (!b.start) return;
     const start = new Date(b.start);
@@ -216,7 +204,8 @@ CALENDAR_HTML = """<!doctype html>
     const startH = start.getHours() + start.getMinutes() / 60;
     const endH = Math.max(startH + 0.4, end.getHours() + end.getMinutes() / 60);
     const el = document.createElement("div");
-    el.className = "booking" + (String(b.status).toLowerCase().includes("cancel") ? " cancelled" : "");
+    const cancelled = String(b.status).toLowerCase().includes("cancel");
+    el.className = "booking" + (cancelled ? " cancelled" : "");
     el.style.top = (startH - DAY_START) * HOUR_PX + "px";
     el.style.height = Math.max(20, (endH - startH) * HOUR_PX - 2) + "px";
     const hm = (d) => String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
@@ -225,6 +214,14 @@ CALENDAR_HTML = """<!doctype html>
     el.querySelector(".who").textContent = b.customer || "(ohne Name)";
     el.querySelector(".what").textContent = b.title + (b.employee ? " · " + b.employee : "");
     el.title = (b.customer || "") + " — " + b.title + (b.employee ? " bei " + b.employee : "");
+    if (!cancelled) {
+      const x = document.createElement("button");
+      x.className = "x";
+      x.textContent = "×";
+      x.title = "Termin stornieren";
+      x.onclick = () => cancelBooking(b);
+      el.appendChild(x);
+    }
     col.appendChild(el);
   }
 

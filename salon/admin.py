@@ -1,30 +1,19 @@
-"""Admin operations: edit services, employees and qualifications after
-onboarding, keeping the Cal.com event types in sync so availability,
-durations, buffers and double-booking protection stay correct.
-
-Invariants maintained against Cal.com:
-- every service with >=1 qualified employee has a Round-Robin team event
-  type whose hosts are exactly the qualified, active employees
-- every (employee, service) qualification has a fixed-host event type
-  whose length is the employee override or the service default
-- deleting a service/employee/qualification never silently orphans
-  upcoming bookings (UpcomingBookingsError, overridable with force)
-"""
-
-from datetime import datetime, timedelta, timezone
+"""Admin operations: edit services, employees, qualifications and opening
+hours after onboarding. Since the booking engine reads everything live from
+the database, changes take effect immediately — the only thing to protect
+is upcoming bookings, which deletions must not silently orphan
+(UpcomingBookingsError, overridable with force: those bookings get
+cancelled explicitly)."""
 
 from sqlalchemy.orm import Session
 
-from . import models, schemas
-from .cal_client import CalComClient
+from . import booking, models, schemas
+
+WEEKDAYS_DE = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"]
 
 
 class UpcomingBookingsError(Exception):
-    """Deletion would orphan upcoming bookings; retry with force to override."""
-
-
-def _slugify(text: str) -> str:
-    return text.lower().replace(" ", "-")
+    """Deletion would orphan upcoming bookings; retry with force to cancel them."""
 
 
 def _salon_links(db: Session, salon: models.Salon) -> list[models.EmployeeService]:
@@ -37,6 +26,8 @@ def _salon_links(db: Session, salon: models.Salon) -> list[models.EmployeeServic
 
 
 def get_salon_config(db: Session, salon: models.Salon) -> dict:
+    links = _salon_links(db, salon)
+    qualified_service_ids = {l.service_id for l in links if l.employee.active}
     return {
         "name": salon.name,
         "slug": salon.slug,
@@ -53,8 +44,7 @@ def get_salon_config(db: Session, salon: models.Salon) -> dict:
                 "duration_min": s.duration_min,
                 "buffer_min": s.buffer_min,
                 "price_cents": s.price_cents,
-                # without a Round-Robin event type the service can't be booked "egal wer"
-                "bookable_any": bool(s.cal_event_type_id),
+                "bookable_any": s.id in qualified_service_ids,
             }
             for s in salon.services
         ],
@@ -67,84 +57,61 @@ def get_salon_config(db: Session, salon: models.Salon) -> dict:
                 "duration_min": l.duration_min,
                 "effective_duration_min": l.effective_duration_min,
             }
-            for l in _salon_links(db, salon)
+            for l in links
+            if l.employee.active
+        ],
+        "opening_hours": [
+            {
+                "weekday": h.weekday,
+                "weekday_de": WEEKDAYS_DE[h.weekday],
+                "open_time": h.open_time,
+                "close_time": h.close_time,
+                "closed": h.closed,
+            }
+            for h in sorted(salon.opening_hours, key=lambda h: h.weekday)
         ],
     }
 
 
-def _assert_no_upcoming_bookings(cal: CalComClient, event_type_ids: list[str], force: bool):
-    ids = [i for i in event_type_ids if i]
-    if force or not ids:
+def _guard_upcoming(bookings: list[models.Booking], force: bool, db: Session):
+    """Block the change while upcoming bookings depend on it — unless forced,
+    then cancel them explicitly so the calendar reflects reality."""
+    if not bookings:
         return
-    now = datetime.now(timezone.utc)
-    horizon = now + timedelta(days=365)
-    bookings = cal.get_bookings(ids, now.isoformat(), horizon.isoformat())
-    upcoming = [b for b in bookings if "cancel" not in str(b.get("status", "")).lower()]
-    if upcoming:
+    if not force:
         raise UpcomingBookingsError(
-            f"Es hängen noch {len(upcoming)} bevorstehende Termin(e) daran. "
-            "Erst umbuchen/stornieren — oder mit force=true trotzdem löschen."
+            f"Es hängen noch {len(bookings)} bevorstehende Termin(e) daran. "
+            "Erst umbuchen/stornieren — oder mit force=true trotzdem fortfahren "
+            "(die Termine werden dann storniert)."
         )
-
-
-def _sync_round_robin(db: Session, cal: CalComClient, salon: models.Salon, service: models.Service):
-    """Make the service's Round-Robin event type match its current set of
-    qualified active employees (create/update/delete as needed)."""
-    links = db.query(models.EmployeeService).filter_by(service_id=service.id).all()
-    host_ids = [l.employee.cal_user_id for l in links if l.employee.active and l.employee.cal_user_id]
-
-    if not host_ids:
-        if service.cal_event_type_id:
-            cal.delete_event_type(salon.cal_team_id, service.cal_event_type_id)
-            service.cal_event_type_id = None
-        return
-
-    if service.cal_event_type_id:
-        cal.update_event_type(
-            salon.cal_team_id,
-            service.cal_event_type_id,
-            {"hosts": [{"userId": int(uid), "isFixed": False} for uid in host_ids]},
-        )
-    else:
-        event_type = cal.create_event_type(
-            salon.cal_team_id,
-            service.name,
-            _slugify(f"{service.name}-any"),
-            service.duration_min,
-            host_ids,
-            scheduling_type="ROUND_ROBIN",
-            buffer_min=service.buffer_min,
-        )
-        service.cal_event_type_id = str(event_type.get("id", ""))
+    for b in bookings:
+        b.status = "cancelled"
+    db.flush()
 
 
 # ----------------- Services -----------------
 
-def add_service(db: Session, cal: CalComClient, salon: models.Salon, data: schemas.ServiceIn) -> dict:
+def add_service(db: Session, salon: models.Salon, data: schemas.ServiceIn) -> dict:
     if any(s.name.lower() == data.name.lower() for s in salon.services):
         raise ValueError(f"Service '{data.name}' existiert bereits")
-    service = models.Service(
+    db.add(models.Service(
         salon_id=salon.id,
         name=data.name,
         duration_min=data.duration_min,
         buffer_min=data.buffer_min,
         price_cents=data.price_cents,
-    )
-    db.add(service)
+    ))
     db.commit()
     db.refresh(salon)
-    # Event types are created once qualifications are assigned — until then
-    # the service is not bookable, which get_salon_config surfaces.
     return get_salon_config(db, salon)
 
 
 def update_service(
-    db: Session, cal: CalComClient, salon: models.Salon, service_id: int, patch: schemas.ServicePatch
+    db: Session, salon: models.Salon, service_id: int, patch: schemas.ServicePatch
 ) -> dict:
     service = next((s for s in salon.services if s.id == service_id), None)
     if not service:
         raise ValueError(f"Unbekannter Service: {service_id}")
-
     if patch.name is not None:
         service.name = patch.name
     if patch.duration_min is not None:
@@ -153,47 +120,21 @@ def update_service(
         service.buffer_min = patch.buffer_min
     if patch.price_cents is not None:
         service.price_cents = patch.price_cents
-    db.flush()
-
-    team_id = salon.cal_team_id
-    if service.cal_event_type_id:
-        payload = {"title": service.name, "lengthInMinutes": service.duration_min}
-        if patch.buffer_min is not None:
-            payload["afterEventBuffer"] = service.buffer_min
-        cal.update_event_type(team_id, service.cal_event_type_id, payload)
-
-    links = db.query(models.EmployeeService).filter_by(service_id=service.id).all()
-    for link in links:
-        if not link.cal_event_type_id:
-            continue
-        payload = {"title": f"{service.name} mit {link.employee.name}"}
-        if link.duration_min is None:
-            # inherits the service default, so the new default must reach Cal.com
-            payload["lengthInMinutes"] = service.duration_min
-        if patch.buffer_min is not None:
-            payload["afterEventBuffer"] = service.buffer_min
-        cal.update_event_type(team_id, link.cal_event_type_id, payload)
-
+    # Existing bookings keep their booked end/buffer (snapshotted); only new
+    # availability uses the changed values.
     db.commit()
     db.refresh(salon)
     return get_salon_config(db, salon)
 
 
 def delete_service(
-    db: Session, cal: CalComClient, salon: models.Salon, service_id: int, force: bool = False
+    db: Session, salon: models.Salon, service_id: int, force: bool = False
 ) -> dict:
     service = next((s for s in salon.services if s.id == service_id), None)
     if not service:
         raise ValueError(f"Unbekannter Service: {service_id}")
-
-    links = db.query(models.EmployeeService).filter_by(service_id=service.id).all()
-    event_type_ids = [service.cal_event_type_id] + [l.cal_event_type_id for l in links]
-    _assert_no_upcoming_bookings(cal, event_type_ids, force)
-
-    for et_id in event_type_ids:
-        if et_id:
-            cal.delete_event_type(salon.cal_team_id, et_id)
-    for link in links:
+    _guard_upcoming(booking.upcoming_bookings(db, salon, service_id=service.id), force, db)
+    for link in db.query(models.EmployeeService).filter_by(service_id=service.id).all():
         db.delete(link)
     db.delete(service)
     db.commit()
@@ -203,47 +144,26 @@ def delete_service(
 
 # ----------------- Employees -----------------
 
-def add_employee(db: Session, cal: CalComClient, salon: models.Salon, data: schemas.EmployeeIn) -> dict:
+def add_employee(db: Session, salon: models.Salon, data: schemas.EmployeeIn) -> dict:
     if any(e.name.lower() == data.name.lower() and e.active for e in salon.employees):
         raise ValueError(f"Mitarbeiter '{data.name}' existiert bereits")
-    membership = cal.invite_team_member(salon.cal_team_id, data.email)
-    employee = models.Employee(
-        salon_id=salon.id,
-        name=data.name,
-        email=data.email,
-        cal_user_id=str(membership.get("userId", "")),
-    )
-    db.add(employee)
+    db.add(models.Employee(salon_id=salon.id, name=data.name, email=data.email))
     db.commit()
     db.refresh(salon)
     return get_salon_config(db, salon)
 
 
 def remove_employee(
-    db: Session, cal: CalComClient, salon: models.Salon, employee_id: int, force: bool = False
+    db: Session, salon: models.Salon, employee_id: int, force: bool = False
 ) -> dict:
     employee = next((e for e in salon.employees if e.id == employee_id and e.active), None)
     if not employee:
         raise ValueError(f"Unbekannter Mitarbeiter: {employee_id}")
-
-    links = db.query(models.EmployeeService).filter_by(employee_id=employee.id).all()
-    _assert_no_upcoming_bookings(cal, [l.cal_event_type_id for l in links], force)
-
-    affected_service_ids = {l.service_id for l in links}
-    for link in links:
-        if link.cal_event_type_id:
-            cal.delete_event_type(salon.cal_team_id, link.cal_event_type_id)
+    _guard_upcoming(booking.upcoming_bookings(db, salon, employee_id=employee.id), force, db)
+    for link in db.query(models.EmployeeService).filter_by(employee_id=employee.id).all():
         db.delete(link)
-    # Soft-delete: keep the row so past bookings stay attributable. The
-    # Cal.com team membership is left in place (removing seats is a manual
-    # follow-up in Cal.com, see docs).
+    # Soft-delete: keep the row so past bookings stay attributable.
     employee.active = False
-    db.flush()
-
-    for service in salon.services:
-        if service.id in affected_service_ids:
-            _sync_round_robin(db, cal, salon, service)
-
     db.commit()
     db.refresh(salon)
     return get_salon_config(db, salon)
@@ -253,7 +173,6 @@ def remove_employee(
 
 def set_qualifications(
     db: Session,
-    cal: CalComClient,
     salon: models.Salon,
     quals: list[schemas.EmployeeServiceIn],
     force: bool = False,
@@ -263,7 +182,7 @@ def set_qualifications(
     employees = {e.name.lower(): e for e in salon.employees if e.active}
     services = {s.name.lower(): s for s in salon.services}
 
-    desired: dict[tuple[int, int], tuple[models.Employee, models.Service, int | None]] = {}
+    desired: dict[tuple[int, int], int | None] = {}
     for q in quals:
         employee = employees.get(q.employee_name.lower())
         if not employee:
@@ -271,55 +190,57 @@ def set_qualifications(
         service = services.get(q.service_name.lower())
         if not service:
             raise ValueError(f"Unbekannter Service: {q.service_name}")
-        desired[(employee.id, service.id)] = (employee, service, q.duration_min)
+        desired[(employee.id, service.id)] = q.duration_min
 
-    current = {(l.employee_id, l.service_id): l for l in _salon_links(db, salon)}
+    current = {
+        (l.employee_id, l.service_id): l
+        for l in _salon_links(db, salon)
+        if l.employee.active
+    }
 
     removed = [l for key, l in current.items() if key not in desired]
-    _assert_no_upcoming_bookings(cal, [l.cal_event_type_id for l in removed], force)
+    at_risk = [
+        b
+        for l in removed
+        for b in booking.upcoming_bookings(
+            db, salon, employee_id=l.employee_id, service_id=l.service_id
+        )
+    ]
+    _guard_upcoming(at_risk, force, db)
 
-    affected_service_ids: set[int] = set()
     for link in removed:
-        if link.cal_event_type_id:
-            cal.delete_event_type(salon.cal_team_id, link.cal_event_type_id)
-        affected_service_ids.add(link.service_id)
         db.delete(link)
-
-    for key, (employee, service, duration_min) in desired.items():
-        if key in current:
-            link = current[key]
-            if link.duration_min != duration_min:
-                link.duration_min = duration_min
-                if link.cal_event_type_id:
-                    cal.update_event_type(
-                        salon.cal_team_id,
-                        link.cal_event_type_id,
-                        {"lengthInMinutes": duration_min or service.duration_min},
-                    )
+    for (employee_id, service_id), duration_min in desired.items():
+        if (employee_id, service_id) in current:
+            current[(employee_id, service_id)].duration_min = duration_min
         else:
-            event_type = cal.create_event_type(
-                salon.cal_team_id,
-                f"{service.name} mit {employee.name}",
-                _slugify(f"{service.name}-{employee.name}"),
-                duration_min or service.duration_min,
-                [employee.cal_user_id],
-                buffer_min=service.buffer_min,
-            )
-            db.add(
-                models.EmployeeService(
-                    employee_id=employee.id,
-                    service_id=service.id,
-                    duration_min=duration_min,
-                    cal_event_type_id=str(event_type.get("id", "")),
-                )
-            )
-            affected_service_ids.add(service.id)
-    db.flush()
+            db.add(models.EmployeeService(
+                employee_id=employee_id, service_id=service_id, duration_min=duration_min
+            ))
+    db.commit()
+    db.refresh(salon)
+    return get_salon_config(db, salon)
 
-    for service in salon.services:
-        if service.id in affected_service_ids:
-            _sync_round_robin(db, cal, salon, service)
 
+# ----------------- Opening hours -----------------
+
+def set_opening_hours(
+    db: Session, salon: models.Salon, hours: list[schemas.OpeningHoursIn]
+) -> dict:
+    by_weekday = {h.weekday: h for h in hours}
+    for h in by_weekday.values():
+        if not (0 <= h.weekday <= 6):
+            raise ValueError(f"Ungültiger Wochentag: {h.weekday}")
+        if not h.closed and h.open_time >= h.close_time:
+            raise ValueError(
+                f"{WEEKDAYS_DE[h.weekday]}: Öffnung ({h.open_time}) muss vor Schließung ({h.close_time}) liegen"
+            )
+    for row in salon.opening_hours:
+        incoming = by_weekday.get(row.weekday)
+        if incoming:
+            row.open_time = incoming.open_time
+            row.close_time = incoming.close_time
+            row.closed = incoming.closed
     db.commit()
     db.refresh(salon)
     return get_salon_config(db, salon)

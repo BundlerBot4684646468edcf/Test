@@ -1,7 +1,7 @@
 """Admin page for one salon: manage employees, services (durations, buffers,
-prices) and the qualification matrix (who does what, with their own
-duration). All changes go through the /salons/{slug}/... admin endpoints,
-which keep Cal.com in sync."""
+prices), the qualification matrix (who does what, with their own duration)
+and weekly opening hours. All changes go through the /salons/{slug}/...
+admin endpoints; the booking engine reads them live."""
 
 from . import models
 
@@ -68,8 +68,15 @@ ADMIN_HTML = """<!doctype html>
 </header>
 <main>
   <section>
+    <h2>Öffnungszeiten</h2>
+    <p class="hint">Termine werden nur innerhalb dieser Zeiten angeboten. Bestehende Termine bleiben unberührt.</p>
+    <table id="hoursTable"><thead><tr><th>Tag</th><th>Geöffnet</th><th>Von</th><th>Bis</th></tr></thead><tbody></tbody></table>
+    <div class="addrow"><button class="primary" id="hoursSave">Öffnungszeiten speichern</button></div>
+  </section>
+
+  <section>
     <h2>Mitarbeiter</h2>
-    <p class="hint">Neue Mitarbeiter werden automatisch ins Cal.com-Team eingeladen. Beim Entfernen werden ihre Buchungslinks entfernt — bestehende zukünftige Termine blockieren das Entfernen.</p>
+    <p class="hint">Beim Entfernen bleiben vergangene Termine erhalten (Mitarbeiter wird nur deaktiviert) — bestehende zukünftige Termine blockieren das Entfernen.</p>
     <table id="empTable"><thead><tr><th>Name</th><th>E-Mail</th><th></th></tr></thead><tbody></tbody></table>
     <div class="addrow">
       <input type="text" id="empName" placeholder="Name">
@@ -93,7 +100,7 @@ ADMIN_HTML = """<!doctype html>
 
   <section>
     <h2>Wer macht was — und wie lange</h2>
-    <p class="hint">Haken = Mitarbeiter bietet den Service an. Eigene Dauer nur eintragen, wenn sie vom Standard abweicht (leer = Standard-Dauer des Service). Erst "Zuordnung speichern" schreibt alles nach Cal.com.</p>
+    <p class="hint">Haken = Mitarbeiter bietet den Service an. Eigene Dauer nur eintragen, wenn sie vom Standard abweicht (leer = Standard-Dauer des Service). Erst "Zuordnung speichern" übernimmt die Änderungen.</p>
     <div style="overflow-x:auto"><table id="matrix"><thead></thead><tbody></tbody></table></div>
     <div class="addrow"><button class="primary" id="matrixSave">Zuordnung speichern</button></div>
   </section>
@@ -139,6 +146,24 @@ ADMIN_HTML = """<!doctype html>
   }
 
   function render() {
+    const hours = document.querySelector("#hoursTable tbody");
+    hours.innerHTML = "";
+    for (const h of config.opening_hours) {
+      const tr = document.createElement("tr");
+      tr.dataset.weekday = h.weekday;
+      const open = document.createElement("input"); open.type = "checkbox"; open.checked = !h.closed;
+      const from = document.createElement("input"); from.type = "text"; from.value = h.open_time; from.size = 5;
+      const to = document.createElement("input"); to.type = "text"; to.value = h.close_time; to.size = 5;
+      const td0 = document.createElement("td"); td0.textContent = h.weekday_de;
+      tr.appendChild(td0);
+      for (const el of [open, from, to]) {
+        const td = document.createElement("td");
+        td.appendChild(el);
+        tr.appendChild(td);
+      }
+      hours.appendChild(tr);
+    }
+
     const emp = document.querySelector("#empTable tbody");
     emp.innerHTML = "";
     for (const e of config.employees) {
@@ -165,7 +190,7 @@ ADMIN_HTML = """<!doctype html>
       const save = document.createElement("button"); save.textContent = "Speichern";
       save.onclick = () => run(api("PATCH", "/services/" + s.id, {
         name: name.value, duration_min: +dur.value, buffer_min: +buf.value, price_cents: Math.round(+price.value * 100),
-      }), "'" + name.value + "' gespeichert (Cal.com aktualisiert)");
+      }), "'" + name.value + "' gespeichert");
       const del = document.createElement("button"); del.className = "danger"; del.textContent = "Löschen";
       del.onclick = () => run(apiWithForceRetry("DELETE", "/services/" + s.id), "'" + s.name + "' gelöscht");
       for (const el of [name, dur, buf, price, save, del]) {
@@ -226,6 +251,19 @@ ADMIN_HTML = """<!doctype html>
     }
   }
 
+  document.getElementById("hoursSave").onclick = () => {
+    const rows = [];
+    document.querySelectorAll("#hoursTable tbody tr").forEach((tr) => {
+      const inputs = tr.querySelectorAll("input");
+      rows.push({
+        weekday: +tr.dataset.weekday,
+        closed: !inputs[0].checked,
+        open_time: inputs[1].value.trim(),
+        close_time: inputs[2].value.trim(),
+      });
+    });
+    run(api("PUT", "/opening-hours", { opening_hours: rows }), "Öffnungszeiten gespeichert");
+  };
   document.getElementById("empAdd").onclick = () => {
     const name = document.getElementById("empName").value.trim();
     const email = document.getElementById("empEmail").value.trim();
@@ -251,7 +289,7 @@ ADMIN_HTML = """<!doctype html>
       });
     });
     run(apiWithForceRetry("PUT", "/qualifications", { qualifications: quals }),
-      "Zuordnung gespeichert (Cal.com synchronisiert)");
+      "Zuordnung gespeichert");
   };
 
   api("GET", "/config").then((c) => { config = c; render(); setStatus("Geladen"); })
