@@ -123,15 +123,17 @@ Schichten:
 3. **`book_appointment`**: Termin-Start in der Vergangenheit → Fehler mit
    demselben Hinweis, Buchung erreicht Cal.com nie.
 
-## SMS-Fix
+## SMS: Telefonnummer-Durchreichung
 
-SMS (Bestätigung/Reminder/Review über Cal.com Workflows) gingen nie raus,
-weil `handle_book_appointment` die `customer_phone` verworfen hat — sie
-kam nie bei Cal.com an. Jetzt wird sie best-effort auf E.164 normalisiert
-(`0176…` → `+49176…`, Zielmarkt DE) und als `attendee.phoneNumber` in die
-Buchung geschrieben. `customer_phone` ist im Famulor-Tool-Schema jetzt
-required, damit der Bot die Nummer aktiv erfragt; das Backend selbst
-bleibt tolerant und bucht auch ohne Nummer (dann ohne SMS).
+Bei Buchungen über den Bot hat `handle_book_appointment` die
+`customer_phone` verworfen — sie kam nie als `attendee.phoneNumber` bei
+Cal.com an (SMS bei direkten Cal.com-Buchungen waren davon nicht
+betroffen, dort sammelt Cal.coms eigenes Formular die Nummer). Jetzt wird
+sie best-effort auf E.164 normalisiert (`0176…` → `+49176…`, Zielmarkt DE)
+und in die Buchung geschrieben. `customer_phone` bleibt optional; die
+Tool-Beschreibung weist Famulor an, die Anrufer-Nummer aus dem Gespräch zu
+nutzen oder sonst danach zu fragen. Ohne Nummer wird trotzdem gebucht —
+dann nur ohne SMS.
 
 ## Kalender-UI
 

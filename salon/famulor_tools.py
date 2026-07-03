@@ -61,12 +61,13 @@ FAMULOR_TOOLS = [
                 "customer_phone": {
                     "type": "string",
                     "description": (
-                        "Customer's mobile number. Required for the SMS booking "
-                        "confirmation and reminders — always ask the customer for it."
+                        "Customer's mobile number, used for the SMS booking "
+                        "confirmation and reminders. Use the caller's number "
+                        "from the call if known, otherwise ask for it."
                     ),
                 },
             },
-            "required": ["salon_slug", "service_name", "start_at", "customer_name", "customer_email", "customer_phone"],
+            "required": ["salon_slug", "service_name", "start_at", "customer_name", "customer_email"],
         },
     },
 ]
