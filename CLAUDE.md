@@ -174,7 +174,13 @@ Read-only — gebucht/storniert wird weiterhin über Famulor bzw. Cal.com.
 6. Klären: was passiert bei Konflikt, wenn ein Slot zwischen Verfügbarkeits-
    Abfrage und Buchung weg ist (Cal.com sollte das beim `create_booking`
    selbst ablehnen — verifizieren, sobald live getestet werden kann)
-7. Falls später gebraucht: Cal.com-Sales fragen, ob Managed Users/Platform
+7. **Round-Robin live durchspielen** (Ansatz ist vom Nutzer bestätigt, so
+   bleibt es): (a) Lena direkt buchen → ist derselbe Slot danach auch im
+   Round-Robin-Event-Type weg? (b) In der Cal.com-UI pro Round-Robin-
+   Event-Type die Verteilungsstrategie wählen — "Load Balancing"
+   (gleichmäßige Verteilung im Team) vs. "Maximize Availability" (erster
+   freier gewinnt)
+8. Falls später gebraucht: Cal.com-Sales fragen, ob Managed Users/Platform
    für neue Kunden noch verfügbar ist (siehe oben)
 
 ## Wie testen
