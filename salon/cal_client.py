@@ -18,6 +18,12 @@ class CalComClient:
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
             "cal-api-version": CAL_API_VERSION,
+            # Cal.com sits behind Cloudflare, which blocks the default
+            # python-httpx User-Agent with a 403 (error 1010) before the
+            # request ever reaches the API. Send a browser-like UA to pass.
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36",
+            "Accept": "application/json",
         }
 
     def _request(self, method: str, path: str, **kwargs) -> dict:
