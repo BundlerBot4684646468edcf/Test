@@ -2,14 +2,14 @@
 tags: [decisions, index]
 ---
 
-# Decisions Index
+# Entscheidungs-Index
 
-> One note per significant decision, from the [[Decision Record]] template, named `YYYY-MM-DD Short Title`. Decisions are append-only — to change one, write a new record that supersedes it.
+> Eine Notiz pro wichtiger Entscheidung, aus der Vorlage [[Decision Record]], benannt `JJJJ-MM-TT Kurzer Titel`. Entscheidungen sind append-only — zum Ändern einen neuen Record schreiben, der den alten ablöst.
 
-| Date | Decision | Status |
+| Datum | Entscheidung | Status |
 |---|---|---|
-| 2026-07-10 | [[08-Decisions/2026-07-10 Google Places as first review source]] | ✅ accepted |
+| 2026-07-10 | [[08-Decisions/2026-07-10 Famulor als Voice-Plattform]] | ✅ akzeptiert |
 
-## What deserves a decision record?
-- Anything expensive to reverse (tech stack, data sources, pricing, market)
-- Anything a future teammate will ask "why did we do it this way?" about
+## Was verdient einen Decision Record?
+- Alles, was teuer umkehrbar ist (Plattform, Preismodell, Zielgruppe, Kalender-Integration)
+- Alles, wozu ein künftiges Teammitglied fragen würde: „Warum habt ihr das so gemacht?"

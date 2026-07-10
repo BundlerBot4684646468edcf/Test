@@ -2,17 +2,17 @@
 tags: [team, index]
 ---
 
-# Team Directory
+# Team-Verzeichnis
 
-> One note per person, created from the [[Person]] template. Link people everywhere — meetings, projects, decisions.
+> Eine Notiz pro Person aus der Vorlage [[Person]]. Personen überall verlinken — in Meetings, Projekten, Entscheidungen.
 
-| Person | Role | Focus | Location |
+| Person | Rolle | Fokus | Ort |
 |---|---|---|---|
-| [[02-Team/Alex Grunberger\|Alex Grunberger]] | Founder | Product & Engineering | |
+| [[02-Team/Alex Grunberger\|Alex Grunberger]] | Founder | Produkt & Vertrieb | |
 
 ## Onboarding
-New teammate? Start here:
-1. Read [[01-Company/Mission & Vision]] and [[01-Company/Strategy]]
-2. Skim the last 4 weekly meetings in [[04-Meetings/Meetings Index]]
-3. Set up the product locally → [[07-Knowledge/Dev Setup]]
-4. Create your own note from the [[Person]] template and add yourself to the table above
+Neu im Team? Starte hier:
+1. Lies [[01-Company/Mission & Vision]] und [[01-Company/Strategy]]
+2. Überflieg die letzten 4 Wochen-Meetings in [[04-Meetings/Meetings Index]]
+3. Hör dir Anrufe des Pilot-Salons an → [[07-Knowledge/Famulor Setup]]
+4. Leg deine eigene Notiz aus der Vorlage [[Person]] an und trag dich oben ein

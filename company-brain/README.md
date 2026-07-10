@@ -1,32 +1,32 @@
-# Company Brain (Obsidian Vault)
+# amstudio — Company Brain (Obsidian Vault)
 
-A shared knowledge base for the company, built for [Obsidian](https://obsidian.md).
+Das gemeinsame Firmen-Gehirn von **amstudio** (KI-Rezeptionist für Friseursalons), gebaut für [Obsidian](https://obsidian.md).
 
-## Open it
-1. Install Obsidian (free).
-2. **Open folder as vault** → select this `company-brain/` directory.
-3. Enable the core **Templates** plugin (Settings → Core plugins) — it's preconfigured to use `99-Templates/` with `YYYY-MM-DD` dates.
-4. Open `00-Home/Home.md` and pin it.
+## Öffnen
+1. Obsidian installieren (kostenlos).
+2. **„Ordner als Vault öffnen"** → diesen Ordner `company-brain/` auswählen.
+3. Kern-Plugin **Vorlagen/Templates** aktivieren (Einstellungen → Kern-Plugins) — vorkonfiguriert auf `99-Templates/` mit `YYYY-MM-DD`-Datum.
+4. `00-Home/Home.md` öffnen und anpinnen.
 
-## Structure
+## Struktur
 ```
-00-Home/        Entry-point dashboard
-01-Company/     Mission, strategy, OKRs
-02-Team/        People & onboarding
-03-Product/     Product docs & roadmap
-04-Meetings/    One note per meeting (YYYY-MM-DD Topic)
-05-Projects/    One note per project (has an owner, goal, end date)
-06-Customers/   Lightweight CRM — one note per hotel/account
-07-Knowledge/   Evergreen how-tos and processes
-08-Decisions/   Decision records — why we chose what we chose
-99-Templates/   Templates for all of the above
+00-Home/        Startseite / Dashboard
+01-Company/     Mission, Strategie, OKRs
+02-Team/        Personen & Onboarding
+03-Product/     Produkt-Doku & Roadmap (KI-Rezeptionist)
+04-Meetings/    Eine Notiz pro Meeting (JJJJ-MM-TT Thema)
+05-Projects/    Eine Notiz pro Projekt (Owner, Ziel, Ende)
+06-Customers/   Leichtes CRM — eine Notiz pro Salon
+07-Knowledge/   Dauerhaftes Wissen (Famulor-Setup, Prozesse)
+08-Decisions/   Entscheidungs-Protokolle — warum wir was gewählt haben
+99-Templates/   Vorlagen für alles oben
 ```
 
-## Rules of the vault
-- **One note per entity** — person, meeting, customer, project, decision.
-- **Link generously** — `[[wiki links]]` are what make it a brain, not a folder.
-- **Write decisions down** — anything hard to reverse gets a Decision Record.
-- **Index notes are the map** — each folder has an `… Index` note; add a row when you add a note.
+## Regeln des Vaults
+- **Eine Notiz pro Entität** — Person, Meeting, Salon, Projekt, Entscheidung.
+- **Großzügig verlinken** — `[[Wiki-Links]]` machen aus Ordnern ein Gehirn (Graph: `Strg+G`).
+- **Entscheidungen aufschreiben** — alles schwer Umkehrbare bekommt einen Decision Record.
+- **Index-Notizen sind die Landkarte** — jeder Ordner hat eine `… Index`-Notiz; neue Notiz = neue Zeile dort.
 
-## Syncing with the team
-This vault lives in git. Commit and push like code; `.obsidian/workspace.json` (per-device layout) is git-ignored so you won't conflict on window state.
+## Sync im Team
+Das Vault liegt in Git. Committen und pushen wie Code; `.obsidian/workspace.json` (Fensterlayout pro Gerät) ist git-ignoriert, damit es keine Konflikte gibt.

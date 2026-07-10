@@ -3,23 +3,27 @@ tags: [review]
 week: {{date:YYYY-[W]ww}}
 ---
 
-# Weekly Review — {{date:YYYY-[W]ww}}
+# Wochen-Review — {{date:YYYY-[W]ww}}
 
-## Wins
+## Erfolge
 - 
 
-## OKR check → [[01-Company/OKRs]]
+## OKR-Check → [[01-Company/OKRs]]
 - 
 
-## Projects → [[05-Projects/Projects Index]]
-| Project | Status | Blocker |
+## Piloten & Anrufe
+_Transkripte der Woche angeschaut? Was hat die KI gut/schlecht gemacht?_
+- 
+
+## Projekte → [[05-Projects/Projects Index]]
+| Projekt | Status | Blocker |
 |---|---|---|
 | | | |
 
-## Customers → [[06-Customers/Customers Index]]
+## Salons → [[06-Customers/Customers Index]]
 - 
 
-## Next week's top 3
+## Top 3 nächste Woche
 1. 
 2. 
 3. 

@@ -8,19 +8,21 @@ website:
 
 # {{title}}
 
-## Snapshot
-- **Contact:** 
-- **Stage:** lead / contacted / demo / pilot / paying
-- **Next step:** 
+## Steckbrief
+- **Kontakt:** 
+- **Phase:** Lead / Kontaktiert / Demo / Pilot / Zahlend
+- **Arbeitszeiten:** 
+- **Famulor-Assistent:** _(ID, sobald live)_
+- **Nächster Schritt:** 
 
-## What they care about
+## Was dem Salon wichtig ist
 - 
 
-## Interaction log
+## Kontakt-Log
 - {{date}} — 
 
-## Product feedback
+## Produkt-Feedback
 - 
 
 ---
-_Add a row to [[06-Customers/Customers Index]]._
+_Zeile in [[06-Customers/Customers Index]] ergänzen._

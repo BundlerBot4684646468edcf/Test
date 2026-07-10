@@ -5,21 +5,22 @@ period: 2026-Q3
 
 # OKRs — 2026 Q3
 
-> Score 0.0–1.0 at end of quarter. 0.7 is a good stretch result.
+> Am Quartalsende mit 0.0–1.0 bewerten. 0.7 ist ein gutes ambitioniertes Ergebnis.
 
-## Objective 1: Prove the MVP with real hotels
-| Key Result | Target | Current | Score |
+## Objective 1: Beweisen, dass Salons den KI-Rezeptionisten wollen und behalten
+| Key Result | Ziel | Aktuell | Score |
 |---|---|---|---|
-| Paid or committed pilot hotels | 3 | 0 | |
-| Hotels analyzed end-to-end (name → action plan) | 25 | | |
-| Avg. time from hotel name to insights | < 5 min | | |
+| Salons mit live geschaltetem Assistenten | 5 | 1 (sfiumabiondei) | |
+| Davon zahlend nach Pilotphase | 3 | 0 | |
+| Angenommene Anrufe über alle Salons | 500 | | |
 
-## Objective 2: Make insights trustworthy
-| Key Result | Target | Current | Score |
+## Objective 2: Die KI bucht zuverlässig Termine
+| Key Result | Ziel | Aktuell | Score |
 |---|---|---|---|
-| Sentiment agreement with human label (sample of 100) | > 85% | | |
-| Languages fully supported | DE, IT, EN | | |
+| Anrufe, die in einer Terminbuchung enden | > 40 % | | |
+| Fehlerhafte Buchungen (falsche Zeit/Leistung) | < 5 % | | |
+| Transkripte pro Woche geprüft & Prompt verbessert | 20 | | |
 
-## How we work with OKRs
-- Reviewed in the weekly team meeting → [[04-Meetings/Meetings Index]]
-- Changed only at quarter boundaries; mid-quarter changes need a [[Decision Record]].
+## So arbeiten wir mit OKRs
+- Wöchentlich im Team-Meeting prüfen → [[04-Meetings/Meetings Index]]
+- Änderungen nur zum Quartalswechsel; mitten im Quartal nur per [[Decision Record]].

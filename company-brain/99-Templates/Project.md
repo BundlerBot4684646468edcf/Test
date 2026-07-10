@@ -7,17 +7,17 @@ target:
 
 # {{title}}
 
-## Goal
-_One sentence: what does done look like?_
+## Ziel
+_Ein Satz: Woran erkennen wir, dass es fertig ist?_
 
-## Success criteria
+## Erfolgskriterien
 - [ ] 
 
 ## Plan
 - [ ] 
 
 ## Log
-- {{date}} — Project created.
+- {{date}} — Projekt angelegt.
 
 ---
-_Add a row to [[05-Projects/Projects Index]]._
+_Zeile in [[05-Projects/Projects Index]] ergänzen._

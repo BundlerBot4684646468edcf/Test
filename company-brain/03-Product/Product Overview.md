@@ -1,32 +1,38 @@
 ---
 tags: [product]
-status: MVP
+status: Pilot
 ---
 
-# Product Overview — AI Hotel Reputation
+# Produkt — amstudio KI-Rezeptionist
 
-> Hotel name → reviews → language AI + ML → clusters, trends & action plan (DE/IT/EN).
+> Anruf im Salon → KI nimmt ab → beantwortet Fragen & bucht Termine → Salon bekommt Zusammenfassung.
 
-## What it does (current MVP)
-1. **Find hotel** via Google Places (`GOOGLE_PLACES_API_KEY`)
-2. **Fetch reviews** and clean the text
-3. **Detect language** (DE / IT / EN) and score sentiment (heuristic, LLM-assisted when `OPENAI_API_KEY` is set)
-4. **Cluster topics** with TF-IDF + KMeans
-5. **Weight by recency** (half-life 180 days) and show **trends** (Plotly)
-6. Output a prioritized **action plan** for the hotel
+## Was das Produkt macht
+1. **Anruf annehmen** — die Salonnummer (oder eine neue Nummer) leitet auf den Famulor-Assistenten
+2. **Natürlich sprechen** — Begrüßung im Ton des Salons, Deutsch, versteht Dialekt-Anrufer
+3. **FAQ beantworten** — Öffnungszeiten (z. B. Di–Sa, 9:00–17:00), Preise, Leistungen, Anfahrt
+4. **Termin buchen** — Wunschleistung + Zeit erfragen, freien Slot vorschlagen, buchen
+5. **Nachbereiten** — Transkript & Auswertung pro Anruf; SMS/WhatsApp-Bestätigung an den Kunden möglich
+
+## Live-Assistenten (Famulor)
+| Assistent | ID | Typ | Status |
+|---|---|---|---|
+| sfiumabiondei | 16347 | Inbound, eigene Nummer | 🟢 live (Pilot-Salon) |
+| friseur test | 15899 | Inbound, ohne Nummer | 🧪 Test/Spielwiese |
+
+Details & Konfiguration: [[07-Knowledge/Famulor Setup]]
 
 ## Stack
-- Streamlit UI (`app.py` in repo root)
-- pandas / numpy / scikit-learn / plotly
-- Google Places API, optional OpenAI
+- **Voice-Plattform:** Famulor (app.famulor.de) — Assistenten, Nummern, Transkripte, Mid-Call-Tools
+- **Kanäle:** Telefon (inbound), optional SMS/WhatsApp-Bestätigungen
+- Entscheidung dazu: [[08-Decisions/2026-07-10 Famulor als Voice-Plattform]]
 
 ## Roadmap
-| Horizon | Item | Notes |
+| Horizont | Thema | Notizen |
 |---|---|---|
-| Now | Validate clusters with pilot hotels | see [[05-Projects/Pilot Program]] |
-| Next | More review sources (Booking, TripAdvisor) | needs sourcing decision → [[08-Decisions/Decisions Index]] |
-| Later | Auto-generated weekly action-plan email | |
+| Jetzt | Pilot sfiumabiondei stabil: Transkripte wöchentlich prüfen, Prompt schärfen | [[05-Projects/Pilot Program]] |
+| Als Nächstes | Terminbuchung an Salon-Kalender anbinden (Mid-Call-Tool) | Kalender-Entscheidung nötig → [[08-Decisions/Decisions Index]] |
+| Später | Onboarding-Vorlage: neuen Salon in < 1 Tag live schalten | |
 
-## Related
-- [[07-Knowledge/Dev Setup]]
-- [[06-Customers/Customers Index]]
+## Verwandt
+- [[06-Customers/Customers Index]] · [[07-Knowledge/Famulor Setup]]

@@ -6,17 +6,17 @@ date: {{date}}
 
 # {{title}}
 
-## Context
-_What situation forced a choice? What were the options?_
+## Kontext
+_Welche Situation erzwingt eine Entscheidung? Welche Optionen gab es?_
 
-## Decision
-_What we chose, in one sentence._
+## Entscheidung
+_Was wir gewählt haben, in einem Satz._
 
-## Rationale
+## Begründung
 - 
 
-## Consequences
-- _What becomes easier, what becomes harder, when to revisit._
+## Konsequenzen
+- _Was wird leichter, was schwerer, wann prüfen wir sie erneut?_
 
 ---
-_Set status to `accepted` once agreed, then add a row to [[08-Decisions/Decisions Index]]._
+_Status auf `accepted` setzen, sobald beschlossen, dann Zeile in [[08-Decisions/Decisions Index]] ergänzen._

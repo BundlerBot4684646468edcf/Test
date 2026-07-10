@@ -2,13 +2,14 @@
 tags: [meetings, index]
 ---
 
-# Meetings Index
+# Meeting-Index
 
-> One note per meeting, named `YYYY-MM-DD Topic`, created from the [[Meeting Note]] template. Newest on top.
+> Eine Notiz pro Meeting, benannt `JJJJ-MM-TT Thema`, aus der Vorlage [[Meeting Note]]. Neuestes oben.
 
-| Date | Meeting | Attendees | Key outcome |
+| Datum | Meeting | Teilnehmer | Kern-Ergebnis |
 |---|---|---|---|
 | | | | |
 
-## Recurring meetings
-- **Weekly team sync** — Mondays. Standing agenda: OKR check ([[01-Company/OKRs]]), project status, blockers.
+## Wiederkehrende Termine
+- **Wochen-Review** — montags. Feste Agenda: OKR-Check ([[01-Company/OKRs]]), Pilot-Status, Transkript-Erkenntnisse, Blocker.
+- **Salon-Feedback-Gespräche** — pro Pilot-Salon regelmäßig; Notiz hier ablegen und in der Salon-Notiz verlinken.

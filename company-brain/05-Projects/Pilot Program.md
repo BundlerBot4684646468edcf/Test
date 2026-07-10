@@ -5,21 +5,22 @@ status: active
 target: 
 ---
 
-# Pilot Program
+# Pilot-Programm
 
-## Goal
-Get **3 hotels** actively using the MVP and giving structured feedback, to validate the core bet in [[01-Company/Strategy]].
+## Ziel
+**5 Friseursalons** nutzen den KI-Rezeptionisten aktiv und geben strukturiertes Feedback — um die Kernwette aus [[01-Company/Strategy]] zu validieren.
 
-## Success criteria
-- [ ] 3 hotels onboarded (name → analysis → action plan delivered)
-- [ ] Each pilot gives feedback in a logged call → file under [[04-Meetings/Meetings Index]]
-- [ ] At least 1 hotel acts on the action plan
+## Erfolgskriterien
+- [ ] 5 Salons live (aktuell: 1 → [[06-Customers/Sfuma Biondè]])
+- [ ] Pro Salon mindestens ein Feedback-Gespräch geführt und protokolliert → [[04-Meetings/Meetings Index]]
+- [ ] Mindestens 3 Salons sagen: „Würde ich nach dem Pilot bezahlen"
 
 ## Plan
-- [ ] Build shortlist of 10 candidate hotels
-- [ ] Outreach emails / warm intros
-- [ ] Run analysis live in first call
-- [ ] Collect feedback, log per customer in [[06-Customers/Customers Index]]
+- [x] Ersten Pilot-Salon live schalten (Sfuma Biondè, 08.06.)
+- [ ] Shortlist mit 15 Kandidaten-Salons aufbauen (Umkreis + Insta)
+- [ ] Demo-Skript: Assistenten live im Gespräch anrufen lassen
+- [ ] Onboarding per Checkliste → [[07-Knowledge/Famulor Setup]]
+- [ ] Feedback pro Salon in der Salon-Notiz sammeln → [[06-Customers/Customers Index]]
 
 ## Log
-- 2026-07-10 — Project created.
+- 2026-07-10 — Projekt angelegt; Sfuma Biondè läuft seit 08.06. als erster Pilot.

@@ -2,17 +2,17 @@
 tags: [knowledge, index]
 ---
 
-# Knowledge Index
+# Wissens-Index
 
-> Evergreen how-tos and processes. If you explain something twice, write it down here.
+> Dauerhaftes Wissen: How-tos und Prozesse. Was du zweimal erklärst, schreibst du hier auf.
 
-## Engineering
-- [[07-Knowledge/Dev Setup]]
+## Technik & Produkt
+- [[07-Knowledge/Famulor Setup]] — Assistenten, Nummern, Onboarding-Checkliste
 
-## Processes
-- _Add: outreach playbook, pilot onboarding checklist, review-labeling guide…_
+## Prozesse
+- _Ergänzen: Outreach-Playbook für Salons, Pilot-Onboarding, Preisgespräch-Leitfaden…_
 
-## Conventions
-- Prefer **one small note per topic** over long documents.
-- Start each note with a one-line summary so link previews are useful.
-- Link to the [[Decision Record]] that explains *why*, don't restate it.
+## Konventionen
+- Lieber **eine kleine Notiz pro Thema** als lange Dokumente.
+- Jede Notiz beginnt mit einem Ein-Zeiler, damit Link-Vorschauen nützlich sind.
+- Das *Warum* steht im [[Decision Record]] — verlinken statt wiederholen.

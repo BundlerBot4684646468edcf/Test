@@ -7,13 +7,13 @@ started:
 
 # {{title}}
 
-## Role & focus
+## Rolle & Fokus
 - 
 
-## Current responsibilities
+## Aktuelle Verantwortlichkeiten
 - 
 
-## Working notes
+## Arbeitsnotizen
 - 
 
 ## Links

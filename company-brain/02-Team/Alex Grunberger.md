@@ -7,14 +7,14 @@ started:
 
 # Alex Grunberger
 
-## Role & focus
-- Founder — product, engineering, everything else.
+## Rolle & Fokus
+- Founder — Produkt, Famulor-Setup, Salon-Akquise. Aktuell alles.
 
-## Current responsibilities
-- [[03-Product/Product Overview|AI Hotel Reputation MVP]]
-- Pilot hotel outreach
+## Aktuelle Verantwortlichkeiten
+- [[03-Product/Product Overview|amstudio KI-Rezeptionist]]
+- [[05-Projects/Pilot Program|Pilot-Programm]] — Salons gewinnen & betreuen
 
-## Working notes
+## Arbeitsnotizen
 - 
 
 ## Links

@@ -5,23 +5,23 @@ tags: [company]
 # Mission & Vision
 
 ## Mission
-> _Why we exist — one sentence._
+> _Warum es uns gibt — ein Satz._
 
-Help hotels turn guest reviews into concrete, prioritized action — across languages (DE / IT / EN).
+Kein Friseursalon verliert mehr Kunden, weil niemand ans Telefon geht: Unser KI-Rezeptionist nimmt jeden Anruf an und bucht den Termin direkt.
 
 ## Vision
-> _Where we're going in 3–5 years._
+> _Wo wir in 3–5 Jahren stehen._
 
-Every independent hotel in the DACH/Alps region runs its reputation and service quality on our platform.
+amstudio ist der Standard-Telefonassistent für Friseursalons im deutschsprachigen Raum.
 
-## Values
-1. **Guest truth over vanity metrics** — we surface what reviews actually say.
-2. **Ship small, learn fast** — MVPs over master plans.
-3. **Multilingual by default** — DE/IT/EN are first-class citizens.
+## Werte
+1. **Der Salon steht im Stuhl, nicht am Telefon** — wir nehmen den Stress ab, nicht die Kontrolle.
+2. **Klingt wie ein Mensch, arbeitet wie eine Maschine** — natürliche Gespräche, zuverlässige Buchungen.
+3. **Klein starten, schnell lernen** — Piloten vor Perfektion.
 
-## Positioning (one-liner)
-"AI Hotel Reputation: hotel name in → clustered review insights, trends and an action plan out."
+## Positionierung (Ein-Zeiler)
+„amstudio: Der KI-Rezeptionist für Friseure — nimmt ab, wenn ihr gerade schneidet."
 
-## Related
+## Verwandt
 - [[01-Company/Strategy]]
 - [[01-Company/OKRs]]

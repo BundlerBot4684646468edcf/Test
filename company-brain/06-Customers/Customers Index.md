@@ -2,18 +2,19 @@
 tags: [customers, index]
 ---
 
-# Customers Index
+# Kunden-Index (Salons)
 
-> One note per hotel/account from the [[Customer]] template. This is the lightweight CRM.
+> Eine Notiz pro Salon aus der Vorlage [[Customer]]. Das ist unser leichtgewichtiges CRM.
 
 ## Pipeline
-| Hotel | Stage | Owner | Next step | Last contact |
+| Salon | Phase | Assistent | Nächster Schritt | Letzter Kontakt |
 |---|---|---|---|---|
-| | lead / contacted / demo / pilot / paying / churned | | | |
+| [[06-Customers/Sfuma Biondè]] | 🟢 Pilot | sfiumabiondei (ID 16347) | Wöchentliche Transkript-Runde | |
 
-## Stages
-- **Lead** — on the shortlist, no contact yet
-- **Contacted** — outreach sent
-- **Demo** — saw the product live
-- **Pilot** — actively using it, giving feedback (→ [[05-Projects/Pilot Program]])
-- **Paying** 🎉
+## Phasen
+- **Lead** — auf der Liste, noch kein Kontakt
+- **Kontaktiert** — angesprochen (Anruf, Besuch, Insta-DM)
+- **Demo** — hat den Assistenten live gehört
+- **Pilot** — Assistent geschaltet, Feedback läuft (→ [[05-Projects/Pilot Program]])
+- **Zahlend** 🎉
+- **Verloren/Churn** — Grund in der Salon-Notiz festhalten!

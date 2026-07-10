@@ -9,14 +9,14 @@ attendees:
 ## Agenda
 - 
 
-## Notes
+## Notizen
 - 
 
-## Decisions
-- _Big decision? Create a [[Decision Record]] instead and link it here._
+## Entscheidungen
+- _Große Entscheidung? Stattdessen einen [[Decision Record]] anlegen und hier verlinken._
 
-## Action items
-- [ ] Who — what — by when
+## Action Items
+- [ ] Wer — was — bis wann
 
 ---
-_After the meeting: add a row to [[04-Meetings/Meetings Index]]._
+_Nach dem Meeting: Zeile in [[04-Meetings/Meetings Index]] ergänzen._

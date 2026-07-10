@@ -3,28 +3,28 @@ tags: [company, strategy]
 updated: 2026-07-10
 ---
 
-# Strategy
+# Strategie
 
-## Where we play
-- **Segment:** independent 3–5★ hotels, DACH + Northern Italy first.
-- **Buyer:** hotel GM / owner; **user:** front-office & quality manager.
+## Wo wir spielen
+- **Segment:** Inhabergeführte Friseursalons, 1–10 Mitarbeiter, DACH zuerst.
+- **Käufer & Nutzer:** Saloninhaber:in — entscheidet und erlebt das Produkt selbst.
 
-## How we win
-- Multilingual review intelligence (DE/IT/EN) that competitors treat as an afterthought.
-- Action plans, not dashboards — output is "what to fix next week".
-- Fast time-to-value: hotel name → insights in minutes (see [[03-Product/Product Overview]]).
+## Warum wir gewinnen
+- **Das Problem ist täglich spürbar:** Während geschnitten/gefärbt wird, klingelt das Telefon — jeder verpasste Anruf ist ein verlorener Termin (oft 40–80 €).
+- **Sprache & Ton passen:** Deutschsprachige Voice-KI, die Salonkontext versteht (Dienstleistungen, Dauer, Stammkunden).
+- **Schnell live:** Assistent auf Famulor aufsetzen, Nummer verbinden, fertig — kein IT-Projekt für den Salon.
 
-## Current bets
-| Bet | Hypothesis | Status | Owner |
+## Aktuelle Wetten
+| Wette | Hypothese | Status | Beleg |
 |---|---|---|---|
-| Review clustering MVP | Clusters + trends are enough for a paid pilot | 🟡 validating | |
-| Google Places as sole source | Enough review volume without Booking/TripAdvisor | 🟡 validating | |
-| LLM action plans | GM will act on auto-generated plans | ⚪ not started | |
+| Anrufannahme + FAQ | Salons zahlen schon dafür, dass kein Anruf verloren geht | 🟢 Pilot läuft ([[06-Customers/Customers Index\|sfiumabiondei]]) | |
+| Terminbuchung im Anruf | Die KI kann Termine direkt und fehlerfrei buchen | 🟡 in Validierung | |
+| Selbst-Onboarding | Salons können den Assistenten (fast) ohne uns einrichten | ⚪ noch nicht gestartet | |
 
-## Explicit non-goals (for now)
-- Review *response* automation
-- Chains / enterprise
-- Markets outside DACH/IT
+## Bewusste Nicht-Ziele (vorerst)
+- Andere Branchen (Ärzte, Restaurants, Hotels) — erst Friseure gewinnen
+- Outbound-Kampagnen / Marketing-Anrufe
+- Eigene Telefonie-Infrastruktur (wir bauen auf Famulor, siehe [[08-Decisions/2026-07-10 Famulor als Voice-Plattform]])
 
-## Related
+## Verwandt
 - [[01-Company/OKRs]] · [[08-Decisions/Decisions Index]]
