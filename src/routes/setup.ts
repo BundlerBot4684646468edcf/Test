@@ -73,6 +73,55 @@ router.get('/test-sms', async (req, res) => {
   await doTestSms((req.query.to as string) || '', res);
 });
 
+// GET /api/setup/test-sms-check/:number — Send AND poll delivery status in one
+// browser hit, so we get the definitive result without copying the SID around.
+router.get('/test-sms-check/:number', async (req, res) => {
+  const accountSid = process.env.TWILIO_ACCOUNT_SID || '';
+  const token = process.env.TWILIO_AUTH_TOKEN || '';
+  if (!accountSid || !token) {
+    return res.status(400).json({ error: 'Twilio not configured' });
+  }
+
+  let phone = (req.params.number || '').trim().replace(/\s/g, '');
+  if (!phone.startsWith('+')) phone = '+' + phone.replace(/^\+*/, '');
+
+  try {
+    const client = twilio(accountSid, token);
+    const msg = await client.messages.create({
+      from: process.env.TWILIO_PHONE_NUMBER || '',
+      to: phone,
+      body:
+        "Hallo! Mundpost-Test 🎉 Wenn du das liest, funktioniert der SMS-Versand. — Mundpost",
+    });
+
+    // Poll up to ~18s for a final status
+    let status = msg.status;
+    let errorCode: number | null = msg.errorCode ?? null;
+    let errorMessage: string | null = msg.errorMessage ?? null;
+    for (let i = 0; i < 9; i++) {
+      if (['delivered', 'undelivered', 'failed'].includes(status)) break;
+      await new Promise((r) => setTimeout(r, 2000));
+      const m = await client.messages(msg.sid).fetch();
+      status = m.status;
+      errorCode = m.errorCode ?? null;
+      errorMessage = m.errorMessage ?? null;
+    }
+
+    let hint: string | undefined;
+    if (errorCode === 21608)
+      hint = 'Trial: Zielnummer nicht verifiziert.';
+    else if (errorCode === 30008 || status === 'undelivered')
+      hint =
+        'Vom Netz nicht zugestellt — typisch bei US-Absendernummer nach Italien. Für Italien brauchst du eine italienische/EU-Nummer oder Alphanumeric Sender ID (und ein aufgeladenes, kein Trial-Konto).';
+    else if (errorCode === 30007)
+      hint = 'Vom Carrier als Spam gefiltert.';
+
+    res.json({ sid: msg.sid, to: phone, status, errorCode, errorMessage, hint });
+  } catch (error: any) {
+    res.status(500).json({ error: error?.message || String(error), code: error?.code });
+  }
+});
+
 // GET /api/setup/sms-status/:sid — Ask Twilio the REAL delivery status of a
 // message (Twilio "success" only means accepted, not delivered).
 router.get('/sms-status/:sid', async (req, res) => {
