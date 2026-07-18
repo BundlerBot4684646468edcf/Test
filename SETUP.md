@@ -89,8 +89,8 @@ RESEND_API_KEY=re_123...
 Öffne `/home/user/Test/.env` und stelle sicher, dass alle 4 Keys eingetragen sind:
 
 ```bash
-# Database
-DATABASE_URL="postgresql://mundpost_user:mundpost_pass@localhost:5432/mundpost_dev"
+# Database — SQLite, wird als Datei automatisch angelegt. Leer lassen genügt.
+DB_FILE=
 
 # Google Places
 GOOGLE_PLACES_API_KEY=AIzaSyD...
@@ -109,30 +109,20 @@ PORT=3000
 FRONTEND_URL=http://localhost:3001
 ```
 
-### 2. PostgreSQL starten
-```bash
-docker-compose -f docker-compose.dev.yml up -d
-```
-
-### 3. Datenbank migrieren
-```bash
-npm run prisma:migrate
-```
-
-### 4. Backend starten
+### 2. Backend starten (Node.js 22+ nötig)
 ```bash
 npm run dev
 ```
 Server läuft auf `http://localhost:3000`
 
-### 5. Frontend starten (neues Terminal)
+### 3. Frontend starten (neues Terminal)
 ```bash
 cd frontend
 npm run dev
 ```
 Frontend läuft auf `http://localhost:3001`
 
-### 6. Setup validieren
+### 4. Setup validieren
 ```bash
 curl http://localhost:3000/api/setup/status
 ```

@@ -8,3 +8,8 @@ dist/
 .idea/
 .prisma/
 build/
+
+# SQLite database
+mundpost.db
+mundpost.db-shm
+mundpost.db-wal

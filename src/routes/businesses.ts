@@ -1,5 +1,5 @@
-import express, { Router } from 'express';
-import prisma from '../db';
+import { Router } from 'express';
+import { businesses, customers, reviewEvents } from '../db';
 import { searchPlace, generateReviewLink } from '../services/googlePlaces';
 import customersRouter from './customers';
 import photosRouter from './photos';
@@ -18,10 +18,7 @@ router.post('/', async (req, res) => {
         .json({ error: 'name and ownerName are required' });
     }
 
-    const business = await prisma.business.create({
-      data: { name, ownerName, timezone },
-    });
-
+    const business = businesses.create({ name, ownerName, timezone });
     res.status(201).json(business);
   } catch (error) {
     console.error(error);
@@ -29,22 +26,19 @@ router.post('/', async (req, res) => {
   }
 });
 
-// GET /api/businesses/:id — Get business details
+// GET /api/businesses/:id — Get business details (+ recent customers & events)
 router.get('/:id', async (req, res) => {
   try {
-    const business = await prisma.business.findUnique({
-      where: { id: req.params.id },
-      include: {
-        customers: { take: 10 },
-        reviewEvents: { take: 10, orderBy: { checkedAt: 'desc' } },
-      },
-    });
-
+    const business = businesses.get(req.params.id);
     if (!business) {
       return res.status(404).json({ error: 'Business not found' });
     }
 
-    res.json(business);
+    res.json({
+      ...business,
+      customers: customers.list(business.id, 0, 10),
+      reviewEvents: reviewEvents.listRecent(business.id, 10),
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to get business' });
@@ -62,23 +56,24 @@ router.post('/:id/find-place', async (req, res) => {
         .json({ error: 'businessName and address are required' });
     }
 
+    const business = businesses.get(req.params.id);
+    if (!business) {
+      return res.status(404).json({ error: 'Business not found' });
+    }
+
     const placeResult = await searchPlace(businessName, address);
     const reviewLink = generateReviewLink(placeResult.placeId);
 
-    // Save to business
-    const business = await prisma.business.update({
-      where: { id: req.params.id },
-      data: {
-        googlePlaceId: placeResult.placeId,
-        googleReviewLink: reviewLink,
-      },
+    const updated = businesses.update(req.params.id, {
+      googlePlaceId: placeResult.placeId,
+      googleReviewLink: reviewLink,
     });
 
     res.json({
       success: true,
       place: placeResult,
       reviewLink,
-      business,
+      business: updated,
     });
   } catch (error) {
     console.error(error);
@@ -89,6 +84,6 @@ router.post('/:id/find-place', async (req, res) => {
 // Nested routes
 router.use('/:businessId/customers', customersRouter);
 router.use('/:businessId/review-requests', reviewRequestsRouter);
-router.use('/:id/photo', photosRouter);
+router.use('/:businessId/photo', photosRouter);
 
 export default router;

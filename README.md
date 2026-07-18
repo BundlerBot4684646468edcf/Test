@@ -19,7 +19,7 @@ Automatisierter Google-Review-Service für lokale Betriebe. Lädt Kundenlisten h
 |-------|------|
 | **Frontend** | Next.js, React, Tailwind CSS, Recharts |
 | **Backend** | Node.js, TypeScript, Express, Prisma |
-| **Database** | PostgreSQL, Docker |
+| **Database** | SQLite (in Node 22 eingebaut, kein Server) |
 | **SMS** | Twilio API |
 | **Email** | Resend API |
 | **Places** | Google Places API |
@@ -91,22 +91,14 @@ mundpost/
 ## ⚡ Development
 
 ```bash
-# Install
+# Backend (braucht Node.js 22+)
 npm install
+npm run dev            # Port 3000, legt mundpost.db automatisch an
 
-# Start PostgreSQL
-docker-compose -f docker-compose.dev.yml up -d
+# Frontend (zweites Terminal)
+cd frontend && npm install && npm run dev   # Port 3001
 
-# Migrate DB
-npm run prisma:migrate
-
-# Start Backend (Port 3000)
-npm run dev
-
-# Start Frontend (Port 3001, separate terminal)
-cd frontend && npm run dev
-
-# Check Setup Status
+# Setup-Status prüfen
 curl http://localhost:3000/api/setup/status
 ```
 

@@ -1,198 +1,86 @@
-# 🚀 Mundpost Quick Start
+# 🚀 Mundpost — In 3 Schritten starten
 
-## ⏱️ 5 Minuten Setup
+Kein Docker, keine Datenbank-Installation, keine Prisma-Downloads.
+Die Datenbank ist eine einzige Datei (`mundpost.db`), die automatisch entsteht.
 
-### 1. API-Keys besorgen (siehe SETUP.md für Details)
+## Voraussetzung
+- **Node.js 22 oder neuer** (wichtig — die Datenbank braucht das eingebaute SQLite von Node 22).
+  Prüfen: `node -v` → muss `v22...` oder höher zeigen.
+  Falls nicht: https://nodejs.org/ → LTS installieren.
 
-**Google Places API** (https://console.cloud.google.com/)
-- [ ] Create Project
-- [ ] Enable Places API
-- [ ] Create API Key
-- [ ] Copy: `AIzaSy...`
+---
 
-**Twilio SMS** (https://console.twilio.com/)
-- [ ] Sign Up
-- [ ] Buy Phone Number
-- [ ] Copy: Account SID, Auth Token, Phone Number
-
-**Resend Email** (https://resend.com/)
-- [ ] Sign Up
-- [ ] Create API Key
-- [ ] Copy: `re_...`
-
-### 2. Keys in `.env` einfügen
+## Schritt 1 — Backend starten
 
 ```bash
-# Öffne .env und fülle aus:
-GOOGLE_PLACES_API_KEY=AIzaSy...
-TWILIO_ACCOUNT_SID=AC...
-TWILIO_AUTH_TOKEN=...
-TWILIO_PHONE_NUMBER=+1...
-RESEND_API_KEY=re_...
-```
-
-### 3. Datenbank starten
-
-```bash
-docker-compose -f docker-compose.dev.yml up -d
-npm run prisma:migrate
-```
-
-### 4. Server starten (2 Terminals)
-
-**Terminal 1 — Backend:**
-```bash
+cd Test          # in den Projektordner
+npm install
 npm run dev
-# Port: 3000
 ```
 
-**Terminal 2 — Frontend:**
+Du siehst:
+```
+🚀 Mundpost server running on http://localhost:3000
+✅ Cron jobs started
+```
+
+Das war's — das Backend läuft. Die Datei `mundpost.db` wird automatisch angelegt.
+
+## Schritt 2 — Frontend starten (zweites Terminal)
+
 ```bash
-cd frontend
+cd Test/frontend
+npm install
 npm run dev
-# Port: 3001
 ```
 
-### 5. Validieren
+Dashboard: http://localhost:3001
+
+## Schritt 3 — Prüfen ob deine API-Keys erkannt werden
 
 ```bash
 curl http://localhost:3000/api/setup/status
 ```
 
-Sollte zeigen:
-```json
-{
-  "allConfigured": true,
-  "services": {
-    "googlePlaces": { "configured": true, "status": "✅ Ready" },
-    "sms": { "configured": true, "status": "✅ Ready" },
-    "email": { "configured": true, "status": "✅ Ready" }
-  }
-}
-```
+Zeigt für jeden Dienst ✅ oder ❌. Keys trägst du in `.env` ein (siehe SETUP.md).
+**Wichtig:** Ohne Keys läuft alles trotzdem — nur echtes SMS/E-Mail-Versenden
+und die Google-Suche sind dann deaktiviert.
 
 ---
 
-## 📝 Beispiel: Business + Kunden + SMS versenden
+## Schnelltest ohne Keys (alles außer echtem Versand)
 
-### Business erstellen
 ```bash
-BUSINESS_ID=$(curl -s -X POST http://localhost:3000/api/businesses \
+# Business anlegen
+curl -X POST http://localhost:3000/api/businesses \
   -H "Content-Type: application/json" \
-  -d '{
-    "name": "My Pizza",
-    "ownerName": "Marco",
-    "timezone": "Europe/Rome"
-  }' | jq -r '.id')
+  -d '{"name":"Meine Pizzeria","ownerName":"Marco"}'
+# -> gibt eine "id" zurück, die merkst du dir
 
-echo "Business ID: $BUSINESS_ID"
+# Kunden aus CSV importieren (Datei customers.csv mit Kopfzeile:
+# firstName,phone,email,servedAt)
+curl -X POST http://localhost:3000/api/businesses/DEINE_ID/customers/import \
+  -F "file=@customers.csv" -F "source=past"
+
+# Kundenliste ansehen
+curl http://localhost:3000/api/businesses/DEINE_ID/customers
 ```
 
-### Google Place finden
-```bash
-curl -X POST http://localhost:3000/api/businesses/$BUSINESS_ID/find-place \
-  -H "Content-Type: application/json" \
-  -d '{
-    "businessName": "My Pizza",
-    "address": "Via Roma 1, Bolzano, Italy"
-  }' | jq .
-```
-
-### Foto hochladen (optional)
-```bash
-# Mit echtem Foto ersetzen
-curl -X POST http://localhost:3000/api/businesses/$BUSINESS_ID/photo \
-  -F "photo=@/path/to/owner.jpg"
-```
-
-### Kunden importieren
-```bash
-# customers.csv erstellen:
-cat > customers.csv << EOF
-firstName,phone,email,servedAt
-Marco,+393891234567,marco@example.com,2024-01-15
-Anna,,anna@example.com,2024-01-14
-EOF
-
-curl -X POST http://localhost:3000/api/businesses/$BUSINESS_ID/customers/import \
-  -F "file=@customers.csv" \
-  -F "source=past"
-```
-
-### Kunden-ID abrufen
-```bash
-curl http://localhost:3000/api/businesses/$BUSINESS_ID/customers | jq '.customers[0]'
-# Merke dir die "id"
-```
-
-### SMS/Email versenden
-```bash
-CUSTOMER_ID="xxxxxx"
-
-# SMS:
-curl -X POST http://localhost:3000/api/businesses/$BUSINESS_ID/review-requests \
-  -H "Content-Type: application/json" \
-  -d "{
-    \"customerId\": \"$CUSTOMER_ID\",
-    \"channel\": \"sms\"
-  }"
-
-# Email:
-curl -X POST http://localhost:3000/api/businesses/$BUSINESS_ID/review-requests \
-  -H "Content-Type: application/json" \
-  -d "{
-    \"customerId\": \"$CUSTOMER_ID\",
-    \"channel\": \"email\"
-  }"
-```
-
-**Hinweis:** Echte SMS/Email werden sofort gesendet. Logs zeigen Status.
+Im Dashboard (http://localhost:3001) meldest du dich mit der Business-`id` an.
 
 ---
 
-## 🌐 Dashboard
+## Was jeder Teil macht
 
-Öffne http://localhost:3001
-- Login mit deiner Business ID
-- Siehe: Kunden, Review Requests, Stats
+| Endpoint | Zweck |
+|---|---|
+| `POST /api/businesses` | Betrieb anlegen |
+| `POST /api/businesses/:id/find-place` | Google-Place + Review-Link (braucht Google-Key) |
+| `POST /api/businesses/:id/customers/import` | CSV-Kunden importieren |
+| `POST /api/businesses/:id/photo` | Inhaber-Foto hochladen |
+| `POST /api/businesses/:id/review-requests` | Bewertungsanfrage einreihen |
+| `PATCH .../review-requests/:id/opt-out` | Abmeldung |
+| `GET /api/setup/status` | Welche Keys sind aktiv |
 
----
-
-## 🎯 Was funktioniert
-
-✅ SMS mit Foto (MMS) + personalisiertem Text  
-✅ Email mit inline Foto + HTML  
-✅ Automatische Versand-Cron-Jobs  
-✅ Erinnerungen nach 3 Tagen  
-✅ GDPR Opt-out  
-✅ Wochenbericht mit Chart  
-✅ Rate Limiting (daily batch limit)  
-✅ CSV Import  
-
----
-
-## ❓ Fehlersuche
-
-**SMS nicht gesendet?**
-- Logs prüfen: `✅ SMS sent` oder `❌ SMS error`
-- Twilio Balance check: https://console.twilio.com/
-
-**Email nicht gesendet?**
-- Logs prüfen: `✅ Email sent` oder `❌ Email error`
-- Prüfe Spam-Folder
-
-**Place nicht gefunden?**
-- Google Places API aktiviert? https://console.cloud.google.com/
-- Ist der API Key richtig?
-- Probiere exakte Adresse
-
----
-
-## 📚 Mehr
-
-- **Full Setup Guide:** `SETUP.md`
-- **API Docs:** Curl-Beispiele in `SETUP.md`
-- **Database:** `prisma/schema.prisma`
-- **Cron Jobs:** `src/services/cronJobs.ts`
-
-🎉 **Done!**
+Der stündliche Cron-Job verschickt eingereihte Anfragen (wenn Twilio/Resend-Keys
+gesetzt sind) und respektiert das tägliche Limit pro Betrieb.
