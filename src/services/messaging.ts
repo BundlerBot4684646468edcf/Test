@@ -60,8 +60,20 @@ export async function sendSMS(payload: SMSPayload): Promise<{
       from: process.env.TWILIO_PHONE_NUMBER || '',
       to: payload.toPhone,
     };
-    if (payload.mediaUrl) {
+    // Only attach media if it is a real public https URL Twilio can fetch.
+    // A non-public placeholder (mock storage) would make Twilio reject the
+    // whole message, so we fall back to a text-only SMS in that case.
+    const isPublic =
+      !!payload.mediaUrl &&
+      payload.mediaUrl.startsWith('https://') &&
+      !payload.mediaUrl.includes('mock-storage.local');
+    if (isPublic) {
       messageData.mediaUrl = [payload.mediaUrl];
+    } else if (payload.mediaUrl) {
+      console.warn(
+        '[SMS] Photo URL is not publicly reachable — sending text-only SMS. ' +
+          'Configure R2 storage to enable photo-MMS.'
+      );
     }
 
     const message = await client.messages.create(messageData);

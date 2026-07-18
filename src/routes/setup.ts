@@ -122,6 +122,56 @@ router.get('/test-sms-check/:number', async (req, res) => {
   }
 });
 
+// GET /api/setup/test-mms/:number — Send a test MMS with a public sample image,
+// to confirm your Twilio number can deliver picture messages at all.
+router.get('/test-mms/:number', async (req, res) => {
+  const accountSid = process.env.TWILIO_ACCOUNT_SID || '';
+  const token = process.env.TWILIO_AUTH_TOKEN || '';
+  if (!accountSid || !token) {
+    return res.status(400).json({ error: 'Twilio not configured' });
+  }
+
+  let phone = (req.params.number || '').trim().replace(/\s/g, '');
+  if (!phone.startsWith('+')) phone = '+' + phone.replace(/^\+*/, '');
+
+  // A known publicly-reachable image (Twilio's own demo owl).
+  const imageUrl = (req.query.img as string) || 'https://demo.twilio.com/owl.png';
+
+  try {
+    const client = twilio(accountSid, token);
+    const msg = await client.messages.create({
+      from: process.env.TWILIO_PHONE_NUMBER || '',
+      to: phone,
+      body: 'Mundpost Foto-Test 📸 — wenn du ein Bild siehst, funktioniert MMS.',
+      mediaUrl: [imageUrl],
+    });
+
+    let status = msg.status;
+    let errorCode: number | null = msg.errorCode ?? null;
+    for (let i = 0; i < 9; i++) {
+      if (['delivered', 'undelivered', 'failed'].includes(status)) break;
+      await new Promise((r) => setTimeout(r, 2000));
+      const m = await client.messages(msg.sid).fetch();
+      status = m.status;
+      errorCode = m.errorCode ?? null;
+    }
+
+    res.json({
+      sid: msg.sid,
+      to: phone,
+      imageUrl,
+      status,
+      errorCode,
+      hint:
+        status === 'undelivered' || errorCode
+          ? 'MMS oft eingeschränkt bei Trial-Konten und US-Nummer -> Italien. Für echtes Foto-MMS: aufgeladenes Konto + MMS-fähige Nummer.'
+          : undefined,
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error?.message || String(error), code: error?.code });
+  }
+});
+
 // GET /api/setup/sms-status/:sid — Ask Twilio the REAL delivery status of a
 // message (Twilio "success" only means accepted, not delivered).
 router.get('/sms-status/:sid', async (req, res) => {
