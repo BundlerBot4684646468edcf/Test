@@ -1,4 +1,5 @@
 import express from 'express';
+import twilio from 'twilio';
 import { isGooglePlacesConfigured } from '../services/googlePlaces';
 import {
   isMessagingConfigured,
@@ -70,6 +71,36 @@ router.get('/test-sms/:number', async (req, res) => {
 // Also works with a query param: /api/setup/test-sms?to=+39...
 router.get('/test-sms', async (req, res) => {
   await doTestSms((req.query.to as string) || '', res);
+});
+
+// GET /api/setup/sms-status/:sid — Ask Twilio the REAL delivery status of a
+// message (Twilio "success" only means accepted, not delivered).
+router.get('/sms-status/:sid', async (req, res) => {
+  const sid = process.env.TWILIO_ACCOUNT_SID || '';
+  const token = process.env.TWILIO_AUTH_TOKEN || '';
+  if (!sid || !token) {
+    return res.status(400).json({ error: 'Twilio not configured' });
+  }
+  try {
+    const client = twilio(sid, token);
+    const m = await client.messages(req.params.sid).fetch();
+    res.json({
+      status: m.status, // queued | sent | delivered | undelivered | failed
+      errorCode: m.errorCode,
+      errorMessage: m.errorMessage,
+      to: m.to,
+      from: m.from,
+      dateSent: m.dateSent,
+      hint:
+        m.errorCode === 21608
+          ? 'Trial-Konto: Zielnummer muss in Twilio verifiziert sein.'
+          : m.errorCode === 30008 || m.status === 'undelivered'
+          ? 'Vom Netz nicht zugestellt (oft US-Nummer -> Italien). Italienische/lokale Absendernummer oder Alphanumeric Sender ID nötig.'
+          : undefined,
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error?.message || String(error) });
+  }
 });
 
 // GET /api/setup/test-email?to=name@example.com — Send a single real test email.
