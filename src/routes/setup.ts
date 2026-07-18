@@ -33,27 +33,43 @@ router.get('/status', (req, res) => {
   });
 });
 
-// GET /api/setup/test-sms?to=+39...  — Send a single real test SMS.
-// Handy for a first end-to-end check straight from the browser.
-router.get('/test-sms', async (req, res) => {
-  const to = (req.query.to as string) || '';
-  if (!to.startsWith('+')) {
+// Normalise a number the browser may have mangled (dropped '+', added spaces).
+function normalizePhone(raw: string): string {
+  let n = (raw || '').trim().replace(/[\s]/g, '');
+  if (n.startsWith(' ')) n = n.trim();
+  if (!n.startsWith('+')) n = '+' + n.replace(/^\+*/, '');
+  return n;
+}
+
+async function doTestSms(to: string, res: express.Response) {
+  const phone = normalizePhone(to);
+  if (phone.length < 8) {
     return res.status(400).json({
-      error: 'Bitte ?to=+Ländervorwahl... angeben, z.B. /api/setup/test-sms?to=+393271234567',
+      error:
+        'Nummer fehlt. Öffne z.B. http://localhost:3000/api/setup/test-sms/393273042753',
     });
   }
-
   const result = await sendSMS({
-    toPhone: to,
+    toPhone: phone,
     message:
       "Hallo! Das ist deine Mundpost-Test-SMS 🎉 Wenn du das liest, funktioniert der SMS-Versand wirklich. — Mundpost",
   });
-
   if (result.success) {
-    res.json({ success: true, sentTo: to, messageId: result.messageId });
+    res.json({ success: true, sentTo: phone, messageId: result.messageId });
   } else {
-    res.status(500).json({ success: false, error: result.error });
+    res.status(500).json({ success: false, sentTo: phone, error: result.error });
   }
+}
+
+// Easiest: number in the path, no '+' or '?' needed.
+// e.g. http://localhost:3000/api/setup/test-sms/393273042753
+router.get('/test-sms/:number', async (req, res) => {
+  await doTestSms(req.params.number, res);
+});
+
+// Also works with a query param: /api/setup/test-sms?to=+39...
+router.get('/test-sms', async (req, res) => {
+  await doTestSms((req.query.to as string) || '', res);
 });
 
 // GET /api/setup/test-email?to=name@example.com — Send a single real test email.
