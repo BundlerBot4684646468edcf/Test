@@ -1,15 +1,27 @@
 import { createCanvas, loadImage, GlobalFonts } from '@napi-rs/canvas';
 import path from 'path';
 
-// Register the bundled handwriting font once (ships with the project,
-// so it renders identically on every machine).
+// Register the bundled fonts once (ship with the project, so they render
+// identically on every machine — no reliance on OS-installed fonts, which
+// @napi-rs/canvas may not find at all on some systems, e.g. showing tofu
+// boxes for "sans-serif" on some Windows setups).
 let fontReady = false;
 function ensureFont() {
   if (fontReady) return;
-  const fontPath = require.resolve(
+  const handwriting = require.resolve(
     '@fontsource/caveat/files/caveat-latin-400-normal.woff'
   );
-  GlobalFonts.registerFromPath(fontPath, 'Caveat');
+  GlobalFonts.registerFromPath(handwriting, 'Caveat');
+
+  const bodyRegular = require.resolve(
+    '@fontsource/inter/files/inter-latin-400-normal.woff'
+  );
+  GlobalFonts.registerFromPath(bodyRegular, 'Inter');
+  const bodyBold = require.resolve(
+    '@fontsource/inter/files/inter-latin-700-normal.woff'
+  );
+  GlobalFonts.registerFromPath(bodyBold, 'Inter Bold');
+
   fontReady = true;
 }
 
@@ -96,10 +108,10 @@ export async function demoPhoto(firstName: string): Promise<Buffer> {
 
   // "Logo" text on the wall
   ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 44px sans-serif';
+  ctx.font = '44px "Inter Bold"';
   ctx.textAlign = 'center';
   ctx.fillText('Mundpost Demo', W / 2, 110);
-  ctx.font = '22px sans-serif';
+  ctx.font = '22px Inter';
   ctx.fillText('Dein Betrieb · Südtirol', W / 2, 150);
 
   // Sign with shadow
