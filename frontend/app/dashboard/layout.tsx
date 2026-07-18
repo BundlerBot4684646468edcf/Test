@@ -1,8 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
+
+const nav = [
+  { href: '/dashboard', label: 'Übersicht' },
+  { href: '/dashboard/customers', label: 'Kunden' },
+  { href: '/dashboard/reviews', label: 'Bewertungen' },
+];
 
 export default function DashboardLayout({
   children,
@@ -10,15 +16,13 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [businessId, setBusinessId] = useState('');
 
   useEffect(() => {
     const id = localStorage.getItem('businessId');
-    if (!id) {
-      router.push('/');
-    } else {
-      setBusinessId(id);
-    }
+    if (!id) router.push('/');
+    else setBusinessId(id);
   }, [router]);
 
   const handleLogout = () => {
@@ -27,52 +31,66 @@ export default function DashboardLayout({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-8">
-            <h1 className="text-2xl font-bold text-gray-900">
-              Mundpost
-            </h1>
-            <div className="hidden md:flex space-x-6">
-              <Link
-                href="/dashboard"
-                className="text-gray-600 hover:text-gray-900 font-medium"
+    <div className="min-h-screen" style={{ background: 'var(--plane)' }}>
+      <nav
+        className="sticky top-0 z-10 backdrop-blur"
+        style={{
+          background: 'color-mix(in srgb, var(--surface) 85%, transparent)',
+          borderBottom: '1px solid var(--border)',
+        }}
+      >
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-8">
+            <div className="flex items-center gap-2">
+              <span
+                className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-white text-sm font-bold"
+                style={{ background: 'var(--brand)' }}
               >
-                Dashboard
-              </Link>
-              <Link
-                href="/dashboard/customers"
-                className="text-gray-600 hover:text-gray-900 font-medium"
-              >
-                Kunden
-              </Link>
-              <Link
-                href="/dashboard/reviews"
-                className="text-gray-600 hover:text-gray-900 font-medium"
-              >
-                Bewertungen
-              </Link>
+                M
+              </span>
+              <span className="font-semibold tracking-tight" style={{ color: 'var(--ink)' }}>
+                Mundpost
+              </span>
+            </div>
+            <div className="hidden md:flex items-center gap-1">
+              {nav.map((item) => {
+                const active = pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+                    style={{
+                      color: active ? 'var(--brand-600)' : 'var(--ink-2)',
+                      background: active ? 'var(--brand-50)' : 'transparent',
+                    }}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
             </div>
           </div>
 
-          <div className="flex items-center space-x-4">
-            <code className="text-sm bg-gray-100 px-3 py-1 rounded text-gray-600">
-              {businessId.slice(0, 8)}...
+          <div className="flex items-center gap-3">
+            <code
+              className="hidden sm:block text-xs px-2.5 py-1 rounded-md tnum"
+              style={{ background: 'var(--plane)', color: 'var(--muted)', border: '1px solid var(--border)' }}
+            >
+              {businessId.slice(0, 8)}…
             </code>
             <button
               onClick={handleLogout}
-              className="px-4 py-2 text-gray-600 hover:text-gray-900 font-medium"
+              className="text-sm font-medium px-3 py-1.5 rounded-lg transition-colors"
+              style={{ color: 'var(--ink-2)' }}
             >
-              Logout
+              Abmelden
             </button>
           </div>
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        {children}
-      </main>
+      <main className="max-w-6xl mx-auto px-6 py-10">{children}</main>
     </div>
   );
 }

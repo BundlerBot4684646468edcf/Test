@@ -1,26 +1,42 @@
 @import "tailwindcss";
 
+/* ---- Mundpost design tokens (validated data-viz palette) ---- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --surface: #fcfcfb;        /* card surface */
+  --plane: #f9f9f7;          /* page background */
+  --ink: #0b0b0b;            /* primary text */
+  --ink-2: #52514e;          /* secondary text */
+  --muted: #898781;          /* labels / axis */
+  --line: #e1e0d9;           /* hairline / gridline */
+  --border: rgba(11, 11, 11, 0.10);
+
+  --brand: #2a78d6;          /* primary blue */
+  --brand-600: #184f95;
+  --brand-50: #eef5fe;
+
+  --good: #0ca30c;
+  --good-ink: #006300;
+  --warning: #fab219;
+  --serious: #ec835a;
+  --critical: #d03b3b;
+
+  --background: var(--plane);
+  --foreground: var(--ink);
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans: var(--font-sans);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--plane);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
 }
+
+.tnum { font-variant-numeric: tabular-nums; }

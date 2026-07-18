@@ -5,11 +5,7 @@ import api from '@/lib/api';
 
 interface ReviewRequest {
   id: string;
-  customer: {
-    firstName: string;
-    email?: string;
-    phone?: string;
-  };
+  customer: { firstName: string; email?: string; phone?: string };
   channel: string;
   status: string;
   sentAt?: string;
@@ -17,162 +13,137 @@ interface ReviewRequest {
   createdAt: string;
 }
 
-const statusColors: Record<string, string> = {
-  queued: 'bg-yellow-100 text-yellow-700',
-  sent: 'bg-blue-100 text-blue-700',
-  reminded: 'bg-purple-100 text-purple-700',
-  reviewed: 'bg-green-100 text-green-700',
-  opted_out: 'bg-red-100 text-red-700',
+const STATUS: Record<string, { label: string; fg: string; bg: string }> = {
+  queued: { label: 'In Warteschlange', fg: '#8a5a00', bg: 'rgba(250,178,25,0.15)' },
+  sent: { label: 'Gesendet', fg: 'var(--brand-600)', bg: 'var(--brand-50)' },
+  reminded: { label: 'Erinnert', fg: '#a24a25', bg: 'rgba(236,131,90,0.15)' },
+  reviewed: { label: 'Bewertet', fg: 'var(--good-ink)', bg: 'rgba(12,163,12,0.13)' },
+  opted_out: { label: 'Abgemeldet', fg: 'var(--critical)', bg: 'rgba(208,59,59,0.12)' },
 };
+
+const card: React.CSSProperties = {
+  background: 'var(--surface)',
+  border: '1px solid var(--border)',
+  borderRadius: 14,
+};
+
+function Badge({ status }: { status: string }) {
+  const s = STATUS[status] || { label: status, fg: 'var(--ink-2)', bg: 'var(--plane)' };
+  return (
+    <span
+      className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium"
+      style={{ color: s.fg, background: s.bg }}
+    >
+      {s.label}
+    </span>
+  );
+}
 
 export default function ReviewsPage() {
   const [requests, setRequests] = useState<ReviewRequest[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<string>('');
+  const [filter, setFilter] = useState('');
 
   useEffect(() => {
-    loadRequests();
+    const id = localStorage.getItem('businessId');
+    if (!id) return;
+    setLoading(true);
+    api
+      .get(`/businesses/${id}/review-requests`, { params: filter ? { status: filter } : {} })
+      .then((r) => setRequests(r.data.requests))
+      .catch(console.error)
+      .finally(() => setLoading(false));
   }, [filter]);
 
-  const loadRequests = async () => {
-    try {
-      const businessId = localStorage.getItem('businessId');
-      if (!businessId) return;
+  const stat = (s: string) => requests.filter((r) => r.status === s).length;
 
-      const params = filter ? { status: filter } : {};
-      const response = await api.get(
-        `/businesses/${businessId}/review-requests`,
-        { params }
-      );
-      setRequests(response.data.requests);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const stats = {
-    total: requests.length,
-    sent: requests.filter((r) => r.status === 'sent').length,
-    reviewed: requests.filter((r) => r.status === 'reviewed').length,
-    optedOut: requests.filter((r) => r.status === 'opted_out').length,
-  };
+  const filters = [
+    { key: '', label: 'Alle' },
+    { key: 'queued', label: 'Wartend' },
+    { key: 'sent', label: 'Gesendet' },
+    { key: 'reviewed', label: 'Bewertet' },
+    { key: 'opted_out', label: 'Abgemeldet' },
+  ];
 
   return (
-    <div className="space-y-8">
-      <h2 className="text-3xl font-bold text-gray-900">Review Requests</h2>
+    <div className="space-y-6">
+      <h1 className="text-2xl font-semibold tracking-tight" style={{ color: 'var(--ink)' }}>
+        Bewertungsanfragen
+      </h1>
 
-      {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow p-4">
-          <p className="text-gray-600 text-sm">Total Requests</p>
-          <p className="text-2xl font-bold text-gray-900 mt-1">{stats.total}</p>
-        </div>
-        <div className="bg-white rounded-lg shadow p-4">
-          <p className="text-gray-600 text-sm">Sent</p>
-          <p className="text-2xl font-bold text-blue-600 mt-1">{stats.sent}</p>
-        </div>
-        <div className="bg-white rounded-lg shadow p-4">
-          <p className="text-gray-600 text-sm">Reviewed</p>
-          <p className="text-2xl font-bold text-green-600 mt-1">
-            {stats.reviewed}
-          </p>
-        </div>
-        <div className="bg-white rounded-lg shadow p-4">
-          <p className="text-gray-600 text-sm">Opted Out</p>
-          <p className="text-2xl font-bold text-red-600 mt-1">
-            {stats.optedOut}
-          </p>
-        </div>
-      </div>
-
-      {/* Filter */}
-      <div className="flex gap-2">
-        {['', 'queued', 'sent', 'reviewed', 'opted_out'].map((status) => (
-          <button
-            key={status || 'all'}
-            onClick={() => setFilter(status)}
-            className={`px-4 py-2 rounded-lg font-medium transition ${
-              filter === status
-                ? 'bg-blue-600 text-white'
-                : 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300'
-            }`}
-          >
-            {status || 'All'}
-          </button>
+        {[
+          { label: 'Gesamt', value: requests.length, color: 'var(--ink)' },
+          { label: 'Gesendet', value: stat('sent'), color: 'var(--brand-600)' },
+          { label: 'Bewertet', value: stat('reviewed'), color: 'var(--good-ink)' },
+          { label: 'Abgemeldet', value: stat('opted_out'), color: 'var(--critical)' },
+        ].map((s) => (
+          <div key={s.label} style={card} className="p-4">
+            <p className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--muted)' }}>
+              {s.label}
+            </p>
+            <p className="mt-1.5 text-2xl font-semibold tnum" style={{ color: s.color }}>
+              {s.value}
+            </p>
+          </div>
         ))}
       </div>
 
-      {/* List */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="flex flex-wrap gap-2">
+        {filters.map((f) => {
+          const active = filter === f.key;
+          return (
+            <button
+              key={f.key || 'all'}
+              onClick={() => setFilter(f.key)}
+              className="px-3.5 py-1.5 rounded-lg text-sm font-medium transition-colors"
+              style={{
+                color: active ? '#fff' : 'var(--ink-2)',
+                background: active ? 'var(--brand)' : 'var(--surface)',
+                border: `1px solid ${active ? 'var(--brand)' : 'var(--border)'}`,
+              }}
+            >
+              {f.label}
+            </button>
+          );
+        })}
+      </div>
+
+      <div style={card} className="overflow-hidden">
         {loading ? (
-          <div className="p-6 text-center">Loading...</div>
+          <div className="p-8 text-center" style={{ color: 'var(--muted)' }}>Lädt…</div>
         ) : requests.length === 0 ? (
-          <div className="p-6 text-center text-gray-600">
-            No review requests
+          <div className="p-8 text-center" style={{ color: 'var(--ink-2)' }}>
+            Keine Anfragen in dieser Ansicht.
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-3 text-left text-sm font-semibold">
-                    Customer
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold">
-                    Channel
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold">
-                    Sent
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold">
-                    Reminded
-                  </th>
+            <table className="w-full text-sm">
+              <thead>
+                <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                  {['Kunde', 'Kanal', 'Status', 'Gesendet', 'Erinnert'].map((h) => (
+                    <th key={h} className="text-left px-5 py-3 font-medium" style={{ color: 'var(--muted)' }}>
+                      {h}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {requests.map((request) => (
-                  <tr
-                    key={request.id}
-                    className="border-b border-gray-200 hover:bg-gray-50"
-                  >
-                    <td className="px-6 py-4 text-sm">
-                      <div className="font-medium text-gray-900">
-                        {request.customer.firstName}
-                      </div>
-                      <div className="text-gray-600 text-xs">
-                        {request.customer.email || request.customer.phone}
+                {requests.map((r) => (
+                  <tr key={r.id} style={{ borderBottom: '1px solid var(--line)' }}>
+                    <td className="px-5 py-3.5">
+                      <div className="font-medium" style={{ color: 'var(--ink)' }}>{r.customer.firstName}</div>
+                      <div className="text-xs" style={{ color: 'var(--muted)' }}>
+                        {r.customer.email || r.customer.phone}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {request.channel.toUpperCase()}
+                    <td className="px-5 py-3.5" style={{ color: 'var(--ink-2)' }}>{r.channel.toUpperCase()}</td>
+                    <td className="px-5 py-3.5"><Badge status={r.status} /></td>
+                    <td className="px-5 py-3.5 tnum" style={{ color: 'var(--ink-2)' }}>
+                      {r.sentAt ? new Date(r.sentAt).toLocaleDateString('de-DE') : '–'}
                     </td>
-                    <td className="px-6 py-4 text-sm">
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-medium ${
-                          statusColors[request.status]
-                        }`}
-                      >
-                        {request.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {request.sentAt
-                        ? new Date(request.sentAt).toLocaleDateString(
-                            'de-DE'
-                          )
-                        : '-'}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {request.remindedAt
-                        ? new Date(request.remindedAt).toLocaleDateString(
-                            'de-DE'
-                          )
-                        : '-'}
+                    <td className="px-5 py-3.5 tnum" style={{ color: 'var(--ink-2)' }}>
+                      {r.remindedAt ? new Date(r.remindedAt).toLocaleDateString('de-DE') : '–'}
                     </td>
                   </tr>
                 ))}

@@ -10,188 +10,155 @@ interface Customer {
   email?: string;
   servedAt: string;
   source: string;
-  optOut: boolean;
+  optOut: number | boolean;
 }
+
+const card: React.CSSProperties = {
+  background: 'var(--surface)',
+  border: '1px solid var(--border)',
+  borderRadius: 14,
+};
 
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
-  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
-  const [message, setMessage] = useState('');
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
-  useEffect(() => {
-    loadCustomers();
-  }, []);
-
-  const loadCustomers = async () => {
-    try {
-      const businessId = localStorage.getItem('businessId');
-      if (!businessId) return;
-
-      const response = await api.get(`/businesses/${businessId}/customers`);
-      setCustomers(response.data.customers);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
+  const load = () => {
+    const id = localStorage.getItem('businessId');
+    if (!id) return;
+    api
+      .get(`/businesses/${id}/customers`)
+      .then((r) => setCustomers(r.data.customers))
+      .catch(console.error)
+      .finally(() => setLoading(false));
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setCsvFile(e.target.files[0]);
-    }
-  };
+  useEffect(load, []);
 
-  const handleUpload = async () => {
-    if (!csvFile) return;
-
+  const upload = async () => {
+    if (!file) return;
     setUploading(true);
+    setMsg(null);
     try {
-      const businessId = localStorage.getItem('businessId');
-      if (!businessId) return;
-
-      const formData = new FormData();
-      formData.append('file', csvFile);
-      formData.append('source', 'past');
-
-      const response = await api.post(
-        `/businesses/${businessId}/customers/import`,
-        formData,
-        {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        }
-      );
-
-      setMessage(
-        `✅ Imported ${response.data.imported} customers. Errors: ${response.data.errors.length}`
-      );
-      setCsvFile(null);
-      await loadCustomers();
-    } catch (error) {
-      setMessage('❌ Upload failed');
-      console.error(error);
+      const id = localStorage.getItem('businessId');
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('source', 'past');
+      const r = await api.post(`/businesses/${id}/customers/import`, fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setMsg({ ok: true, text: `${r.data.imported} Kunden importiert${r.data.errors.length ? `, ${r.data.errors.length} Fehler` : ''}.` });
+      setFile(null);
+      load();
+    } catch {
+      setMsg({ ok: false, text: 'Upload fehlgeschlagen.' });
     } finally {
       setUploading(false);
     }
   };
 
   return (
-    <div className="space-y-8">
-      <h2 className="text-3xl font-bold text-gray-900">Kunden</h2>
+    <div className="space-y-6">
+      <h1 className="text-2xl font-semibold tracking-tight" style={{ color: 'var(--ink)' }}>
+        Kunden
+      </h1>
 
-      {/* CSV Upload */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold mb-4">CSV importieren</h3>
-        <div className="space-y-4">
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
-            <input
-              type="file"
-              accept=".csv"
-              onChange={handleFileSelect}
-              className="w-full"
-            />
+      <div style={card} className="p-6">
+        <h2 className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>CSV importieren</h2>
+        <p className="mt-1 text-sm" style={{ color: 'var(--ink-2)' }}>
+          Spalten: <code className="tnum">firstName, phone, email, servedAt</code>
+        </p>
+
+        <div
+          className="mt-4 rounded-xl p-6 text-center"
+          style={{ border: '1.5px dashed var(--line)', background: 'var(--plane)' }}
+        >
+          <input
+            type="file"
+            accept=".csv"
+            onChange={(e) => setFile(e.target.files?.[0] || null)}
+            className="block w-full text-sm"
+            style={{ color: 'var(--ink-2)' }}
+          />
+        </div>
+
+        {file && (
+          <button
+            onClick={upload}
+            disabled={uploading}
+            className="mt-4 w-full py-2.5 rounded-lg font-medium text-white transition-opacity disabled:opacity-60"
+            style={{ background: 'var(--brand)' }}
+          >
+            {uploading ? 'Importiere…' : `„${file.name}" importieren`}
+          </button>
+        )}
+
+        {msg && (
+          <div
+            className="mt-4 p-3 rounded-lg text-sm"
+            style={{
+              color: msg.ok ? 'var(--good-ink)' : 'var(--critical)',
+              background: msg.ok ? 'rgba(12,163,12,0.10)' : 'rgba(208,59,59,0.10)',
+            }}
+          >
+            {msg.text}
           </div>
-
-          {csvFile && (
-            <button
-              onClick={handleUpload}
-              disabled={uploading}
-              className="w-full bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition disabled:bg-gray-400"
-            >
-              {uploading ? 'Uploading...' : 'Import Customers'}
-            </button>
-          )}
-
-          {message && (
-            <div className={`p-3 rounded text-sm ${
-              message.startsWith('✅')
-                ? 'bg-green-50 text-green-700'
-                : 'bg-red-50 text-red-700'
-            }`}>
-              {message}
-            </div>
-          )}
-        </div>
-
-        <div className="mt-6 pt-6 border-t text-sm text-gray-600">
-          <p className="font-medium mb-2">CSV Format (with headers):</p>
-          <pre className="bg-gray-100 p-3 rounded overflow-auto">
-{`firstName,phone,email,servedAt
-Marco,+393891234567,marco@example.com,2024-01-15
-Anna,,anna@example.com,2024-01-14`}
-          </pre>
-        </div>
+        )}
       </div>
 
-      {/* Customers List */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold">
-            Customers ({customers.length})
-          </h3>
+      <div style={card} className="overflow-hidden">
+        <div className="px-5 py-3.5" style={{ borderBottom: '1px solid var(--border)' }}>
+          <h2 className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>
+            {customers.length} {customers.length === 1 ? 'Kunde' : 'Kunden'}
+          </h2>
         </div>
 
         {loading ? (
-          <div className="p-6 text-center">Loading...</div>
+          <div className="p-8 text-center" style={{ color: 'var(--muted)' }}>Lädt…</div>
         ) : customers.length === 0 ? (
-          <div className="p-6 text-center text-gray-600">
-            No customers yet. Upload a CSV file.
+          <div className="p-8 text-center" style={{ color: 'var(--ink-2)' }}>
+            Noch keine Kunden — lade eine CSV hoch.
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                    Name
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                    Phone
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                    Email
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                    Served
-                  </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                    Status
-                  </th>
+            <table className="w-full text-sm">
+              <thead>
+                <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                  {['Name', 'Telefon', 'E-Mail', 'Besuch', 'Status'].map((h) => (
+                    <th key={h} className="text-left px-5 py-3 font-medium" style={{ color: 'var(--muted)' }}>
+                      {h}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {customers.map((customer) => (
-                  <tr
-                    key={customer.id}
-                    className="border-b border-gray-200 hover:bg-gray-50"
-                  >
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {customer.firstName}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {customer.phone || '-'}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {customer.email || '-'}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                      {new Date(customer.servedAt).toLocaleDateString('de-DE')}
-                    </td>
-                    <td className="px-6 py-4 text-sm">
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-medium ${
-                          customer.optOut
-                            ? 'bg-red-100 text-red-700'
-                            : 'bg-green-100 text-green-700'
-                        }`}
-                      >
-                        {customer.optOut ? 'Opted Out' : 'Active'}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                {customers.map((c) => {
+                  const opted = c.optOut === 1 || c.optOut === true;
+                  return (
+                    <tr key={c.id} style={{ borderBottom: '1px solid var(--line)' }}>
+                      <td className="px-5 py-3.5 font-medium" style={{ color: 'var(--ink)' }}>{c.firstName}</td>
+                      <td className="px-5 py-3.5 tnum" style={{ color: 'var(--ink-2)' }}>{c.phone || '–'}</td>
+                      <td className="px-5 py-3.5" style={{ color: 'var(--ink-2)' }}>{c.email || '–'}</td>
+                      <td className="px-5 py-3.5 tnum" style={{ color: 'var(--ink-2)' }}>
+                        {new Date(c.servedAt).toLocaleDateString('de-DE')}
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <span
+                          className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium"
+                          style={{
+                            color: opted ? 'var(--critical)' : 'var(--good-ink)',
+                            background: opted ? 'rgba(208,59,59,0.12)' : 'rgba(12,163,12,0.13)',
+                          }}
+                        >
+                          {opted ? 'Abgemeldet' : 'Aktiv'}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

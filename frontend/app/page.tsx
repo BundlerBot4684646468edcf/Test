@@ -14,47 +14,64 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError('');
-
     try {
-      const response = await api.get(`/businesses/${businessId}`);
-      if (response.data) {
-        localStorage.setItem('businessId', businessId);
+      const r = await api.get(`/businesses/${businessId.trim()}`);
+      if (r.data) {
+        localStorage.setItem('businessId', businessId.trim());
         router.push('/dashboard');
       }
-    } catch (err) {
-      setError('Business not found or invalid ID');
-      console.error(err);
+    } catch {
+      setError('Betrieb nicht gefunden. Prüfe die ID.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-lg shadow-2xl p-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Mundpost</h1>
-          <p className="text-gray-600 mb-8">
-            Google Review Service für dein Business
+    <div className="min-h-screen flex items-center justify-center px-4" style={{ background: 'var(--plane)' }}>
+      <div className="w-full max-w-sm">
+        <div className="flex items-center gap-2.5 mb-6 justify-center">
+          <span
+            className="inline-flex h-9 w-9 items-center justify-center rounded-xl text-white font-bold"
+            style={{ background: 'var(--brand)' }}
+          >
+            M
+          </span>
+          <span className="text-xl font-semibold tracking-tight" style={{ color: 'var(--ink)' }}>
+            Mundpost
+          </span>
+        </div>
+
+        <div
+          className="p-7"
+          style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16 }}
+        >
+          <h1 className="text-lg font-semibold" style={{ color: 'var(--ink)' }}>Anmelden</h1>
+          <p className="mt-1 text-sm" style={{ color: 'var(--ink-2)' }}>
+            Gib die ID deines Betriebs ein.
           </p>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Business ID
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--ink-2)' }}>
+                Business-ID
               </label>
               <input
                 type="text"
                 value={businessId}
                 onChange={(e) => setBusinessId(e.target.value)}
-                placeholder="Paste your Business ID"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="z. B. 011fad11-ca93-…"
+                className="w-full px-3.5 py-2.5 rounded-lg text-sm outline-none tnum"
+                style={{ border: '1px solid var(--line)', background: 'var(--plane)', color: 'var(--ink)' }}
                 required
               />
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+              <div
+                className="px-3.5 py-2.5 rounded-lg text-sm"
+                style={{ color: 'var(--critical)', background: 'rgba(208,59,59,0.10)' }}
+              >
                 {error}
               </div>
             )}
@@ -62,26 +79,17 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition disabled:bg-gray-400"
+              className="w-full py-2.5 rounded-lg font-medium text-white transition-opacity disabled:opacity-60"
+              style={{ background: 'var(--brand)' }}
             >
-              {loading ? 'Loading...' : 'Login'}
+              {loading ? 'Prüfe…' : 'Anmelden'}
             </button>
           </form>
-
-          <div className="mt-8 pt-8 border-t border-gray-200">
-            <p className="text-sm text-gray-600 mb-4">
-              Noch kein Business? Erstelle eines über die API:
-            </p>
-            <pre className="bg-gray-100 p-4 rounded text-xs overflow-auto">
-{`POST /api/businesses
-{
-  "name": "My Pizzeria",
-  "ownerName": "Marco",
-  "timezone": "Europe/Rome"
-}`}
-            </pre>
-          </div>
         </div>
+
+        <p className="mt-5 text-center text-xs" style={{ color: 'var(--muted)' }}>
+          Noch kein Betrieb? Lege einen über die API an — siehe QUICKSTART.md.
+        </p>
       </div>
     </div>
   );
