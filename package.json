@@ -21,13 +21,17 @@
   "dependencies": {
     "@types/express": "^5.0.6",
     "@types/node": "^26.1.1",
+    "axios": "^1.18.1",
     "cors": "^2.8.6",
+    "csv-parse": "^7.0.1",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "fastify": "^5.10.0",
     "helmet": "^8.3.0",
+    "multer": "^2.2.0",
     "node-cron": "^4.6.0",
     "nodemon": "^3.1.14",
+    "resend": "^6.17.2",
     "ts-node": "^10.9.2",
     "typescript": "^7.0.2"
   },

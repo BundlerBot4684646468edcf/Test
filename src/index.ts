@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
+import businessesRouter from './routes/businesses';
+import { startCronJobs } from './services/cronJobs';
 
 dotenv.config();
 
@@ -16,12 +18,11 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// API Routes (to be implemented)
-app.use('/api/businesses', (req, res) => {
-  res.status(404).json({ error: 'Not yet implemented' });
-});
+// API Routes
+app.use('/api/businesses', businessesRouter);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Mundpost server running on http://localhost:${PORT}`);
+  startCronJobs();
 });
