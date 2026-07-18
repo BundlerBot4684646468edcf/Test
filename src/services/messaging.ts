@@ -1,11 +1,23 @@
 import { Resend } from 'resend';
+import twilio from 'twilio';
 
-const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID || 'mock';
-const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN || 'mock';
-const TWILIO_PHONE = process.env.TWILIO_PHONE_NUMBER || '+1234567890';
-const RESEND_API_KEY = process.env.RESEND_API_KEY || 'mock';
+const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID || '';
+const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN || '';
+const TWILIO_PHONE = process.env.TWILIO_PHONE_NUMBER || '';
+const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
 
-const resend = new Resend(RESEND_API_KEY);
+let twilioClient: any = null;
+let resendClient: Resend | null = null;
+
+// Initialize Twilio only if credentials exist
+if (TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN) {
+  twilioClient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
+}
+
+// Initialize Resend only if API key exists
+if (RESEND_API_KEY) {
+  resendClient = new Resend(RESEND_API_KEY);
+}
 
 export interface SMSPayload {
   toPhone: string;
@@ -20,37 +32,39 @@ export interface EmailPayload {
   fromName?: string;
 }
 
-// Mock responses
-const mockSmsSend = async (payload: SMSPayload) => {
-  console.log(`[MOCK SMS] To: ${payload.toPhone}`);
-  console.log(`[MOCK SMS] Message: ${payload.message}`);
-  if (payload.mediaUrl) {
-    console.log(`[MOCK SMS] MediaUrl: ${payload.mediaUrl}`);
-  }
-  return { success: true, messageId: `mock-sms-${Date.now()}` };
-};
-
-const mockEmailSend = async (payload: EmailPayload) => {
-  console.log(`[MOCK EMAIL] To: ${payload.toEmail}`);
-  console.log(`[MOCK EMAIL] Subject: ${payload.subject}`);
-  return { id: `mock-email-${Date.now()}` };
-};
-
 export async function sendSMS(payload: SMSPayload): Promise<{
   success: boolean;
   messageId?: string;
   error?: string;
 }> {
-  if (TWILIO_ACCOUNT_SID === 'mock') {
-    return mockSmsSend(payload);
+  if (!twilioClient) {
+    console.warn(
+      '[SMS] Twilio not configured. Set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER'
+    );
+    return {
+      success: false,
+      error: 'Twilio not configured',
+    };
   }
 
   try {
-    // Real Twilio would go here
-    // For now, return mock response
-    return mockSmsSend(payload);
+    const messageData: any = {
+      body: payload.message,
+      from: TWILIO_PHONE,
+      to: payload.toPhone,
+    };
+
+    // Add media if photo URL provided (MMS)
+    if (payload.mediaUrl) {
+      messageData.mediaUrl = [payload.mediaUrl];
+    }
+
+    const message = await twilioClient.messages.create(messageData);
+
+    console.log(`✅ SMS sent: ${message.sid} to ${payload.toPhone}`);
+    return { success: true, messageId: message.sid };
   } catch (error) {
-    console.error('SMS error:', error);
+    console.error('❌ SMS error:', error);
     return { success: false, error: String(error) };
   }
 }
@@ -60,12 +74,16 @@ export async function sendEmail(payload: EmailPayload): Promise<{
   messageId?: string;
   error?: string;
 }> {
-  if (RESEND_API_KEY === 'mock') {
-    return mockEmailSend(payload);
+  if (!resendClient) {
+    console.warn('[EMAIL] Resend not configured. Set RESEND_API_KEY');
+    return {
+      success: false,
+      error: 'Resend not configured',
+    };
   }
 
   try {
-    const result = await resend.emails.send({
+    const result = await resendClient.emails.send({
       from: `${payload.fromName || 'Mundpost'} <noreply@resend.dev>`,
       to: payload.toEmail,
       subject: payload.subject,
@@ -73,12 +91,14 @@ export async function sendEmail(payload: EmailPayload): Promise<{
     });
 
     if (result.error) {
+      console.error('❌ Email error:', result.error);
       return { success: false, error: result.error.message };
     }
 
+    console.log(`✅ Email sent: ${result.data?.id} to ${payload.toEmail}`);
     return { success: true, messageId: result.data?.id };
   } catch (error) {
-    console.error('Email error:', error);
+    console.error('❌ Email error:', error);
     return { success: false, error: String(error) };
   }
 }
@@ -91,8 +111,7 @@ export function buildReviewRequestSMS(
   ownerName: string,
   ownerPhotoUrl?: string
 ): string {
-  const baseMessage = `Hallo ${firstName},\n\nIch bin's, ${ownerName} von ${businessName}. Danke dass du bei uns warst! 🙏\n\nHättest du vielleicht 30 Sekunden Zeit für eine kurze Google-Bewertung? Das bedeutet uns wirklich viel.\n\n${reviewLink}`;
-  return baseMessage;
+  return `Hallo ${firstName},\n\nIch bin's, ${ownerName} von ${businessName}. Danke dass du bei uns warst! 🙏\n\nHättest du vielleicht 30 Sekunden Zeit für eine kurze Google-Bewertung? Das bedeutet uns wirklich viel.\n\n${reviewLink}`;
 }
 
 export function buildReviewRequestHTML(
@@ -126,4 +145,14 @@ export function buildReviewRequestHTML(
       </body>
     </html>
   `;
+}
+
+export function isMessagingConfigured(): {
+  sms: boolean;
+  email: boolean;
+} {
+  return {
+    sms: !!twilioClient,
+    email: !!resendClient,
+  };
 }

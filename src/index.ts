@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import businessesRouter from './routes/businesses';
+import setupRouter from './routes/setup';
 import { startCronJobs } from './services/cronJobs';
 
 dotenv.config();
@@ -20,6 +21,7 @@ app.get('/health', (req, res) => {
 
 // API Routes
 app.use('/api/businesses', businessesRouter);
+app.use('/api/setup', setupRouter);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
