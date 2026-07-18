@@ -122,6 +122,44 @@ router.get('/test-sms-check/:number', async (req, res) => {
   }
 });
 
+// GET /api/setup/test-email-photo/:email — Send a full "photo + text" review
+// email, so you can see the personalised message with an owner photo in your inbox.
+router.get('/test-email-photo/:email', async (req, res) => {
+  const to = req.params.email || '';
+  if (!to.includes('@')) {
+    return res.status(400).json({
+      error: 'Bitte E-Mail angeben, z.B. /api/setup/test-email-photo/alex@example.com',
+    });
+  }
+
+  // For the demo we use a public sample portrait; your real owner photo would
+  // be shown the same way once uploaded.
+  const samplePhoto =
+    (req.query.photo as string) ||
+    'https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=200&h=200&fit=crop';
+
+  const html = buildReviewRequestHTML(
+    'Anna',
+    'Deinem Betrieb',
+    'https://search.google.com/local/writereview?placeid=DEMO',
+    'Marco',
+    samplePhoto
+  );
+
+  const result = await sendEmail({
+    toEmail: to,
+    subject: 'Eine kurze Frage von Marco 🙏',
+    html,
+    fromName: 'Marco',
+  });
+
+  if (result.success) {
+    res.json({ success: true, sentTo: to, messageId: result.messageId, note: 'Prüfe dein Postfach (auch Spam).' });
+  } else {
+    res.status(500).json({ success: false, error: result.error });
+  }
+});
+
 // GET /api/setup/test-mms/:number — Send a test MMS with a public sample image,
 // to confirm your Twilio number can deliver picture messages at all.
 router.get('/test-mms/:number', async (req, res) => {
