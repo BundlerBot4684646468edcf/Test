@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import path from 'path';
+import { promises as fsp } from 'fs';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 
 // Cloudflare R2 is S3-compatible, so we use the AWS S3 SDK against R2's endpoint.
@@ -45,7 +46,27 @@ const CONTENT_TYPES: Record<string, string> = {
  * - Without R2: stores in memory and returns a non-public placeholder URL.
  *   That URL is NOT reachable by Twilio, so photo-MMS won't work until R2 is set.
  */
-const mockStorage: Map<string, Buffer> = new Map();
+const UPLOADS_DIR = path.join(process.cwd(), 'uploads');
+
+/** Local base URL the server serves /uploads from. */
+function localBaseUrl(): string {
+  return (
+    process.env.PUBLIC_BASE_URL ||
+    `http://localhost:${process.env.PORT || 3000}`
+  );
+}
+
+/** Resolve a stored photo URL back to its file on disk (local uploads only). */
+export function localPathForUrl(url: string): string | null {
+  const marker = '/uploads/';
+  const idx = url.indexOf(marker);
+  if (idx === -1) return null;
+  const rel = url.slice(idx + marker.length);
+  // Prevent path traversal
+  const abs = path.join(UPLOADS_DIR, rel);
+  if (!abs.startsWith(UPLOADS_DIR)) return null;
+  return abs;
+}
 
 export async function uploadFile(
   fileBuffer: Buffer,
@@ -59,13 +80,15 @@ export async function uploadFile(
   const c = getR2Config();
 
   if (!isStorageConfigured()) {
-    console.warn(
-      '[STORAGE] R2 not fully configured — storing photo in memory only. ' +
-        'Photo-MMS will NOT work until R2_ACCOUNT_ID/ACCESS_KEY_ID/SECRET_ACCESS_KEY/' +
-        'BUCKET_NAME/PUBLIC_BASE_URL are set. Set them to enable real photo sending.'
-    );
-    mockStorage.set(key, fileBuffer);
-    return `https://mock-storage.local/${key}`;
+    // Local disk storage: works fully offline. The photo is served by this
+    // server at /uploads/... — perfect for previews and email testing.
+    // (For MMS, Twilio needs a public URL — that's what R2 is for later.)
+    const filePath = path.join(UPLOADS_DIR, key);
+    await fsp.mkdir(path.dirname(filePath), { recursive: true });
+    await fsp.writeFile(filePath, fileBuffer);
+    const url = `${localBaseUrl()}/uploads/${key}`;
+    console.log(`✅ Photo saved locally: ${url}`);
+    return url;
   }
 
   const client = getClient(c.accountId, c.accessKeyId, c.secretAccessKey);

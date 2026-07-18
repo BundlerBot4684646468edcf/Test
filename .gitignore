@@ -13,3 +13,6 @@ build/
 mundpost.db
 mundpost.db-shm
 mundpost.db-wal
+
+# uploaded photos
+uploads/

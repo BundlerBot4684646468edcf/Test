@@ -67,6 +67,22 @@ CREATE TABLE IF NOT EXISTS ReviewEvent (
 CREATE INDEX IF NOT EXISTS idx_re_business ON ReviewEvent(businessId);
 `);
 
+// --- Lightweight migrations (add columns to existing tables) ---------------
+function ensureColumn(table: string, column: string, ddl: string) {
+  const cols = db.prepare(`PRAGMA table_info(${table})`).all() as Array<{
+    name: string;
+  }>;
+  if (!cols.some((c) => c.name === column)) {
+    db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${ddl};`);
+  }
+}
+// Sign area on the owner photo (relative 0..1 coords) for name personalization
+ensureColumn('Business', 'signX', 'REAL');
+ensureColumn('Business', 'signY', 'REAL');
+ensureColumn('Business', 'signWidth', 'REAL');
+ensureColumn('Business', 'signHeight', 'REAL');
+ensureColumn('Business', 'signRotation', 'REAL');
+
 // --- Helpers --------------------------------------------------------------
 export function newId(): string {
   return crypto.randomUUID();
@@ -85,6 +101,11 @@ export interface Business {
   ownerPhotoUrl: string | null;
   timezone: string;
   dailyBatchLimit: number;
+  signX: number | null;
+  signY: number | null;
+  signWidth: number | null;
+  signHeight: number | null;
+  signRotation: number | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -148,6 +169,11 @@ export const businesses = {
       'googleReviewLink',
       'ownerPhotoUrl',
       'dailyBatchLimit',
+      'signX',
+      'signY',
+      'signWidth',
+      'signHeight',
+      'signRotation',
     ];
     const keys = Object.keys(fields).filter((k) => allowed.includes(k));
     if (keys.length > 0) {

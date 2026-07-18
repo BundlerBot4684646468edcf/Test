@@ -14,6 +14,9 @@ app.use(helmet());
 app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:3001' }));
 app.use(express.json());
 
+// Uploaded photos (owner photos) are served from local disk
+app.use('/uploads', express.static('uploads'));
+
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

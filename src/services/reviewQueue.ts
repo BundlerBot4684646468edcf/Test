@@ -1,12 +1,56 @@
-import { reviewRequests, customers, businesses } from '../db';
+import { promises as fsp } from 'fs';
+import { reviewRequests, customers, businesses, Business } from '../db';
 import {
   sendSMS,
   sendEmail,
   buildReviewRequestSMS,
   buildReviewRequestHTML,
 } from './messaging';
+import { uploadFile, localPathForUrl } from './fileStorage';
+import {
+  personalizePhoto,
+  DEFAULT_SIGN_BOX,
+} from './photoPersonalization';
 
 const REMINDER_WAIT_DAYS = 3;
+
+/**
+ * If the business has an owner photo (with a blank sign) stored locally,
+ * render the customer's name onto it and store the result, returning its URL.
+ * Falls back to the plain owner photo on any problem.
+ */
+async function photoUrlFor(
+  business: Business,
+  firstName: string
+): Promise<string | undefined> {
+  if (!business.ownerPhotoUrl) return undefined;
+  try {
+    const filePath = localPathForUrl(business.ownerPhotoUrl);
+    if (!filePath) return business.ownerPhotoUrl; // hosted elsewhere, use as-is
+
+    const base = await fsp.readFile(filePath);
+    const box =
+      business.signX != null
+        ? {
+            x: business.signX,
+            y: business.signY ?? 0.6,
+            width: business.signWidth ?? 0.5,
+            height: business.signHeight ?? 0.2,
+            rotation: business.signRotation ?? 0,
+          }
+        : DEFAULT_SIGN_BOX;
+
+    const png = await personalizePhoto(base, firstName, box);
+    return await uploadFile(
+      png,
+      `${firstName.toLowerCase()}.png`,
+      `personalized/${business.id}`
+    );
+  } catch (error) {
+    console.warn('[PHOTO] Personalization failed, using plain photo:', error);
+    return business.ownerPhotoUrl;
+  }
+}
 
 function startOfTodayISO(): string {
   const d = new Date();
@@ -44,6 +88,9 @@ export async function processReviewQueue() {
 
       let sent = false;
 
+      // Per-customer personalized photo (name written on the sign)
+      const personalPhotoUrl = await photoUrlFor(business, customer.firstName);
+
       if (request.channel === 'sms' && customer.phone) {
         const message = buildReviewRequestSMS(
           customer.firstName,
@@ -54,7 +101,7 @@ export async function processReviewQueue() {
         const result = await sendSMS({
           toPhone: customer.phone,
           message,
-          mediaUrl: business.ownerPhotoUrl || undefined,
+          mediaUrl: personalPhotoUrl,
         });
         sent = result.success;
       } else if (request.channel === 'email' && customer.email) {
@@ -63,7 +110,7 @@ export async function processReviewQueue() {
           business.name,
           business.googleReviewLink || 'https://google.com',
           business.ownerName,
-          business.ownerPhotoUrl || undefined
+          personalPhotoUrl
         );
         const result = await sendEmail({
           toEmail: customer.email,

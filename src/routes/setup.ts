@@ -122,6 +122,20 @@ router.get('/test-sms-check/:number', async (req, res) => {
   }
 });
 
+// GET /api/setup/test-photo/:name — Instant browser preview of the
+// personalized "name on the sign" photo (demo backdrop, no upload needed).
+router.get('/test-photo/:name', async (req, res) => {
+  try {
+    const { demoPhoto } = await import('../services/photoPersonalization');
+    const name = (req.params.name || 'Anna').slice(0, 40);
+    const png = await demoPhoto(name);
+    res.type('png').send(png);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: String(error) });
+  }
+});
+
 // GET /api/setup/test-email-photo/:email — Send a full "photo + text" review
 // email, so you can see the personalised message with an owner photo in your inbox.
 router.get('/test-email-photo/:email', async (req, res) => {
