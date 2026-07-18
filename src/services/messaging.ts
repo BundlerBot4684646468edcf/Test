@@ -1,22 +1,31 @@
 import { Resend } from 'resend';
 import twilio from 'twilio';
 
-const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID || '';
-const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN || '';
-const TWILIO_PHONE = process.env.TWILIO_PHONE_NUMBER || '';
-const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
-
-let twilioClient: any = null;
+// Clients are created lazily so that credentials from .env are always read
+// after the environment has finished loading, regardless of import order.
+let twilioClient: ReturnType<typeof twilio> | null = null;
+let twilioTriedFor = '';
 let resendClient: Resend | null = null;
+let resendTriedFor = '';
 
-// Initialize Twilio only if credentials exist
-if (TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN) {
-  twilioClient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
+function getTwilio(): ReturnType<typeof twilio> | null {
+  const sid = process.env.TWILIO_ACCOUNT_SID || '';
+  const token = process.env.TWILIO_AUTH_TOKEN || '';
+  const fingerprint = sid + ':' + token;
+  if (fingerprint !== twilioTriedFor) {
+    twilioTriedFor = fingerprint;
+    twilioClient = sid && token ? twilio(sid, token) : null;
+  }
+  return twilioClient;
 }
 
-// Initialize Resend only if API key exists
-if (RESEND_API_KEY) {
-  resendClient = new Resend(RESEND_API_KEY);
+function getResend(): Resend | null {
+  const key = process.env.RESEND_API_KEY || '';
+  if (key !== resendTriedFor) {
+    resendTriedFor = key;
+    resendClient = key ? new Resend(key) : null;
+  }
+  return resendClient;
 }
 
 export interface SMSPayload {
@@ -37,30 +46,25 @@ export async function sendSMS(payload: SMSPayload): Promise<{
   messageId?: string;
   error?: string;
 }> {
-  if (!twilioClient) {
+  const client = getTwilio();
+  if (!client) {
     console.warn(
       '[SMS] Twilio not configured. Set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER'
     );
-    return {
-      success: false,
-      error: 'Twilio not configured',
-    };
+    return { success: false, error: 'Twilio not configured' };
   }
 
   try {
     const messageData: any = {
       body: payload.message,
-      from: TWILIO_PHONE,
+      from: process.env.TWILIO_PHONE_NUMBER || '',
       to: payload.toPhone,
     };
-
-    // Add media if photo URL provided (MMS)
     if (payload.mediaUrl) {
       messageData.mediaUrl = [payload.mediaUrl];
     }
 
-    const message = await twilioClient.messages.create(messageData);
-
+    const message = await client.messages.create(messageData);
     console.log(`✅ SMS sent: ${message.sid} to ${payload.toPhone}`);
     return { success: true, messageId: message.sid };
   } catch (error) {
@@ -74,16 +78,14 @@ export async function sendEmail(payload: EmailPayload): Promise<{
   messageId?: string;
   error?: string;
 }> {
-  if (!resendClient) {
+  const client = getResend();
+  if (!client) {
     console.warn('[EMAIL] Resend not configured. Set RESEND_API_KEY');
-    return {
-      success: false,
-      error: 'Resend not configured',
-    };
+    return { success: false, error: 'Resend not configured' };
   }
 
   try {
-    const result = await resendClient.emails.send({
+    const result = await client.emails.send({
       from: `${payload.fromName || 'Mundpost'} <noreply@resend.dev>`,
       to: payload.toEmail,
       subject: payload.subject,
@@ -147,12 +149,6 @@ export function buildReviewRequestHTML(
   `;
 }
 
-export function isMessagingConfigured(): {
-  sms: boolean;
-  email: boolean;
-} {
-  return {
-    sms: !!twilioClient,
-    email: !!resendClient,
-  };
+export function isMessagingConfigured(): { sms: boolean; email: boolean } {
+  return { sms: !!getTwilio(), email: !!getResend() };
 }

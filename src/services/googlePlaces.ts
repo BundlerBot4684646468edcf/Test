@@ -1,7 +1,12 @@
 import axios from 'axios';
 
-const GOOGLE_API_KEY = process.env.GOOGLE_PLACES_API_KEY || '';
 const PLACES_API_BASE = 'https://maps.googleapis.com/maps/api/place';
+
+// Read the key lazily (inside functions) so it is available regardless of
+// when the .env file finishes loading relative to module import order.
+function getApiKey(): string {
+  return process.env.GOOGLE_PLACES_API_KEY || '';
+}
 
 export interface PlaceSearchResult {
   placeId: string;
@@ -21,7 +26,8 @@ export async function searchPlace(
   businessName: string,
   address: string
 ): Promise<PlaceSearchResult> {
-  if (!GOOGLE_API_KEY) {
+  const apiKey = getApiKey();
+  if (!apiKey) {
     throw new Error(
       'Google Places API key not configured. Set GOOGLE_PLACES_API_KEY in .env'
     );
@@ -30,10 +36,7 @@ export async function searchPlace(
   try {
     const query = `${businessName} ${address}`;
     const response = await axios.get(`${PLACES_API_BASE}/textsearch/json`, {
-      params: {
-        query,
-        key: GOOGLE_API_KEY,
-      },
+      params: { query, key: apiKey },
     });
 
     if (!response.data.results || response.data.results.length === 0) {
@@ -56,7 +59,8 @@ export async function searchPlace(
 }
 
 export async function getPlaceDetails(placeId: string): Promise<PlaceDetails> {
-  if (!GOOGLE_API_KEY) {
+  const apiKey = getApiKey();
+  if (!apiKey) {
     throw new Error(
       'Google Places API key not configured. Set GOOGLE_PLACES_API_KEY in .env'
     );
@@ -67,7 +71,7 @@ export async function getPlaceDetails(placeId: string): Promise<PlaceDetails> {
       params: {
         place_id: placeId,
         fields: 'rating,user_ratings_total,formatted_address',
-        key: GOOGLE_API_KEY,
+        key: apiKey,
       },
     });
 
@@ -89,5 +93,5 @@ export function generateReviewLink(placeId: string): string {
 }
 
 export function isGooglePlacesConfigured(): boolean {
-  return !!GOOGLE_API_KEY;
+  return !!getApiKey();
 }
