@@ -1,0 +1,39 @@
+{
+  "name": "mundpost-review-service",
+  "version": "1.0.0",
+  "description": "Google Review Service for South Tyrolean businesses",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "ts-node-dev --respawn src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:generate": "prisma generate",
+    "prisma:studio": "prisma studio"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://local_proxy@127.0.0.1:41729/git/BundlerBot4684646468edcf/Test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.1.1",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "fastify": "^5.10.0",
+    "helmet": "^8.3.0",
+    "node-cron": "^4.6.0",
+    "nodemon": "^3.1.14",
+    "ts-node": "^10.9.2",
+    "typescript": "^7.0.2"
+  },
+  "devDependencies": {
+    "@prisma/client": "^7.8.0",
+    "prisma": "^7.8.0",
+    "ts-node-dev": "^2.0.0"
+  }
+}
