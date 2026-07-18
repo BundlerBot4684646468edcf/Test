@@ -1,0 +1,89 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Business {
+  id              String    @id @default(cuid())
+  name            String
+  logoUrl         String?
+  primaryColor    String    @default("#000000")
+  stampGoal       Int       @default(10)
+  rewardText      String    @default("Get a free drink!")
+
+  passTypeId      String?   // Apple Pass Type ID (e.g., pass.com.stempl.loyalty)
+  googleIssuerId  String?   // Google Wallet Issuer ID
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  customers       Customer[]
+  stampEvents     StampEvent[]
+}
+
+model Customer {
+  id              String    @id @default(cuid())
+  businessId      String
+  business        Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  // Wallet identifiers
+  walletSerial    String    @unique  // Unique identifier for this pass/object
+
+  // Stamp tracking
+  currentStamps   Int       @default(0)
+
+  // Apple Wallet specific
+  appleDeviceLibraryIdentifier String?  // Device library ID for APNs
+  applePushToken  String?   // Push token for APNs
+  appleRegisteredAt DateTime?
+
+  // Google Wallet specific
+  googleObjectId  String?   // Unique Google Wallet object ID
+
+  // Metadata
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  stampEvents     StampEvent[]
+  walletDevices   WalletDevice[]
+}
+
+model StampEvent {
+  id              String    @id @default(cuid())
+  customerId      String
+  customer        Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  businessId      String
+  business        Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  staffUserId     String?   // Optional: staff member who issued the stamp
+
+  timestamp       DateTime  @default(now())
+
+  @@index([customerId])
+  @@index([businessId])
+}
+
+model WalletDevice {
+  id                          String    @id @default(cuid())
+  customerId                  String
+  customer                    Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  // Apple Wallet registration
+  deviceLibraryIdentifier     String?
+  pushToken                   String?
+  registeredAt                DateTime?
+
+  // Device metadata
+  userAgent                   String?
+  lastActivityAt              DateTime  @default(now())
+
+  createdAt                   DateTime  @default(now())
+  updatedAt                   DateTime  @updatedAt
+
+  @@unique([deviceLibraryIdentifier, customerId])
+}
