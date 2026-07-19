@@ -17,6 +17,7 @@ Google-Bewertungs-Automatisierung für Südtiroler Betriebe. Nach jedem Kundenbe
 - Datenmodell: [[Datenmodell]]
 - Foto-Personalisierung im Detail: [[Foto-Personalisierung]]
 - Bekannte Probleme & Fixes: [[Troubleshooting]]
+- Online hosten (Railway + Vercel): [[Railway Hosting]]
 - Was noch fehlt: [[Roadmap]]
 
 ## Ein-Satz-Zusammenfassung
