@@ -46,7 +46,9 @@ const CONTENT_TYPES: Record<string, string> = {
  * - Without R2: stores in memory and returns a non-public placeholder URL.
  *   That URL is NOT reachable by Twilio, so photo-MMS won't work until R2 is set.
  */
-const UPLOADS_DIR = path.join(process.cwd(), 'uploads');
+// Configurable so it can point at a mounted persistent volume in production
+// (e.g. Railway) instead of the container's ephemeral filesystem.
+const UPLOADS_DIR = process.env.UPLOADS_DIR || path.join(process.cwd(), 'uploads');
 
 /** Local base URL the server serves /uploads from. */
 function localBaseUrl(): string {

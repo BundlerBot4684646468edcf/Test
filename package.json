@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Google Review Service for South Tyrolean businesses",
   "main": "dist/index.js",
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev": "cross-env NODE_OPTIONS=--experimental-sqlite ts-node-dev --respawn src/index.ts",
     "build": "tsc",
