@@ -14,8 +14,9 @@ app.use(helmet());
 app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:3001' }));
 app.use(express.json());
 
-// Uploaded photos (owner photos) are served from local disk
-app.use('/uploads', express.static('uploads'));
+// Uploaded photos (owner photos) are served from local disk. Must match the
+// directory fileStorage writes to (UPLOADS_DIR on a mounted volume in prod).
+app.use('/uploads', express.static(process.env.UPLOADS_DIR || 'uploads'));
 
 // Health check
 app.get('/health', (req, res) => {
