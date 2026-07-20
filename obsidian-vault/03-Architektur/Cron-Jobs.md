@@ -10,7 +10,7 @@ Definiert in `src/services/cronJobs.ts`, läuft im selben Node-Prozess wie der S
 
 | Zeitplan | Funktion | Zweck |
 |---|---|---|
-| `0 * * * *` (stündlich) | `processReviewQueue()` (`services/reviewQueue.ts`) | fällige Anfragen verarbeiten: Opt-out-/Limit-Check, Foto personalisieren, SMS/E-Mail senden, Erinnerungen nach 3+ Tagen |
+| `*/15 * * * *` (alle 15 Min) | `processReviewQueue()` (`services/reviewQueue.ts`) | fällige Anfragen verarbeiten: Opt-out-/Limit-Check, Foto personalisieren, SMS/E-Mail senden, Follow-up nach 24h (Kanalwechsel zu E-Mail) |
 | `0 2 * * *` (täglich 2 Uhr) | `updateReviewMetrics()` (`services/reviewMetrics.ts`) | aktuelle Google-Sternebewertung abfragen, `ReviewEvent` speichern |
 
 ## Wichtig für lokales Testen

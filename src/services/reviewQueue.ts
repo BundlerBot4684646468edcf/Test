@@ -12,7 +12,9 @@ import {
   DEFAULT_SIGN_BOX,
 } from './photoPersonalization';
 
-const REMINDER_WAIT_DAYS = 3;
+// Follow-up fires this many hours after the first send with no review,
+// unless the business overrides it (reminderDelayHours).
+const DEFAULT_REMINDER_DELAY_HOURS = 24;
 
 /**
  * If the business has an owner photo (with a blank sign) stored locally,
@@ -96,7 +98,8 @@ export async function processReviewQueue() {
           customer.firstName,
           business.name,
           business.googleReviewLink || 'https://google.com',
-          business.ownerName
+          business.ownerName,
+          customer.servedBy
         );
         const result = await sendSMS({
           toPhone: customer.phone,
@@ -110,7 +113,8 @@ export async function processReviewQueue() {
           business.name,
           business.googleReviewLink || 'https://google.com',
           business.ownerName,
-          personalPhotoUrl
+          personalPhotoUrl,
+          customer.servedBy
         );
         const result = await sendEmail({
           toEmail: customer.email,
@@ -134,28 +138,41 @@ export async function processReviewQueue() {
       }
     }
 
-    // Reminders: 3+ days after send, no reminder yet
-    const cutoff = new Date(
-      Date.now() - REMINDER_WAIT_DAYS * 24 * 60 * 60 * 1000
-    ).toISOString();
-    const reminders = reviewRequests.listReminderCandidates(cutoff, 50);
+    // Follow-ups: default 24h after the send (per-business override),
+    // switching to email when the first ask went out by SMS — a second SMS
+    // feels pushy, a single friendly email does not.
+    const candidates = reviewRequests.listReminderCandidates(
+      new Date().toISOString(),
+      50
+    );
 
-    for (const request of reminders) {
+    for (const request of candidates) {
       const customer = customers.get(request.customerId);
       const business = businesses.get(request.businessId);
-      if (!customer || !business || customer.optOut) continue;
+      if (!customer || !business || customer.optOut || !request.sentAt) continue;
 
-      const reminderMessage = `Kurze Erinnerung: Hättest du 30 Sekunden für die Google-Bewertung? ${business.googleReviewLink}`;
+      const delayMs =
+        (business.reminderDelayHours ?? DEFAULT_REMINDER_DELAY_HOURS) *
+        60 * 60 * 1000;
+      if (Date.now() - new Date(request.sentAt).getTime() < delayMs) continue;
 
-      if (request.channel === 'sms' && customer.phone) {
-        await sendSMS({ toPhone: customer.phone, message: reminderMessage });
-      } else if (request.channel === 'email' && customer.email) {
+      const reminderMessage = `Hallo ${customer.firstName}, kurze Erinnerung von ${business.ownerName}: Hättest du 30 Sekunden für eine Google-Bewertung? Das würde uns riesig freuen. ${business.googleReviewLink}`;
+
+      // Channel switch: SMS first, email as the follow-up (if we have one).
+      const useEmail =
+        !!customer.email && (request.channel === 'email' || request.channel === 'sms');
+
+      if (useEmail) {
         await sendEmail({
-          toEmail: customer.email,
-          subject: 'Kurze Erinnerung: Google-Bewertung',
+          toEmail: customer.email!,
+          subject: `Kurze Erinnerung von ${business.ownerName} 🙏`,
           html: `<p>${reminderMessage}</p>`,
           fromName: business.ownerName,
         });
+      } else if (customer.phone) {
+        await sendSMS({ toPhone: customer.phone, message: reminderMessage });
+      } else {
+        continue;
       }
 
       reviewRequests.update(request.id, {

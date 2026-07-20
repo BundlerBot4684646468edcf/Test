@@ -69,7 +69,7 @@ export default function CustomersPage() {
       <div style={card} className="p-6">
         <h2 className="text-sm font-semibold" style={{ color: 'var(--ink)' }}>CSV importieren</h2>
         <p className="mt-1 text-sm" style={{ color: 'var(--ink-2)' }}>
-          Spalten: <code className="tnum">firstName, phone, email, servedAt</code>
+          Spalten: <code className="tnum">firstName, phone, email, servedAt, servedBy</code> (servedBy optional — Mitarbeiter:in für die persönliche Ansprache)
         </p>
 
         <div

@@ -20,6 +20,8 @@ SQLite-Datei: `mundpost.db` (ein einzelnes File, per `node:sqlite`). Schema + Mi
 | timezone | TEXT | Default `Europe/Rome` |
 | dailyBatchLimit | INTEGER | max. Anfragen/Tag (Default 20) |
 | signX, signY, signWidth, signHeight, signRotation | REAL | Schild-Position im Foto, siehe [[Foto-Personalisierung]] (nachträglich per Migration ergänzt) |
+| sendDelayHours | REAL | Conversion-Window: Stunden nach dem Besuch, bis die Anfrage rausgeht (leer = 3h) |
+| reminderDelayHours | REAL | Stunden bis zum Follow-up ohne Reaktion (leer = 24h) |
 
 ## Customer (Endkunde des Betriebs)
 
@@ -30,6 +32,7 @@ SQLite-Datei: `mundpost.db` (ein einzelnes File, per `node:sqlite`). Schema + Mi
 | firstName | TEXT | wird aufs Schild geschrieben + in Nachrichten verwendet |
 | phone / email | TEXT | mindestens eins muss gesetzt sein |
 | servedAt | TEXT | wann der Kunde bedient wurde |
+| servedBy | TEXT | Mitarbeiter:in, die bedient hat — wird in der Nachricht erwähnt ("Danke, dass du bei Lisa warst") |
 | source | TEXT | `past` (Altkunden-Import) oder `new` (laufender Zulauf) |
 | optOut | INTEGER (0/1) | Kunde hat sich dauerhaft abgemeldet |
 

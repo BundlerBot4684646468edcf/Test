@@ -82,6 +82,13 @@ ensureColumn('Business', 'signY', 'REAL');
 ensureColumn('Business', 'signWidth', 'REAL');
 ensureColumn('Business', 'signHeight', 'REAL');
 ensureColumn('Business', 'signRotation', 'REAL');
+// Conversion window: hours after servedAt when the request should go out
+// (industry-specific peak-satisfaction window; null = default 3h)
+ensureColumn('Business', 'sendDelayHours', 'REAL');
+// Hours after a send with no review before the follow-up fires (null = 24h)
+ensureColumn('Business', 'reminderDelayHours', 'REAL');
+// Staff member who served the customer — used to personalize messages
+ensureColumn('Customer', 'servedBy', 'TEXT');
 
 // --- Helpers --------------------------------------------------------------
 export function newId(): string {
@@ -106,6 +113,8 @@ export interface Business {
   signWidth: number | null;
   signHeight: number | null;
   signRotation: number | null;
+  sendDelayHours: number | null;
+  reminderDelayHours: number | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -116,6 +125,7 @@ export interface Customer {
   phone: string | null;
   email: string | null;
   servedAt: string;
+  servedBy: string | null;
   source: string;
   optOut: number; // 0 | 1
   createdAt: string;
@@ -174,6 +184,8 @@ export const businesses = {
       'signWidth',
       'signHeight',
       'signRotation',
+      'sendDelayHours',
+      'reminderDelayHours',
     ];
     const keys = Object.keys(fields).filter((k) => allowed.includes(k));
     if (keys.length > 0) {
@@ -200,13 +212,14 @@ export const customers = {
     phone?: string | null;
     email?: string | null;
     servedAt: string;
+    servedBy?: string | null;
     source?: string;
   }): Customer {
     const id = newId();
     const ts = nowISO();
     db.prepare(
-      `INSERT INTO Customer (id, businessId, firstName, phone, email, servedAt, source, createdAt, updatedAt)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO Customer (id, businessId, firstName, phone, email, servedAt, servedBy, source, createdAt, updatedAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).run(
       id,
       data.businessId,
@@ -214,6 +227,7 @@ export const customers = {
       data.phone ?? null,
       data.email ?? null,
       data.servedAt,
+      data.servedBy ?? null,
       data.source || 'past',
       ts,
       ts
@@ -239,7 +253,7 @@ export const customers = {
     return row.c;
   },
   update(id: string, fields: Partial<Customer>): Customer | undefined {
-    const allowed = ['firstName', 'phone', 'email', 'servedAt', 'source', 'optOut'];
+    const allowed = ['firstName', 'phone', 'email', 'servedAt', 'servedBy', 'source', 'optOut'];
     const keys = Object.keys(fields).filter((k) => allowed.includes(k));
     if (keys.length > 0) {
       const setClause = keys.map((k) => `${k} = ?`).join(', ');

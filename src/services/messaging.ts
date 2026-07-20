@@ -118,14 +118,23 @@ export async function sendEmail(payload: EmailPayload): Promise<{
 }
 
 // Template builders
+
+// "Danke, dass du bei Lisa warst" beats a generic thank-you — but only when
+// the staff member is someone other than the sender themselves.
+function visitLine(servedBy: string | undefined | null, ownerName: string): string {
+  return servedBy && servedBy.trim() && servedBy.trim() !== ownerName.trim()
+    ? `Danke, dass du bei ${servedBy.trim()} warst! 🙏`
+    : `Danke, dass du bei uns warst! 🙏`;
+}
+
 export function buildReviewRequestSMS(
   firstName: string,
   businessName: string,
   reviewLink: string,
   ownerName: string,
-  ownerPhotoUrl?: string
+  servedBy?: string | null
 ): string {
-  return `Hallo ${firstName},\n\nIch bin's, ${ownerName} von ${businessName}. Danke dass du bei uns warst! 🙏\n\nHättest du vielleicht 30 Sekunden Zeit für eine kurze Google-Bewertung? Das bedeutet uns wirklich viel.\n\n${reviewLink}`;
+  return `Hallo ${firstName},\n\nIch bin's, ${ownerName} von ${businessName}. ${visitLine(servedBy, ownerName)}\n\nHättest du vielleicht 30 Sekunden Zeit für eine kurze Google-Bewertung? Das bedeutet uns wirklich viel.\n\n${reviewLink}`;
 }
 
 export function buildReviewRequestHTML(
@@ -133,10 +142,12 @@ export function buildReviewRequestHTML(
   businessName: string,
   reviewLink: string,
   ownerName: string,
-  ownerPhotoUrl?: string
+  ownerPhotoUrl?: string,
+  servedBy?: string | null
 ): string {
+  // Large enough that the handwritten name on the sign is readable.
   const photoSection = ownerPhotoUrl
-    ? `<img src="${ownerPhotoUrl}" alt="${ownerName}" style="width: 100px; height: 100px; border-radius: 50%; margin-bottom: 1rem;" />`
+    ? `<img src="${ownerPhotoUrl}" alt="${ownerName}" style="width: 100%; max-width: 380px; border-radius: 12px; margin-bottom: 1rem;" />`
     : '';
 
   return `
@@ -145,7 +156,7 @@ export function buildReviewRequestHTML(
         <div style="max-width: 500px; margin: 0 auto; padding: 2rem;">
           ${photoSection}
           <h2>Hallo ${firstName}!</h2>
-          <p>Ich bin's, ${ownerName} von ${businessName}. Danke dass du bei uns warst! 🙏</p>
+          <p>Ich bin's, ${ownerName} von ${businessName}. ${visitLine(servedBy, ownerName)}</p>
           <p>Hättest du vielleicht 30 Sekunden Zeit für eine kurze Google-Bewertung? Das bedeutet uns wirklich viel.</p>
           <div style="margin: 2rem 0;">
             <a href="${reviewLink}" style="background-color: #1f2937; color: white; padding: 0.75rem 1.5rem; border-radius: 0.375rem; text-decoration: none; display: inline-block;">

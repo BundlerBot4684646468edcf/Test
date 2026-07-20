@@ -6,6 +6,7 @@ export interface CustomerImportRow {
   phone?: string;
   email?: string;
   servedAt: string;
+  servedBy?: string;
 }
 
 export async function importCustomersFromCSV(
@@ -33,7 +34,7 @@ export async function importCustomersFromCSV(
   for (let i = 0; i < records.length; i++) {
     const row = records[i];
     try {
-      const { firstName, phone, email, servedAt } = row;
+      const { firstName, phone, email, servedAt, servedBy } = row;
 
       if (!firstName || !servedAt) {
         errors.push({ row: i + 2, error: 'firstName and servedAt are required' });
@@ -56,6 +57,7 @@ export async function importCustomersFromCSV(
         phone: phone || null,
         email: email || null,
         servedAt: parsedDate.toISOString(),
+        servedBy: servedBy || null,
         source,
       });
 

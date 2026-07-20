@@ -51,11 +51,11 @@ Feld: source = "past" | "new"
 
 **CSV-Format** (Spaltenüberschriften genau so):
 ```csv
-firstName,phone,email,servedAt
-Anna,+393331234567,anna@example.com,2026-07-15
-Marco,+393337654321,,2026-07-16
+firstName,phone,email,servedAt,servedBy
+Anna,+393331234567,anna@example.com,2026-07-15,Lisa
+Marco,+393337654321,,2026-07-16,
 ```
-- `firstName` und `servedAt` sind Pflicht
+- `firstName` und `servedAt` sind Pflicht; `servedBy` ist optional (Mitarbeiter:in für die persönliche Ansprache)
 - mindestens `phone` **oder** `email` muss gesetzt sein
 - `source: "past"` = Altkunden (für einmaligen Nachfass-Import), `"new"` = laufender Betrieb (für den täglichen Zulauf)
 

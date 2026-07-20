@@ -1,5 +1,20 @@
 import express from 'express';
-import { reviewRequests, customers } from '../db';
+import { reviewRequests, customers, businesses } from '../db';
+
+// Industry "conversion window": the ask goes out N hours after the visit,
+// while satisfaction is at its peak. For customers served longer ago than
+// that (e.g. past-customer imports), send at the next queue run instead.
+const DEFAULT_SEND_DELAY_HOURS = 3;
+
+export function computeScheduledAt(
+  servedAtISO: string,
+  sendDelayHours: number | null
+): string {
+  const delayMs =
+    (sendDelayHours ?? DEFAULT_SEND_DELAY_HOURS) * 60 * 60 * 1000;
+  const ideal = new Date(servedAtISO).getTime() + delayMs;
+  return new Date(Math.max(ideal, Date.now())).toISOString();
+}
 
 const router = express.Router({ mergeParams: true });
 
@@ -49,11 +64,16 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Request already exists' });
     }
 
+    const business = businesses.get(businessId);
     const request = reviewRequests.create({
       customerId,
       businessId,
       channel,
       status: 'queued',
+      scheduledAt: computeScheduledAt(
+        customer.servedAt,
+        business?.sendDelayHours ?? null
+      ),
     });
 
     res.status(201).json(withCustomer(request));
