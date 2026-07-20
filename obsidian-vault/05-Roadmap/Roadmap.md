@@ -6,6 +6,16 @@ tags: [mundpost, roadmap]
 
 Gehört zu: [[Mundpost]]
 
+## Die große Linie: Mundpost Suite (3 Säulen)
+
+| # | Säule | Status | Notiz |
+|---|---|---|---|
+| 1 | ⭐ Reviews (Anfragen + Foto + Follow-up) | ✅ live auf Railway/Vercel | fehlt nur noch echtes Foto + erste Testkunden |
+| 2 | 💳 [[Wallet-Stempelkarte]] | geplant | Apple Dev Account (99€/Jahr) früh beantragen |
+| 3 | 📞 [[KI-Telefon]] | Idee | Start nach Säule 2, bevorzugt über Famulor |
+
+**Reihenfolge bewusst nacheinander** — Säule 1 erst fertig machen und beim ersten Salon (hair.style.by andré) in echt laufen lassen, dann erweitern. Das Paket ersetzt, was Agenturen für mehrere hundert Euro/Monat pro Salon verkaufen.
+
 ## Kurzfristig (bevor der erste echte Kunde live geht)
 
 - [ ] Echtes Inhaberfoto hochladen + Schild-Position kalibrieren (siehe [[Foto-Personalisierung]])

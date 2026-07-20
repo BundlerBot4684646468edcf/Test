@@ -19,6 +19,7 @@ Google-Bewertungs-Automatisierung für Südtiroler Betriebe. Nach jedem Kundenbe
 - Bekannte Probleme & Fixes: [[Troubleshooting]]
 - Online hosten (Railway + Vercel): [[Railway Hosting]]
 - Was noch fehlt: [[Roadmap]]
+- Nächste Säulen: [[Wallet-Stempelkarte]] · [[KI-Telefon]]
 
 ## Ein-Satz-Zusammenfassung
 
