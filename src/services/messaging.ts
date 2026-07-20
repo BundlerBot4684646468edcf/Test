@@ -76,9 +76,22 @@ export async function sendSMS(payload: SMSPayload): Promise<{
       );
     }
 
-    const message = await client.messages.create(messageData);
-    console.log(`✅ SMS sent: ${message.sid} to ${payload.toPhone}`);
-    return { success: true, messageId: message.sid };
+    try {
+      const message = await client.messages.create(messageData);
+      console.log(`✅ SMS sent: ${message.sid} to ${payload.toPhone}`);
+      return { success: true, messageId: message.sid };
+    } catch (error) {
+      // MMS is not deliverable on many routes (e.g. US number -> Italy).
+      // Rather than losing the message, retry as a plain text SMS.
+      if (messageData.mediaUrl) {
+        console.warn('[SMS] MMS rejected, retrying text-only:', error);
+        delete messageData.mediaUrl;
+        const message = await client.messages.create(messageData);
+        console.log(`✅ SMS sent (text-only fallback): ${message.sid} to ${payload.toPhone}`);
+        return { success: true, messageId: message.sid };
+      }
+      throw error;
+    }
   } catch (error) {
     console.error('❌ SMS error:', error);
     return { success: false, error: String(error) };
