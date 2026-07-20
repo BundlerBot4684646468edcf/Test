@@ -29,6 +29,15 @@ Digitale 10-Punkte-Treuekarte in Apple Wallet / Google Wallet — mit Lock-Scree
 - **Backend**: läuft auf dem bestehenden Railway-Server; neue Tabellen `LoyaltyCard` (customerId, stampCount, passSerial) + Scan-Endpunkt; einfache Scan-Seite fürs Salon-Tablet/Handy
 - **Verknüpfung**: Karte gehört zu einem `Customer` → Stempel-Event kann direkt eine Bewertungsanfrage triggern (statt CSV-Import)
 
+## Gelernt vom Wettbewerb (fidelitycards.eu, IT-Markt)
+
+Verkauft exakt dieses Produkt an Bars/Restaurants/lokale Geschäfte in Italien (Abo + Einrichtungsgebühr, Instagram-Ads) → Bedarf validiert. Features, die wir übernehmen sollten:
+
+- **Win-back-Automatik**: Kunde länger nicht da → automatische "Wir vermissen dich"-Notification (Cron prüft letztes Stempel-Datum)
+- **Standort-Trigger**: Karte erscheint auf dem Sperrbildschirm, wenn der Kunde in der Nähe ist (`relevantLocations` im pkpass — eingebaute Wallet-Funktion, fast gratis)
+
+Unser Unterschied: Die Karte ist bei uns Teil der Suite (Reviews + Karte + KI-Telefon), nicht Einzelprodukt — Einstieg über das Review-Feature (Unikat), Karte als Upsell.
+
 ## Voraussetzungen
 
 - [ ] **Apple Developer Account, 99 €/Jahr** — Pflicht fürs Signieren; Registrierung dauert 1–2 Tage → früh beantragen!
