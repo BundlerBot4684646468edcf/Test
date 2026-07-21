@@ -147,7 +147,10 @@ export function buildReviewRequestSMS(
   ownerName: string,
   servedBy?: string | null
 ): string {
-  return `Hallo ${firstName},\n\nIch bin's, ${ownerName} von ${businessName}. ${visitLine(servedBy, ownerName)}\n\nHättest du vielleicht 30 Sekunden Zeit für eine kurze Google-Bewertung? Das bedeutet uns wirklich viel.\n\n${reviewLink}`;
+  const greeting = servedBy && servedBy.trim() && servedBy.trim() !== ownerName.trim()
+    ? `${servedBy.trim()}`
+    : ownerName;
+  return `Hallo ${firstName},\n\nes ist ${greeting} von ${businessName}! 💈 ${visitLine(servedBy, ownerName)}\n\nKannst du mir einen großen Gefallen tun? Wenn du kurz Zeit hast, würde ich mich riesig freuen, wenn du uns auf Google bewertest — das bedeutet uns echt viel! 🙏\n\n${reviewLink}`;
 }
 
 export function buildReviewRequestHTML(
@@ -160,25 +163,38 @@ export function buildReviewRequestHTML(
 ): string {
   // Large enough that the handwritten name on the sign is readable.
   const photoSection = ownerPhotoUrl
-    ? `<img src="${ownerPhotoUrl}" alt="${ownerName}" style="width: 100%; max-width: 380px; border-radius: 12px; margin-bottom: 1rem;" />`
+    ? `<img src="${ownerPhotoUrl}" alt="${ownerName}" style="width: 100%; max-width: 480px; border-radius: 12px; margin-bottom: 1.5rem;" />`
     : '';
+
+  const senderName = servedBy && servedBy.trim() && servedBy.trim() !== ownerName.trim()
+    ? servedBy.trim()
+    : ownerName;
 
   return `
     <html>
-      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f9fafb;">
         <div style="max-width: 500px; margin: 0 auto; padding: 2rem;">
-          ${photoSection}
-          <h2>Hallo ${firstName}!</h2>
-          <p>Ich bin's, ${ownerName} von ${businessName}. ${visitLine(servedBy, ownerName)}</p>
-          <p>Hättest du vielleicht 30 Sekunden Zeit für eine kurze Google-Bewertung? Das bedeutet uns wirklich viel.</p>
-          <div style="margin: 2rem 0;">
-            <a href="${reviewLink}" style="background-color: #1f2937; color: white; padding: 0.75rem 1.5rem; border-radius: 0.375rem; text-decoration: none; display: inline-block;">
-              Jetzt bewerten
-            </a>
+          <div style="background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            ${photoSection}
+            <p style="margin: 0 0 1rem 0; font-size: 0.95rem; color: #6b7280;">
+              ❤️ <strong>Hallo ${firstName}</strong>
+            </p>
+            <p style="margin: 0 0 1.5rem 0; font-size: 0.95rem; line-height: 1.6; color: #1f2937;">
+              es ist ${senderName} von ${businessName}! 💈<br>
+              ${visitLine(servedBy, ownerName)}
+            </p>
+            <p style="margin: 0 0 1.5rem 0; font-size: 0.95rem; line-height: 1.6; color: #1f2937;">
+              Kannst du mir einen großen Gefallen tun? Wenn du kurz Zeit hast, würde ich mich riesig freuen, wenn du uns auf Google bewertest — das bedeutet uns echt viel! 🙏
+            </p>
+            <div style="margin: 2rem 0; text-align: center;">
+              <a href="${reviewLink}" style="background-color: #d63031; color: white; padding: 0.875rem 2rem; border-radius: 6px; text-decoration: none; display: inline-block; font-weight: 600; font-size: 0.95rem;">
+                Google-Bewertung schreiben
+              </a>
+            </div>
+            <p style="margin: 1.5rem 0 0 0; padding-top: 1.5rem; border-top: 1px solid #e5e7eb; font-size: 0.85rem; color: #9ca3af;">
+              ${senderName} und das Team von ${businessName}
+            </p>
           </div>
-          <p style="font-size: 0.875rem; color: #6b7280;">
-            ${ownerName} und das ganze Team von ${businessName}
-          </p>
         </div>
       </body>
     </html>
