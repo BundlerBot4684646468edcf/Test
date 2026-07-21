@@ -7,6 +7,7 @@ import Link from 'next/link';
 const nav = [
   { href: '/dashboard', label: 'Übersicht' },
   { href: '/dashboard/customers', label: 'Kunden' },
+  { href: '/dashboard/photo', label: 'Foto' },
   { href: '/dashboard/reviews', label: 'Bewertungen' },
   { href: '/dashboard/privacy', label: 'Datenschutz' },
 ];
