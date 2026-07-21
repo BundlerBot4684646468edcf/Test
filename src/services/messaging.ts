@@ -145,12 +145,18 @@ export function buildReviewRequestSMS(
   businessName: string,
   reviewLink: string,
   ownerName: string,
-  servedBy?: string | null
+  servedBy?: string | null,
+  unsubscribeUrl?: string
 ): string {
   const greeting = servedBy && servedBy.trim() && servedBy.trim() !== ownerName.trim()
     ? `${servedBy.trim()}`
     : ownerName;
-  return `Hallo ${firstName},\n\nes ist ${greeting} von ${businessName}! 💈 ${visitLine(servedBy, ownerName)}\n\nKannst du mir einen großen Gefallen tun? Wenn du kurz Zeit hast, würde ich mich riesig freuen, wenn du uns auf Google bewertest — das bedeutet uns echt viel! 🙏\n\n${reviewLink}\n\n—\nAntwort "STOP" zum Abmelden`;
+  // Alphanumeric sender IDs (e.g. "ANDRE") are one-way — the customer cannot
+  // reply "STOP" — so the opt-out has to be a tappable link, not a keyword.
+  const optOut = unsubscribeUrl
+    ? `\n\n—\nAbmelden: ${unsubscribeUrl}`
+    : `\n\n—\nAntwort "STOP" zum Abmelden`;
+  return `Hallo ${firstName},\n\nes ist ${greeting} von ${businessName}! 💈 ${visitLine(servedBy, ownerName)}\n\nKannst du mir einen großen Gefallen tun? Wenn du kurz Zeit hast, würde ich mich riesig freuen, wenn du uns auf Google bewertest — das bedeutet uns echt viel! 🙏\n\n${reviewLink}${optOut}`;
 }
 
 export function buildReviewRequestHTML(
@@ -159,7 +165,9 @@ export function buildReviewRequestHTML(
   reviewLink: string,
   ownerName: string,
   ownerPhotoUrl?: string,
-  servedBy?: string | null
+  servedBy?: string | null,
+  unsubscribeUrl?: string,
+  privacyUrl?: string
 ): string {
   // Large enough that the handwritten name on the sign is readable.
   const photoSection = ownerPhotoUrl
@@ -196,8 +204,11 @@ export function buildReviewRequestHTML(
             </p>
             <p style="margin: 1rem 0 0 0; font-size: 0.75rem; color: #d1d5db;">
               Wir haben dir diese Nachricht geschickt, weil du ${businessName} besucht hast.
-              <a href="#" style="color: #0066cc; text-decoration: underline;">Hier kannst du dich abmelden</a> oder
-              <a href="#" style="color: #0066cc; text-decoration: underline;">deine Daten einsehen</a>.
+              <a href="${unsubscribeUrl || '#'}" style="color: #0066cc; text-decoration: underline;">Hier kannst du dich abmelden</a>${
+                privacyUrl
+                  ? ` · <a href="${privacyUrl}" style="color: #0066cc; text-decoration: underline;">Datenschutz</a>`
+                  : ''
+              }.
             </p>
           </div>
         </div>

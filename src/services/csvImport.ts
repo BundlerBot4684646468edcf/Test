@@ -1,5 +1,5 @@
 import { parse } from 'csv-parse/sync';
-import { customers } from '../db';
+import { customers, nowISO } from '../db';
 
 export interface CustomerImportRow {
   firstName: string;
@@ -12,11 +12,15 @@ export interface CustomerImportRow {
 export async function importCustomersFromCSV(
   businessId: string,
   csvContent: string,
-  source: 'past' | 'new' = 'past'
+  source: 'past' | 'new' = 'past',
+  consented = false
 ): Promise<{
   imported: number;
   errors: Array<{ row: number; error: string }>;
 }> {
+  // The business owner confirms in the dashboard that these customers agreed
+  // to be contacted. Stamp that consent time so it's auditable per GDPR.
+  const consentedAt = consented ? nowISO() : null;
   const errors: Array<{ row: number; error: string }> = [];
   let imported = 0;
 
@@ -59,6 +63,7 @@ export async function importCustomersFromCSV(
         servedAt: parsedDate.toISOString(),
         servedBy: servedBy || null,
         source,
+        consentedAt,
       });
 
       imported++;

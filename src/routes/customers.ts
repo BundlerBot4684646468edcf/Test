@@ -28,13 +28,19 @@ router.post('/import', upload.single('file'), async (req, res) => {
   try {
     const { businessId } = req.params as Record<string, string>;
     const source = req.body.source === 'new' ? 'new' : 'past';
+    const consented = req.body.consent === 'true' || req.body.consent === true;
 
     if (!req.file) {
       return res.status(400).json({ error: 'No file provided' });
     }
+    if (!consented) {
+      return res.status(400).json({
+        error: 'Consent confirmation required before importing customers',
+      });
+    }
 
     const csvContent = req.file.buffer.toString('utf-8');
-    const result = await importCustomersFromCSV(businessId, csvContent, source);
+    const result = await importCustomersFromCSV(businessId, csvContent, source, consented);
 
     res.json({
       success: true,

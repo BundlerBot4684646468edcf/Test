@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 import businessesRouter from './routes/businesses';
 import setupRouter from './routes/setup';
+import publicRouter from './routes/public';
 import { startCronJobs } from './services/cronJobs';
 
 dotenv.config();
@@ -22,6 +23,9 @@ app.use('/uploads', express.static(process.env.UPLOADS_DIR || 'uploads'));
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+
+// Public, no-login pages: opt-out link + privacy policy (linked in every message)
+app.use('/', publicRouter);
 
 // API Routes
 app.use('/api/businesses', businessesRouter);

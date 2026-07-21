@@ -51,6 +51,7 @@ export default function CustomersPage() {
       const fd = new FormData();
       fd.append('file', file);
       fd.append('source', 'past');
+      fd.append('consent', 'true');
       const r = await api.post(`/businesses/${id}/customers/import`, fd, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });

@@ -16,6 +16,40 @@ import {
 // unless the business overrides it (reminderDelayHours).
 const DEFAULT_REMINDER_DELAY_HOURS = 24;
 
+// EU marketing rule of thumb: only send between these local hours. A review
+// ask that buzzes someone's phone at 3am is both illegal-feeling and ignored.
+const SEND_WINDOW_START = 8;
+const SEND_WINDOW_END = 20;
+
+/** Current hour (0–23) in the business's timezone. */
+function localHour(timezone: string): number {
+  try {
+    const s = new Intl.DateTimeFormat('en-GB', {
+      timeZone: timezone,
+      hour: 'numeric',
+      hour12: false,
+    }).format(new Date());
+    return parseInt(s, 10) % 24;
+  } catch {
+    return new Date().getHours();
+  }
+}
+
+function withinSendingWindow(timezone: string): boolean {
+  const h = localHour(timezone);
+  return h >= SEND_WINDOW_START && h < SEND_WINDOW_END;
+}
+
+/** Public opt-out + privacy links, built from PUBLIC_BASE_URL. */
+function publicLinks(customerId: string): { unsubscribeUrl?: string; privacyUrl?: string } {
+  const base = (process.env.PUBLIC_BASE_URL || '').replace(/\/$/, '');
+  if (!base) return {};
+  return {
+    unsubscribeUrl: `${base}/u/${customerId}`,
+    privacyUrl: `${base}/datenschutz`,
+  };
+}
+
 /**
  * If the business has an owner photo (with a blank sign) stored locally,
  * render the customer's name onto it and store the result, returning its URL.
@@ -88,10 +122,19 @@ export async function processReviewQueue() {
         continue;
       }
 
+      // Only send within polite local hours (per-business timezone).
+      if (!withinSendingWindow(business.timezone)) {
+        console.log(
+          `[SEND WINDOW] Outside ${SEND_WINDOW_START}-${SEND_WINDOW_END}h in ${business.timezone}, deferring ${request.id}`
+        );
+        continue;
+      }
+
       let sent = false;
 
       // Per-customer personalized photo (name written on the sign)
       const personalPhotoUrl = await photoUrlFor(business, customer.firstName);
+      const { unsubscribeUrl, privacyUrl } = publicLinks(customer.id);
 
       if (request.channel === 'sms' && customer.phone) {
         const message = buildReviewRequestSMS(
@@ -99,7 +142,8 @@ export async function processReviewQueue() {
           business.name,
           business.googleReviewLink || 'https://google.com',
           business.ownerName,
-          customer.servedBy
+          customer.servedBy,
+          unsubscribeUrl
         );
         const result = await sendSMS({
           toPhone: customer.phone,
@@ -114,7 +158,9 @@ export async function processReviewQueue() {
           business.googleReviewLink || 'https://google.com',
           business.ownerName,
           personalPhotoUrl,
-          customer.servedBy
+          customer.servedBy,
+          unsubscribeUrl,
+          privacyUrl
         );
         const result = await sendEmail({
           toEmail: customer.email,
@@ -156,17 +202,30 @@ export async function processReviewQueue() {
         60 * 60 * 1000;
       if (Date.now() - new Date(request.sentAt).getTime() < delayMs) continue;
 
-      const reminderMessage = `Hallo ${customer.firstName}, kurze Erinnerung von ${business.ownerName}: Hättest du 30 Sekunden für eine Google-Bewertung? Das würde uns riesig freuen. ${business.googleReviewLink}`;
+      // Respect the same polite-hours window for follow-ups.
+      if (!withinSendingWindow(business.timezone)) continue;
+
+      const { unsubscribeUrl, privacyUrl } = publicLinks(customer.id);
+      const reminderMessage = `Hallo ${customer.firstName}, kurze Erinnerung von ${business.ownerName}: Hättest du 30 Sekunden für eine Google-Bewertung? Das würde uns riesig freuen. ${business.googleReviewLink}${
+        unsubscribeUrl ? `\n\nAbmelden: ${unsubscribeUrl}` : ''
+      }`;
 
       // Channel switch: SMS first, email as the follow-up (if we have one).
       const useEmail =
         !!customer.email && (request.channel === 'email' || request.channel === 'sms');
 
       if (useEmail) {
+        const footer = unsubscribeUrl
+          ? `<p style="font-size:0.75rem;color:#9ca3af;margin-top:1.5rem;">
+               <a href="${unsubscribeUrl}" style="color:#0066cc;">Abmelden</a>${
+                 privacyUrl ? ` · <a href="${privacyUrl}" style="color:#0066cc;">Datenschutz</a>` : ''
+               }
+             </p>`
+          : '';
         await sendEmail({
           toEmail: customer.email!,
           subject: `Kurze Erinnerung von ${business.ownerName} 🙏`,
-          html: `<p>${reminderMessage}</p>`,
+          html: `<p>${reminderMessage}</p>${footer}`,
           fromName: business.ownerName,
         });
       } else if (customer.phone) {

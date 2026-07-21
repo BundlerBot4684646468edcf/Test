@@ -89,6 +89,10 @@ ensureColumn('Business', 'sendDelayHours', 'REAL');
 ensureColumn('Business', 'reminderDelayHours', 'REAL');
 // Staff member who served the customer — used to personalize messages
 ensureColumn('Customer', 'servedBy', 'TEXT');
+// GDPR: when the business confirmed the customer consented (import time),
+// and when the customer opted out (via unsubscribe link / STOP). Auditable.
+ensureColumn('Customer', 'consentedAt', 'TEXT');
+ensureColumn('Customer', 'optedOutAt', 'TEXT');
 
 // --- Helpers --------------------------------------------------------------
 export function newId(): string {
@@ -128,6 +132,8 @@ export interface Customer {
   servedBy: string | null;
   source: string;
   optOut: number; // 0 | 1
+  consentedAt: string | null;
+  optedOutAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -214,12 +220,13 @@ export const customers = {
     servedAt: string;
     servedBy?: string | null;
     source?: string;
+    consentedAt?: string | null;
   }): Customer {
     const id = newId();
     const ts = nowISO();
     db.prepare(
-      `INSERT INTO Customer (id, businessId, firstName, phone, email, servedAt, servedBy, source, createdAt, updatedAt)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO Customer (id, businessId, firstName, phone, email, servedAt, servedBy, source, consentedAt, createdAt, updatedAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     ).run(
       id,
       data.businessId,
@@ -229,6 +236,7 @@ export const customers = {
       data.servedAt,
       data.servedBy ?? null,
       data.source || 'past',
+      data.consentedAt ?? null,
       ts,
       ts
     );
@@ -269,6 +277,17 @@ export const customers = {
   },
   delete(id: string): void {
     db.prepare('DELETE FROM Customer WHERE id = ?').run(id);
+  },
+  // GDPR opt-out: flag the customer, stamp the time, and cancel any pending
+  // requests so nothing else goes out. Idempotent.
+  optOut(id: string): Customer | undefined {
+    const ts = nowISO();
+    db.prepare(
+      `UPDATE Customer SET optOut = 1, optedOutAt = COALESCE(optedOutAt, ?), updatedAt = ?
+       WHERE id = ?`
+    ).run(ts, ts, id);
+    reviewRequests.optOutForCustomer(id);
+    return this.get(id);
   },
 };
 
