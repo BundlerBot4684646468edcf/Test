@@ -150,7 +150,7 @@ export function buildReviewRequestSMS(
   const greeting = servedBy && servedBy.trim() && servedBy.trim() !== ownerName.trim()
     ? `${servedBy.trim()}`
     : ownerName;
-  return `Hallo ${firstName},\n\nes ist ${greeting} von ${businessName}! 💈 ${visitLine(servedBy, ownerName)}\n\nKannst du mir einen großen Gefallen tun? Wenn du kurz Zeit hast, würde ich mich riesig freuen, wenn du uns auf Google bewertest — das bedeutet uns echt viel! 🙏\n\n${reviewLink}`;
+  return `Hallo ${firstName},\n\nes ist ${greeting} von ${businessName}! 💈 ${visitLine(servedBy, ownerName)}\n\nKannst du mir einen großen Gefallen tun? Wenn du kurz Zeit hast, würde ich mich riesig freuen, wenn du uns auf Google bewertest — das bedeutet uns echt viel! 🙏\n\n${reviewLink}\n\n—\nAntwort "STOP" zum Abmelden`;
 }
 
 export function buildReviewRequestHTML(
@@ -193,6 +193,11 @@ export function buildReviewRequestHTML(
             </div>
             <p style="margin: 1.5rem 0 0 0; padding-top: 1.5rem; border-top: 1px solid #e5e7eb; font-size: 0.85rem; color: #9ca3af;">
               ${senderName} und das Team von ${businessName}
+            </p>
+            <p style="margin: 1rem 0 0 0; font-size: 0.75rem; color: #d1d5db;">
+              Wir haben dir diese Nachricht geschickt, weil du ${businessName} besucht hast.
+              <a href="#" style="color: #0066cc; text-decoration: underline;">Hier kannst du dich abmelden</a> oder
+              <a href="#" style="color: #0066cc; text-decoration: underline;">deine Daten einsehen</a>.
             </p>
           </div>
         </div>

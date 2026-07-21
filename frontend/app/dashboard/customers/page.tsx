@@ -25,6 +25,7 @@ export default function CustomersPage() {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [consentGiven, setConsentGiven] = useState(false);
 
   const load = () => {
     const id = localStorage.getItem('businessId');
@@ -39,7 +40,10 @@ export default function CustomersPage() {
   useEffect(load, []);
 
   const upload = async () => {
-    if (!file) return;
+    if (!file || !consentGiven) {
+      setMsg({ ok: false, text: 'Bitte bestätige, dass die Kunden der Datenverarbeitung zugestimmt haben.' });
+      return;
+    }
     setUploading(true);
     setMsg(null);
     try {
@@ -52,6 +56,7 @@ export default function CustomersPage() {
       });
       setMsg({ ok: true, text: `${r.data.imported} Kunden importiert${r.data.errors.length ? `, ${r.data.errors.length} Fehler` : ''}.` });
       setFile(null);
+      setConsentGiven(false);
       load();
     } catch {
       setMsg({ ok: false, text: 'Upload fehlgeschlagen.' });
@@ -86,14 +91,31 @@ export default function CustomersPage() {
         </div>
 
         {file && (
-          <button
-            onClick={upload}
-            disabled={uploading}
-            className="mt-4 w-full py-2.5 rounded-lg font-medium text-white transition-opacity disabled:opacity-60"
-            style={{ background: 'var(--brand)' }}
-          >
-            {uploading ? 'Importiere…' : `„${file.name}" importieren`}
-          </button>
+          <div className="mt-4 space-y-3">
+            <label className="flex items-start gap-3 p-3 rounded-lg" style={{ background: 'var(--plane)', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={consentGiven}
+                onChange={(e) => setConsentGiven(e.target.checked)}
+                className="mt-1"
+              />
+              <span style={{ color: 'var(--ink-2)', fontSize: '0.9rem', lineHeight: 1.5 }}>
+                ✓ Ich bestätige, dass diese Kunden der Datenverarbeitung und dem Erhalt von Bewertungsanfragen zugestimmt haben
+                (GDPR Datenschutz).
+                <a href="/dashboard/privacy" className="ml-1" style={{ color: 'var(--brand)' }}>
+                  Datenschutzerklärung lesen
+                </a>
+              </span>
+            </label>
+            <button
+              onClick={upload}
+              disabled={uploading || !consentGiven}
+              className="w-full py-2.5 rounded-lg font-medium text-white transition-opacity disabled:opacity-60"
+              style={{ background: 'var(--brand)' }}
+            >
+              {uploading ? 'Importiere…' : `„${file.name}" importieren`}
+            </button>
+          </div>
         )}
 
         {msg && (

@@ -8,6 +8,7 @@ const nav = [
   { href: '/dashboard', label: 'Übersicht' },
   { href: '/dashboard/customers', label: 'Kunden' },
   { href: '/dashboard/reviews', label: 'Bewertungen' },
+  { href: '/dashboard/privacy', label: 'Datenschutz' },
 ];
 
 export default function DashboardLayout({
