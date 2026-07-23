@@ -1,0 +1,18 @@
+node_modules/
+dist/
+.env
+.env.local
+.DS_Store
+*.log
+.vscode/
+.idea/
+.prisma/
+build/
+
+# SQLite database
+mundpost.db
+mundpost.db-shm
+mundpost.db-wal
+
+# uploaded photos
+uploads/
