@@ -49,6 +49,12 @@ router.post('/', async (req, res) => {
     const { businessId } = req.params as Record<string, string>;
     const { customerId, channel = 'sms' } = req.body;
 
+    if (!['sms', 'whatsapp', 'email'].includes(channel)) {
+      return res
+        .status(400)
+        .json({ error: 'channel must be sms, whatsapp or email' });
+    }
+
     const customer = customers.get(customerId);
     if (!customer || customer.businessId !== businessId) {
       return res.status(404).json({ error: 'Customer not found' });

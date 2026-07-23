@@ -98,6 +98,51 @@ export async function sendSMS(payload: SMSPayload): Promise<{
   }
 }
 
+/**
+ * WhatsApp via Twilio. Unlike SMS, WhatsApp DOES show images inline in the
+ * chat — including in Italy/EU — so the personalized photo lands directly
+ * in the message (the FlamingoFlow effect).
+ *
+ * Requires TWILIO_WHATSAPP_NUMBER (e.g. the sandbox number +14155238886
+ * for testing, or an approved WhatsApp sender for production).
+ */
+export async function sendWhatsApp(payload: SMSPayload): Promise<{
+  success: boolean;
+  messageId?: string;
+  error?: string;
+}> {
+  const client = getTwilio();
+  const waNumber = process.env.TWILIO_WHATSAPP_NUMBER || '';
+  if (!client || !waNumber) {
+    console.warn(
+      '[WA] WhatsApp not configured. Set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_WHATSAPP_NUMBER'
+    );
+    return { success: false, error: 'WhatsApp not configured' };
+  }
+
+  try {
+    const messageData: any = {
+      body: payload.message,
+      from: `whatsapp:${waNumber}`,
+      to: `whatsapp:${payload.toPhone}`,
+    };
+    const isPublic =
+      !!payload.mediaUrl &&
+      payload.mediaUrl.startsWith('https://') &&
+      !payload.mediaUrl.includes('mock-storage.local');
+    if (isPublic) {
+      messageData.mediaUrl = [payload.mediaUrl];
+    }
+
+    const message = await client.messages.create(messageData);
+    console.log(`✅ WhatsApp sent: ${message.sid} to ${payload.toPhone}`);
+    return { success: true, messageId: message.sid };
+  } catch (error) {
+    console.error('❌ WhatsApp error:', error);
+    return { success: false, error: String(error) };
+  }
+}
+
 export async function sendEmail(payload: EmailPayload): Promise<{
   success: boolean;
   messageId?: string;
@@ -217,6 +262,10 @@ export function buildReviewRequestHTML(
   `;
 }
 
-export function isMessagingConfigured(): { sms: boolean; email: boolean } {
-  return { sms: !!getTwilio(), email: !!getResend() };
+export function isMessagingConfigured(): { sms: boolean; email: boolean; whatsapp: boolean } {
+  return {
+    sms: !!getTwilio(),
+    email: !!getResend(),
+    whatsapp: !!getTwilio() && !!process.env.TWILIO_WHATSAPP_NUMBER,
+  };
 }

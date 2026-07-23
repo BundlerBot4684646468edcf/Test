@@ -3,6 +3,7 @@ import { reviewRequests, customers, businesses, Business } from '../db';
 import {
   sendSMS,
   sendEmail,
+  sendWhatsApp,
   buildReviewRequestSMS,
   buildReviewRequestHTML,
 } from './messaging';
@@ -151,6 +152,22 @@ export async function processReviewQueue() {
           mediaUrl: personalPhotoUrl,
         });
         sent = result.success;
+      } else if (request.channel === 'whatsapp' && customer.phone) {
+        // WhatsApp shows the photo inline in the chat — even in Italy.
+        const message = buildReviewRequestSMS(
+          customer.firstName,
+          business.name,
+          business.googleReviewLink || 'https://google.com',
+          business.ownerName,
+          customer.servedBy,
+          unsubscribeUrl
+        );
+        const result = await sendWhatsApp({
+          toPhone: customer.phone,
+          message,
+          mediaUrl: personalPhotoUrl,
+        });
+        sent = result.success;
       } else if (request.channel === 'email' && customer.email) {
         const html = buildReviewRequestHTML(
           customer.firstName,
@@ -210,9 +227,9 @@ export async function processReviewQueue() {
         unsubscribeUrl ? `\n\nAbmelden: ${unsubscribeUrl}` : ''
       }`;
 
-      // Channel switch: SMS first, email as the follow-up (if we have one).
-      const useEmail =
-        !!customer.email && (request.channel === 'email' || request.channel === 'sms');
+      // Channel switch: SMS/WhatsApp first, email as the follow-up (if we
+      // have one) — a second ping on the same channel feels pushy.
+      const useEmail = !!customer.email;
 
       if (useEmail) {
         const footer = unsubscribeUrl
