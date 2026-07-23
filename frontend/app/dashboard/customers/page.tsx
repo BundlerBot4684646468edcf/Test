@@ -13,6 +13,12 @@ interface Customer {
   optOut: number | boolean;
 }
 
+const CHANNELS: Array<{ key: 'email' | 'sms' | 'whatsapp'; label: string }> = [
+  { key: 'email', label: 'E-Mail' },
+  { key: 'sms', label: 'SMS' },
+  { key: 'whatsapp', label: 'WhatsApp' },
+];
+
 const card: React.CSSProperties = {
   background: 'var(--surface)',
   border: '1px solid var(--border)',
@@ -26,6 +32,9 @@ export default function CustomersPage() {
   const [uploading, setUploading] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [consentGiven, setConsentGiven] = useState(false);
+  const [channelFor, setChannelFor] = useState<Record<string, 'email' | 'sms' | 'whatsapp'>>({});
+  const [sendingFor, setSendingFor] = useState<Record<string, boolean>>({});
+  const [sentFor, setSentFor] = useState<Record<string, boolean>>({});
 
   const load = () => {
     const id = localStorage.getItem('businessId');
@@ -63,6 +72,28 @@ export default function CustomersPage() {
       setMsg({ ok: false, text: 'Upload fehlgeschlagen.' });
     } finally {
       setUploading(false);
+    }
+  };
+
+  const sendRequest = async (customer: Customer) => {
+    const channel = channelFor[customer.id] || (customer.email ? 'email' : 'sms');
+    setSendingFor((s) => ({ ...s, [customer.id]: true }));
+    setMsg(null);
+    try {
+      const id = localStorage.getItem('businessId');
+      await api.post(`/businesses/${id}/review-requests`, {
+        customerId: customer.id,
+        channel,
+      });
+      setSentFor((s) => ({ ...s, [customer.id]: true }));
+      setMsg({ ok: true, text: `Anfrage für ${customer.firstName} eingeplant (${channel}). Der Versand läuft alle 15 Minuten automatisch.` });
+    } catch (err: any) {
+      setMsg({
+        ok: false,
+        text: err?.response?.data?.error || `Anfrage für ${customer.firstName} fehlgeschlagen.`,
+      });
+    } finally {
+      setSendingFor((s) => ({ ...s, [customer.id]: false }));
     }
   };
 
@@ -150,7 +181,7 @@ export default function CustomersPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                  {['Name', 'Telefon', 'E-Mail', 'Besuch', 'Status'].map((h) => (
+                  {['Name', 'Telefon', 'E-Mail', 'Besuch', 'Status', 'Anfrage'].map((h) => (
                     <th key={h} className="text-left px-5 py-3 font-medium" style={{ color: 'var(--muted)' }}>
                       {h}
                     </th>
@@ -160,6 +191,9 @@ export default function CustomersPage() {
               <tbody>
                 {customers.map((c) => {
                   const opted = c.optOut === 1 || c.optOut === true;
+                  const channel = channelFor[c.id] || (c.email ? 'email' : 'sms');
+                  const sending = !!sendingFor[c.id];
+                  const sent = !!sentFor[c.id];
                   return (
                     <tr key={c.id} style={{ borderBottom: '1px solid var(--line)' }}>
                       <td className="px-5 py-3.5 font-medium" style={{ color: 'var(--ink)' }}>{c.firstName}</td>
@@ -178,6 +212,38 @@ export default function CustomersPage() {
                         >
                           {opted ? 'Abgemeldet' : 'Aktiv'}
                         </span>
+                      </td>
+                      <td className="px-5 py-3.5">
+                        {opted ? (
+                          <span style={{ color: 'var(--muted)', fontSize: '0.8rem' }}>–</span>
+                        ) : sent ? (
+                          <span style={{ color: 'var(--good-ink)', fontSize: '0.85rem' }}>✓ Eingeplant</span>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <select
+                              value={channel}
+                              onChange={(e) =>
+                                setChannelFor((s) => ({ ...s, [c.id]: e.target.value as any }))
+                              }
+                              className="px-2 py-1.5 rounded-md text-xs"
+                              style={{ border: '1px solid var(--border)', background: 'var(--plane)', color: 'var(--ink)' }}
+                            >
+                              {CHANNELS.map((ch) => (
+                                <option key={ch.key} value={ch.key}>
+                                  {ch.label}
+                                </option>
+                              ))}
+                            </select>
+                            <button
+                              onClick={() => sendRequest(c)}
+                              disabled={sending}
+                              className="px-3 py-1.5 rounded-md text-xs font-medium text-white disabled:opacity-60"
+                              style={{ background: 'var(--brand)' }}
+                            >
+                              {sending ? 'Sendet…' : 'Anfrage senden'}
+                            </button>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   );
