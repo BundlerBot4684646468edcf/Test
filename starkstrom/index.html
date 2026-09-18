@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Starkstrom — Jürgen Larcher, Elektriker Brixen</title>
+<meta name="description" content="Starkstrom — Elektroinstallationen in Brixen und Umgebung. Was, wo, wann. Schnell erreichbar, klar kalkuliert.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><rect width=%2224%22 height=%2224%22 fill=%22%230026ff%22/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;900&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0a0a0a; --paper:#f2f1ec; --blue:#0026ff; --red:#e8321c; --line:rgba(10,10,10,.14);
+  --font: "Archivo", sans-serif; --mono: "IBM Plex Mono", monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--paper);color:var(--ink);font-family:var(--font);overflow-x:hidden;}
+a{color:inherit;text-decoration:none;}
+[data-reveal]{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s ease;}
+[data-reveal].is-in{opacity:1;transform:translateY(0);}
+::selection{background:var(--blue);color:var(--paper);}
+
+.grid-frame{
+  position:fixed;inset:24px;border:1.5px solid var(--ink);pointer-events:none;z-index:5;
+}
+.grid-frame::before,.grid-frame::after{
+  content:"STARKSTROM";position:absolute;font-family:var(--mono);font-size:11px;letter-spacing:2px;
+  writing-mode:vertical-rl;padding:8px 4px;
+}
+.grid-frame::before{top:0;left:-1.5px;border-right:1.5px solid var(--ink);}
+.grid-frame::after{top:0;right:-1.5px;border-left:1.5px solid var(--ink);transform:rotate(180deg);}
+
+header{
+  position:relative;z-index:10;padding:48px 64px 0;display:flex;justify-content:space-between;
+  font-family:var(--mono);font-size:13px;letter-spacing:1px;text-transform:uppercase;
+}
+header a.cta{border:1.5px solid var(--ink);padding:8px 16px;}
+header a.cta:hover{background:var(--ink);color:var(--paper);}
+
+.hero{padding:60px 64px 90px;position:relative;z-index:2;}
+.hero-eyebrow{font-family:var(--mono);font-size:13px;letter-spacing:1px;color:var(--blue);margin-bottom:18px;}
+.hero h1{
+  font-size:clamp(48px,10vw,140px);line-height:.86;font-weight:900;text-transform:uppercase;
+  letter-spacing:-2px;
+}
+.hero h1 .blue{color:var(--blue);}
+.hero-sub{
+  margin-top:32px;max-width:520px;font-size:18px;line-height:1.55;font-family:var(--mono);
+}
+.hero-meta{
+  margin-top:56px;display:flex;gap:64px;flex-wrap:wrap;font-family:var(--mono);font-size:13px;
+}
+.hero-meta div span{display:block;color:var(--blue);margin-bottom:6px;letter-spacing:1px;}
+
+.marquee-strip{
+  background:var(--blue);color:var(--paper);overflow:hidden;padding:14px 0;position:relative;z-index:2;
+}
+.marquee-strip .track{display:flex;gap:40px;white-space:nowrap;width:max-content;animation:scrollX 16s linear infinite;}
+.marquee-strip span{font-family:var(--mono);font-size:15px;letter-spacing:1px;}
+@keyframes scrollX{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+
+/* WAS WO WANN */
+.wwv{padding:120px 64px;position:relative;z-index:2;}
+.wwv-head{margin-bottom:64px;}
+.wwv-head .num{font-family:var(--mono);color:var(--blue);font-size:13px;letter-spacing:1px;}
+.wwv-head h2{font-size:clamp(34px,5vw,60px);font-weight:900;text-transform:uppercase;letter-spacing:-1px;margin-top:14px;}
+.wwv-grid{display:grid;grid-template-columns:repeat(3,1fr);border-top:1.5px solid var(--ink);}
+.wwv-col{border-right:1.5px solid var(--ink);padding:36px 28px;position:relative;}
+.wwv-col:last-child{border-right:none;}
+.wwv-col .tag{font-family:var(--mono);font-size:12px;letter-spacing:2px;color:var(--blue);text-transform:uppercase;}
+.wwv-col .big{font-size:clamp(30px,3.4vw,44px);font-weight:900;text-transform:uppercase;margin:16px 0 20px;line-height:1.02;}
+.wwv-col p{font-size:14.5px;line-height:1.55;color:#333;}
+.wwv-col ul{margin-top:18px;display:flex;flex-direction:column;gap:8px;font-family:var(--mono);font-size:13px;}
+.wwv-col li::before{content:"— ";color:var(--blue);}
+
+/* SERVICES POSTER LIST */
+.leistungen{padding:0 64px 120px;position:relative;z-index:2;}
+.service-line{
+  display:flex;align-items:baseline;justify-content:space-between;gap:24px;
+  border-bottom:1.5px solid var(--ink);padding:26px 0;
+}
+.service-line:first-child{border-top:1.5px solid var(--ink);}
+.service-line .name{font-size:clamp(20px,3vw,34px);font-weight:900;text-transform:uppercase;}
+.service-line .code{font-family:var(--mono);font-size:13px;color:var(--blue);}
+
+/* CTA */
+.cta-block{
+  background:var(--ink);color:var(--paper);padding:120px 64px;position:relative;z-index:2;
+  border-radius:2px;margin:0 24px 24px;
+}
+.cta-block h2{
+  font-size:clamp(36px,7vw,90px);font-weight:900;text-transform:uppercase;line-height:.95;letter-spacing:-1px;max-width:900px;
+}
+.cta-block h2 span{color:var(--blue);}
+.cta-actions{display:flex;gap:20px;margin-top:48px;flex-wrap:wrap;}
+.btn{
+  font-family:var(--mono);font-size:14px;letter-spacing:1px;text-transform:uppercase;
+  padding:18px 32px;border:1.5px solid var(--paper);
+}
+.btn.solid{background:var(--blue);border-color:var(--blue);color:var(--paper);}
+.btn.solid:hover{background:var(--paper);color:var(--blue);}
+.btn.outline:hover{background:var(--paper);color:var(--ink);}
+
+footer{
+  padding:32px 64px 48px;display:flex;justify-content:space-between;font-family:var(--mono);
+  font-size:12px;color:#666;position:relative;z-index:2;flex-wrap:wrap;gap:12px;
+}
+
+@media(max-width:860px){
+  .grid-frame{display:none;}
+  header,.hero,.wwv,.leistungen,.cta-block,footer{padding-left:24px;padding-right:24px;}
+  .wwv-grid{grid-template-columns:1fr;}
+  .wwv-col{border-right:none;border-bottom:1.5px solid var(--ink);}
+  .cta-block{margin:0 12px 12px;}
+}
+</style>
+</head>
+<body>
+
+<div class="grid-frame"></div>
+
+<header>
+  <span>JÜRGEN LARCHER — BRIXEN</span>
+  <a class="cta" href="#kontakt">Anfrage stellen</a>
+</header>
+
+<section class="hero">
+  <p class="hero-eyebrow">ELEKTROINSTALLATION · SEIT 2013</p>
+  <h1 data-reveal>STARK-<br><span class="blue">STROM.</span></h1>
+  <p class="hero-sub" data-reveal>
+    Ein Elektriker, ein Werkzeugwagen, keine Warteschlangen. Jürgen Larcher übernimmt
+    Installationen, Reparaturen und Notfälle rund um Brixen — direkt, ehrlich, schnell.
+  </p>
+  <div class="hero-meta" data-reveal>
+    <div><span>Einsatzgebiet</span>Brixen · Vahrn · Natz-Schabs</div>
+    <div><span>Reaktionszeit</span>&lt; 24h bei Anfrage</div>
+    <div><span>Sprachen</span>DE / IT</div>
+  </div>
+</section>
+
+<div class="marquee-strip">
+  <div class="track">
+    <span>WAS — WO — WANN · WAS — WO — WANN · WAS — WO — WANN · WAS — WO — WANN · </span>
+    <span>WAS — WO — WANN · WAS — WO — WANN · WAS — WO — WANN · WAS — WO — WANN · </span>
+  </div>
+</div>
+
+<section class="wwv">
+  <div class="wwv-head" data-reveal>
+    <p class="num">01 — ABLAUF</p>
+    <h2>Drei Fragen.<br>Eine Antwort.</h2>
+  </div>
+  <div class="wwv-grid">
+    <div class="wwv-col" data-reveal>
+      <p class="tag">Was</p>
+      <p class="big">Dein Anliegen</p>
+      <p>Steckdose kaputt, Sicherung raus, neuer Zählerkasten — schreib kurz, was ansteht.</p>
+      <ul>
+        <li>Reparatur &amp; Störung</li>
+        <li>Neuinstallation</li>
+        <li>Prüfung &amp; Beratung</li>
+      </ul>
+    </div>
+    <div class="wwv-col" data-reveal>
+      <p class="tag">Wo</p>
+      <p class="big">Dein Standort</p>
+      <p>Brixen und die umliegenden Fraktionen — kurze Wege, keine Anfahrtsüberraschungen.</p>
+      <ul>
+        <li>Brixen Zentrum</li>
+        <li>Vahrn / Neustift</li>
+        <li>Natz-Schabs / Milland</li>
+      </ul>
+    </div>
+    <div class="wwv-col" data-reveal>
+      <p class="tag">Wann</p>
+      <p class="big">Dein Termin</p>
+      <p>Rückmeldung innerhalb eines Werktags, Termin meist noch in derselben Woche.</p>
+      <ul>
+        <li>Mo–Fr, 7–18 Uhr</li>
+        <li>Notfälle nach Absprache</li>
+        <li>Fixtermin per Telefon</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="leistungen">
+  <div class="wwv-head" data-reveal>
+    <p class="num">02 — LEISTUNGEN</p>
+    <h2>Was gemacht wird.</h2>
+  </div>
+  <div class="service-line" data-reveal><span class="name">Steckdosen &amp; Schalter</span><span class="code">01/06</span></div>
+  <div class="service-line" data-reveal><span class="name">Sicherungskasten &amp; FI-Schutz</span><span class="code">02/06</span></div>
+  <div class="service-line" data-reveal><span class="name">Beleuchtung innen &amp; außen</span><span class="code">03/06</span></div>
+  <div class="service-line" data-reveal><span class="name">E-Herd &amp; Warmwasser-Anschluss</span><span class="code">04/06</span></div>
+  <div class="service-line" data-reveal><span class="name">Zählerkasten-Erneuerung</span><span class="code">05/06</span></div>
+  <div class="service-line" data-reveal><span class="name">Störungsdienst</span><span class="code">06/06</span></div>
+</section>
+
+<section class="cta-block" id="kontakt">
+  <h2 data-reveal>Kurze Nachricht.<br>Schnelle <span>Antwort.</span></h2>
+  <div class="cta-actions" data-reveal>
+    <a class="btn solid" href="tel:+390472000000">+39 0472 000 000</a>
+    <a class="btn outline" href="mailto:info@starkstrom-larcher.it">info@starkstrom-larcher.it</a>
+  </div>
+</section>
+
+<footer>
+  <span>© 2026 Starkstrom — Jürgen Larcher, Brixen</span>
+  <span>Konzept &amp; Design: amstudio</span>
+</footer>
+
+<script>
+document.querySelectorAll('[data-reveal]').forEach(el=>{
+  const io = new IntersectionObserver(([e])=>{ if(e.isIntersecting){ el.classList.add('is-in'); io.disconnect(); } },{threshold:.15});
+  io.observe(el);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elektro Reichegger — Loxone Smart Home Partner</title>
+<meta name="description" content="Elektro Reichegger — zertifizierter Loxone-Partner für intelligente Gebäudetechnik in Südtirol.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><rect width=%2224%22 height=%2224%22 fill=%22%230b2f6b%22/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blue:#0b2f6b; --blue-line:#5c86d6; --paper:#eef2fb; --ink:#0d1626;
+  --font-display:"Space Grotesk", sans-serif; --mono:"IBM Plex Mono", monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--blue);color:var(--paper);font-family:var(--font-display);overflow-x:hidden;
+  background-image:
+    linear-gradient(var(--blue-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--blue-line) 1px, transparent 1px);
+  background-size:48px 48px;background-attachment:fixed;
+  background-color:var(--blue);
+}
+body::before{
+  content:"";position:fixed;inset:0;background:radial-gradient(ellipse at 30% 0%, rgba(11,47,107,0) 0%, var(--blue) 75%);
+  opacity:.35;pointer-events:none;z-index:0;
+}
+a{color:inherit;text-decoration:none;}
+[data-reveal]{opacity:0;transform:translateY(20px);transition:opacity .8s ease,transform .8s ease;}
+[data-reveal].is-in{opacity:1;transform:translateY(0);}
+::selection{background:var(--paper);color:var(--blue);}
+
+.nav{position:relative;z-index:3;display:flex;justify-content:space-between;align-items:center;padding:32px 56px;}
+.logo{font-weight:700;font-size:18px;display:flex;align-items:center;gap:10px;}
+.logo .chip{font-family:var(--mono);font-size:10px;border:1px solid var(--blue-line);padding:3px 8px;border-radius:4px;letter-spacing:1px;}
+.nav a.cta{border:1px solid var(--paper);padding:9px 20px;border-radius:2px;font-size:13.5px;font-family:var(--mono);}
+.nav a.cta:hover{background:var(--paper);color:var(--blue);}
+
+.hero{position:relative;z-index:2;padding:80px 56px 60px;max-width:1100px;}
+.hero-tag{
+  font-family:var(--mono);font-size:12.5px;letter-spacing:1px;border:1px solid var(--blue-line);
+  display:inline-block;padding:6px 12px;border-radius:2px;margin-bottom:26px;
+}
+.hero h1{font-weight:700;font-size:clamp(40px,7.4vw,92px);line-height:1.03;letter-spacing:-1px;}
+.hero p{margin-top:28px;font-size:17.5px;line-height:1.6;max-width:540px;color:#c6d4f2;}
+
+/* blueprint annotation lines */
+.annot{position:relative;display:inline-block;}
+.annot::after{content:attr(data-note);position:absolute;top:-22px;left:0;font-family:var(--mono);font-size:11px;color:var(--blue-line);}
+
+/* DAY IN THE HOUSE — scrolly */
+.day{position:relative;z-index:2;padding:100px 56px;max-width:1200px;}
+.day-head{margin-bottom:70px;}
+.day-head .kicker{font-family:var(--mono);font-size:12.5px;color:var(--blue-line);letter-spacing:1px;margin-bottom:16px;}
+.day-head h2{font-weight:700;font-size:clamp(30px,4.8vw,52px);line-height:1.08;}
+.day-track{border-top:1px solid var(--blue-line);}
+.day-row{
+  display:grid;grid-template-columns:120px 1fr 1.4fr;gap:28px;padding:34px 0;
+  border-bottom:1px solid rgba(92,134,214,.35);align-items:start;
+}
+.day-row .time{font-family:var(--mono);font-size:15px;color:var(--blue-line);}
+.day-row .icon{font-family:var(--mono);font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#c6d4f2;}
+.day-row .desc{font-size:15.5px;line-height:1.55;color:#dbe4fa;}
+.day-row .desc b{color:#fff;}
+
+.services{position:relative;z-index:2;padding:0 56px 120px;max-width:1200px;}
+.services h2{font-weight:700;font-size:clamp(28px,4.4vw,48px);margin-bottom:44px;}
+.service-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(92,134,214,.35);border:1px solid rgba(92,134,214,.35);}
+.service-cell{background:var(--blue);padding:30px;position:relative;}
+.service-cell .n{font-family:var(--mono);font-size:11px;color:var(--blue-line);}
+.service-cell h3{font-weight:600;font-size:19px;margin:14px 0 10px;}
+.service-cell p{font-size:13.5px;line-height:1.5;color:#c6d4f2;}
+
+.cta{
+  position:relative;z-index:2;background:var(--paper);color:var(--ink);margin:0 24px 24px;border-radius:8px;
+  padding:100px 56px;text-align:center;
+}
+.cta .kicker{font-family:var(--mono);font-size:12.5px;color:var(--blue);letter-spacing:1px;margin-bottom:18px;}
+.cta h2{font-weight:700;font-size:clamp(32px,5.6vw,60px);line-height:1.05;}
+.cta-actions{display:flex;justify-content:center;gap:16px;margin-top:40px;flex-wrap:wrap;}
+.btn{padding:16px 30px;border-radius:2px;font-size:14px;font-family:var(--mono);}
+.btn.solid{background:var(--blue);color:var(--paper);}
+.btn.ghost{border:1.5px solid var(--blue);}
+.btn:hover{transform:translateY(-2px);}
+
+footer{position:relative;z-index:2;padding:32px 56px 56px;display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px;color:#8ba3d9;flex-wrap:wrap;gap:12px;}
+
+@media(max-width:900px){
+  .nav,.hero,.day,.services,.cta,footer{padding-left:24px;padding-right:24px;}
+  .day-row{grid-template-columns:70px 1fr;}
+  .day-row .icon{display:none;}
+  .service-grid{grid-template-columns:1fr;}
+  .cta{margin:0 12px 12px;padding:60px 24px;}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <span class="logo">Elektro Reichegger <span class="chip">LOXONE PARTNER</span></span>
+  <a class="cta" href="#kontakt">Beratung anfragen</a>
+</nav>
+
+<section class="hero">
+  <span class="hero-tag">GEBÄUDETECHNIK · SÜDTIROL</span>
+  <h1 data-reveal>Ein Haus,<br>das mitdenkt.</h1>
+  <p data-reveal>
+    Elektro Reichegger plant und installiert intelligente Gebäudetechnik auf Basis von
+    Loxone — Licht, Heizung, Beschattung und Sicherheit in einem System, das sich dem Alltag anpasst.
+  </p>
+</section>
+
+<section class="day">
+  <div class="day-head">
+    <p class="kicker">// EIN TAG IM HAUS</p>
+    <h2 data-reveal>Vom ersten Licht<br>bis zur letzten Tür.</h2>
+  </div>
+  <div class="day-track">
+    <div class="day-row" data-reveal>
+      <span class="time">06:30</span>
+      <span class="icon">Aufwachen</span>
+      <span class="desc">Rollläden öffnen sich sanft, <b>Sonnenaufgangssimulation</b> ersetzt den Wecker.</span>
+    </div>
+    <div class="day-row" data-reveal>
+      <span class="time">07:15</span>
+      <span class="icon">Aufbruch</span>
+      <span class="desc">Ein Tastendruck an der Tür schaltet <b>Heizung, Licht und Geräte</b> in den Abwesend-Modus.</span>
+    </div>
+    <div class="day-row" data-reveal>
+      <span class="time">14:00</span>
+      <span class="icon">Sonnenstand</span>
+      <span class="desc">Beschattung reagiert automatisch auf <b>Sonnenintensität</b> — kühl bleibt, was kühl bleiben soll.</span>
+    </div>
+    <div class="day-row" data-reveal>
+      <span class="time">18:45</span>
+      <span class="icon">Ankunft</span>
+      <span class="desc">Näherungserkennung schaltet <b>Licht und Wohlfühltemperatur</b>, bevor der Schlüssel im Schloss ist.</span>
+    </div>
+    <div class="day-row" data-reveal>
+      <span class="time">22:30</span>
+      <span class="icon">Nachtmodus</span>
+      <span class="desc">Ein Szenenschalter: alle Lichter aus, Türen <b>automatisch verriegelt</b>, Alarm scharf.</span>
+    </div>
+  </div>
+</section>
+
+<section class="services">
+  <h2 data-reveal>Leistungen</h2>
+  <div class="service-grid">
+    <div class="service-cell" data-reveal><span class="n">01</span><h3>Smart-Home-Planung</h3><p>Bedarfsanalyse und Systemarchitektur, abgestimmt auf Loxone Miniserver.</p></div>
+    <div class="service-cell" data-reveal><span class="n">02</span><h3>Licht &amp; Beschattung</h3><p>Automatisierte Steuerung nach Tageslicht, Anwesenheit und Szene.</p></div>
+    <div class="service-cell" data-reveal><span class="n">03</span><h3>Heizung &amp; Klima</h3><p>Raumweise Regelung für spürbar geringeren Energieverbrauch.</p></div>
+    <div class="service-cell" data-reveal><span class="n">04</span><h3>Sicherheit</h3><p>Alarm, Zutritt und Kameraintegration in einer Oberfläche.</p></div>
+    <div class="service-cell" data-reveal><span class="n">05</span><h3>Inbetriebnahme</h3><p>Programmierung, Feinabstimmung und Einschulung vor Ort.</p></div>
+    <div class="service-cell" data-reveal><span class="n">06</span><h3>Service &amp; Updates</h3><p>Laufende Betreuung, auch Jahre nach der Installation.</p></div>
+  </div>
+</section>
+
+<section class="cta" id="kontakt">
+  <p class="kicker">// PROJEKT STARTEN</p>
+  <h2 data-reveal>Lass dein Haus<br>mitdenken.</h2>
+  <div class="cta-actions" data-reveal>
+    <a class="btn solid" href="tel:+390471300000">+39 0471 300 000</a>
+    <a class="btn ghost" href="mailto:info@elektro-reichegger.it">info@elektro-reichegger.it</a>
+  </div>
+</section>
+
+<footer>
+  <span>© 2026 Elektro Reichegger — Südtirol</span>
+  <span>Konzept &amp; Design: amstudio</span>
+</footer>
+
+<script>
+document.querySelectorAll('[data-reveal]').forEach(el=>{
+  const io = new IntersectionObserver(([e])=>{ if(e.isIntersecting){ el.classList.add('is-in'); io.disconnect(); } },{threshold:.12});
+  io.observe(el);
+});
+</script>
+</body>
+</html>

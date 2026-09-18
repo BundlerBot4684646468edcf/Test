@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Baukei — KNX Gebäudetechnik, Lana</title>
+<meta name="description" content="Baukei — EIB/KNX-Installationen in Lana. Komfort, den man nicht sieht.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><rect width=%2224%22 height=%2224%22 rx=%224%22 fill=%22%231c1c1e%22/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f4f3f1; --ink:#1c1c1e; --dim:#6b6a67; --line:rgba(28,28,30,.12); --warm:#e8b23d;
+  --font:"Inter", sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);overflow-x:hidden;transition:background 1.2s ease, color 1.2s ease;}
+body.is-dark{background:#141414;color:#efece6;}
+a{color:inherit;text-decoration:none;}
+[data-reveal]{opacity:0;transform:translateY(20px);transition:opacity .8s ease,transform .8s ease;}
+[data-reveal].is-in{opacity:1;transform:translateY(0);}
+::selection{background:var(--ink);color:var(--bg);}
+
+.nav{display:flex;justify-content:space-between;align-items:center;padding:32px 56px;position:relative;z-index:3;}
+.logo{font-weight:700;font-size:18px;letter-spacing:-.3px;}
+.nav a.cta{border:1.5px solid currentColor;padding:9px 20px;border-radius:100px;font-size:13.5px;}
+.nav a.cta:hover{background:var(--ink);color:var(--bg);}
+body.is-dark .nav a.cta:hover{background:#efece6;color:#141414;}
+
+.hero{padding:70px 56px 40px;max-width:1100px;}
+.hero-kicker{font-size:14px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:20px;font-weight:600;}
+.hero h1{font-weight:700;font-size:clamp(40px,7.2vw,88px);line-height:1.02;letter-spacing:-1.5px;}
+.hero p{margin-top:26px;font-size:17.5px;line-height:1.6;max-width:520px;color:var(--dim);}
+
+/* KNX FOUR-GANG SWITCH DEMO */
+.demo{
+  margin:70px 56px 0;border-radius:28px;overflow:hidden;
+  display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);
+}
+.room{
+  position:relative;padding:56px;min-height:420px;display:flex;flex-direction:column;justify-content:flex-end;
+  background:linear-gradient(180deg,#dcd7ca,#c9c2b1);transition:background 1s ease, filter 1s ease;overflow:hidden;
+}
+.room .sun{
+  position:absolute;top:44px;right:52px;width:70px;height:70px;border-radius:50%;
+  background:#fff5da;box-shadow:0 0 60px 20px rgba(255,245,218,.6);transition:opacity 1s ease, transform 1s ease;
+}
+.room .blind{
+  position:absolute;top:0;left:0;right:0;height:0%;background:rgba(28,28,30,.82);transition:height 1s ease;
+}
+.room .lamp-glow{
+  position:absolute;inset:0;background:radial-gradient(circle at 30% 70%, rgba(232,178,61,0) 0%, rgba(232,178,61,0) 60%);
+  transition:background 1s ease;
+}
+.room.lights-on .lamp-glow{background:radial-gradient(circle at 30% 70%, rgba(232,178,61,.55) 0%, rgba(232,178,61,0) 65%);}
+.room .status{position:relative;z-index:2;font-weight:600;font-size:15px;color:#1c1c1e;background:rgba(244,243,241,.85);padding:10px 16px;border-radius:100px;display:inline-block;width:fit-content;}
+
+.switch-panel{padding:56px;display:flex;flex-direction:column;justify-content:center;}
+.switch-panel p.label{font-size:13px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin-bottom:22px;}
+.taster{
+  display:grid;grid-template-columns:1fr 1fr;gap:2px;background:var(--line);border:1px solid var(--line);
+  border-radius:14px;overflow:hidden;width:220px;
+}
+.taster button{
+  aspect-ratio:1;background:#fff;border:none;cursor:pointer;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:6px;font-family:var(--font);font-size:11px;
+  letter-spacing:.5px;text-transform:uppercase;color:var(--dim);transition:background .25s,color .25s;
+}
+body.is-dark .taster button{background:#1f1f1f;color:#a8a49b;}
+.taster button svg{width:22px;height:22px;}
+.taster button.is-on{background:var(--warm);color:#3a2b0e;}
+.taster button:hover{filter:brightness(0.96);}
+
+.material{padding:120px 56px;max-width:1100px;}
+.material .kicker{font-size:14px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:18px;font-weight:600;}
+.material h2{font-weight:700;font-size:clamp(30px,4.8vw,54px);line-height:1.08;letter-spacing:-1px;max-width:760px;}
+.material p{margin-top:26px;font-size:17px;line-height:1.65;max-width:560px;color:var(--dim);}
+
+.services{padding:0 56px 130px;max-width:1100px;}
+.services h2{font-weight:700;font-size:clamp(28px,4.4vw,48px);margin-bottom:46px;}
+.service-list .row{display:flex;justify-content:space-between;align-items:baseline;padding:24px 0;border-bottom:1px solid var(--line);gap:20px;}
+.service-list .row:first-child{border-top:1px solid var(--line);}
+.service-list .row .name{font-weight:600;font-size:clamp(18px,2.4vw,26px);}
+.service-list .row .desc{font-size:14px;color:var(--dim);max-width:340px;text-align:right;}
+
+.cta{margin:0 24px 24px;border-radius:24px;padding:110px 56px;text-align:center;background:var(--ink);color:var(--bg);}
+body.is-dark .cta{background:#efece6;color:#141414;}
+.cta h2{font-weight:700;font-size:clamp(32px,6vw,64px);line-height:1.05;letter-spacing:-1px;}
+.cta-actions{display:flex;justify-content:center;gap:16px;margin-top:42px;flex-wrap:wrap;}
+.btn{padding:16px 30px;border-radius:100px;font-size:14.5px;font-weight:500;}
+.btn.solid{background:var(--warm);color:#3a2b0e;}
+.btn.ghost{border:1.5px solid var(--bg);}
+body.is-dark .btn.ghost{border-color:#141414;}
+.btn:hover{transform:translateY(-2px);}
+
+footer{padding:32px 56px 56px;display:flex;justify-content:space-between;font-size:13px;color:var(--dim);flex-wrap:wrap;gap:12px;}
+
+@media(max-width:900px){
+  .nav,.hero,.material,.services,.cta,footer{padding-left:24px;padding-right:24px;}
+  .demo{grid-template-columns:1fr;margin-left:24px;margin-right:24px;}
+  .service-list .row .desc{display:none;}
+  .cta{margin:0 12px 12px;padding:64px 24px;}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <span class="logo">Baukei</span>
+  <a class="cta" href="#kontakt">Anfrage senden</a>
+</nav>
+
+<section class="hero">
+  <p class="hero-kicker">EIB / KNX-Gebäudetechnik · Lana</p>
+  <h1 data-reveal>Komfort, den<br>man nicht sieht.</h1>
+  <p data-reveal>
+    Baukei installiert KNX-Systeme, die im Hintergrund arbeiten — kein sichtbarer Aufwand,
+    nur ein Zuhause, das genau das tut, was gerade gebraucht wird.
+  </p>
+</section>
+
+<div class="demo" data-reveal>
+  <div class="room" id="room">
+    <div class="sun" id="sun"></div>
+    <div class="blind" id="blind"></div>
+    <div class="lamp-glow"></div>
+    <span class="status" id="roomStatus">Rollladen offen · Licht aus</span>
+  </div>
+  <div class="switch-panel">
+    <p class="label">Vierfach-Taster — probier's aus</p>
+    <div class="taster">
+      <button id="btnLight" data-on="Licht an" data-off="Licht">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="10" r="6"/><path d="M9 21h6M10 17h4"/></svg>
+        Licht
+      </button>
+      <button id="btnBlind" data-on="Rollladen zu" data-off="Rollladen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="16" height="16" rx="1"/><path d="M4 9h16M4 14h16"/></svg>
+        Rollladen
+      </button>
+      <button id="btnTemp" data-on="Wärme +" data-off="Temperatur">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v12M9 15a3 3 0 106 0"/></svg>
+        Temperatur
+      </button>
+      <button id="btnScene" data-on="Nachtmodus" data-off="Szene">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 14.5A8 8 0 1110 4a6.5 6.5 0 0010 10.5z"/></svg>
+        Szene
+      </button>
+    </div>
+  </div>
+</div>
+
+<section class="material">
+  <p class="kicker">Unsere Haltung</p>
+  <h2 data-reveal>Gute Technik meldet sich nicht zu Wort.</h2>
+  <p data-reveal>
+    Ein KNX-System soll nicht bewundert, sondern vergessen werden — weil es einfach funktioniert.
+    Wir planen die Verkabelung so, dass sie mit jedem künftigen Wunsch mitwächst, ohne dass
+    später eine Wand geöffnet werden muss.
+  </p>
+</section>
+
+<section class="services">
+  <h2 data-reveal>Leistungen</h2>
+  <div class="service-list">
+    <div class="row" data-reveal><span class="name">KNX-Planung &amp; Verkabelung</span><span class="desc">Zukunftssichere Busleitung für jeden Raum</span></div>
+    <div class="row" data-reveal><span class="name">Licht- &amp; Beschattungssteuerung</span><span class="desc">Szenen statt Schalterreihen</span></div>
+    <div class="row" data-reveal><span class="name">Heizungsintegration</span><span class="desc">Raumweise, wetterabhängig geregelt</span></div>
+    <div class="row" data-reveal><span class="name">Visualisierung &amp; App</span><span class="desc">Alles an einem Ort, auch unterwegs</span></div>
+    <div class="row" data-reveal><span class="name">Nachrüstung im Bestand</span><span class="desc">KNX auch ohne Kernsanierung möglich</span></div>
+  </div>
+</section>
+
+<section class="cta" id="kontakt">
+  <h2 data-reveal>Unsichtbar gut.<br>Anfrage stellen.</h2>
+  <div class="cta-actions" data-reveal>
+    <a class="btn solid" href="tel:+390473400000">+39 0473 400 000</a>
+    <a class="btn ghost" href="mailto:info@baukei.it">info@baukei.it</a>
+  </div>
+</section>
+
+<footer>
+  <span>© 2026 Baukei — Lana</span>
+  <span>Konzept &amp; Design: amstudio</span>
+</footer>
+
+<script>
+document.querySelectorAll('[data-reveal]').forEach(el=>{
+  const io = new IntersectionObserver(([e])=>{ if(e.isIntersecting){ el.classList.add('is-in'); io.disconnect(); } },{threshold:.12});
+  io.observe(el);
+});
+
+const room = document.getElementById('room');
+const sun = document.getElementById('sun');
+const blind = document.getElementById('blind');
+const status = document.getElementById('roomStatus');
+const state = { light:false, blind:false, temp:false, scene:false };
+
+function updateStatus(){
+  const parts = [];
+  parts.push(state.blind ? 'Rollladen zu' : 'Rollladen offen');
+  parts.push(state.light ? 'Licht an' : 'Licht aus');
+  if (state.temp) parts.push('Wärme +');
+  if (state.scene) parts.push('Nachtmodus');
+  status.textContent = parts.join(' · ');
+}
+
+function wire(id, key){
+  const btn = document.getElementById(id);
+  btn.addEventListener('click', () => {
+    state[key] = !state[key];
+    btn.classList.toggle('is-on', state[key]);
+
+    if (key === 'light') room.classList.toggle('lights-on', state.light);
+    if (key === 'blind') blind.style.height = state.blind ? '92%' : '0%';
+    if (key === 'temp') room.style.filter = state.temp ? 'saturate(1.15) brightness(1.03)' : 'none';
+    if (key === 'scene'){
+      room.style.background = state.scene ? 'linear-gradient(180deg,#20242c,#0f1115)' : 'linear-gradient(180deg,#dcd7ca,#c9c2b1)';
+      sun.style.opacity = state.scene ? '0' : '1';
+      document.body.classList.toggle('is-dark', state.scene);
+    }
+    updateStatus();
+  });
+}
+wire('btnLight','light'); wire('btnBlind','blind'); wire('btnTemp','temp'); wire('btnScene','scene');
+</script>
+</body>
+</html>

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Electro Schaiter — Elektriker in Sterzing</title>
+<meta name="description" content="Electro Schaiter — Elektroinstallationen in Sterzing und im Wipptal. Persönlich, warm, verlässlich.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><circle cx=%2212%22 cy=%2212%22 r=%2210%22 fill=%22%23b5651d%22/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#f6efe4; --ink:#2b211b; --copper:#b5651d; --copper-light:#e0985a; --line:rgba(43,33,27,.14);
+  --font-display:"Fraunces", serif; --font-body:"Inter", sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--cream);color:var(--ink);font-family:var(--font-body);overflow-x:hidden;position:relative;}
+a{color:inherit;text-decoration:none;}
+[data-reveal]{opacity:0;transform:translateY(20px);transition:opacity .8s ease,transform .8s ease;}
+[data-reveal].is-in{opacity:1;transform:translateY(0);}
+::selection{background:var(--copper);color:var(--cream);}
+
+/* copper wire running down the page */
+.wire-svg{
+  position:absolute;top:0;left:50%;width:2px;height:100%;transform:translateX(-50%);z-index:1;pointer-events:none;
+}
+.wire-svg path{fill:none;stroke:var(--copper);stroke-width:2;opacity:.55;}
+
+.nav{
+  position:relative;z-index:5;display:flex;justify-content:space-between;align-items:center;
+  padding:32px 56px;
+}
+.logo{font-family:var(--font-display);font-size:19px;font-weight:600;display:flex;align-items:center;gap:10px;}
+.logo .coil{width:22px;height:22px;border:2px solid var(--copper);border-radius:50%;display:inline-block;}
+.nav a.cta{
+  border:1.5px solid var(--ink);padding:10px 22px;border-radius:100px;font-size:13.5px;
+}
+.nav a.cta:hover{background:var(--ink);color:var(--cream);}
+
+.hero{
+  position:relative;z-index:2;padding:80px 56px 120px;max-width:1100px;
+}
+.hero-kicker{font-size:14px;color:var(--copper);letter-spacing:1px;text-transform:uppercase;margin-bottom:22px;font-weight:600;}
+.hero h1{
+  font-family:var(--font-display);font-weight:600;font-size:clamp(44px,7.4vw,96px);line-height:1.02;letter-spacing:-1px;
+}
+.hero h1 em{font-style:italic;color:var(--copper);}
+.hero p{margin-top:30px;font-size:18px;line-height:1.65;max-width:520px;color:#4a3f36;}
+
+.wire-node{
+  position:relative;z-index:2;display:flex;align-items:center;gap:20px;margin:0 56px;padding:34px 0;
+  border-top:1px solid var(--line);
+}
+.wire-node .dot{width:12px;height:12px;border-radius:50%;background:var(--copper);flex:0 0 auto;}
+.wire-node .txt{font-family:var(--font-display);font-size:clamp(20px,2.6vw,30px);font-weight:600;}
+.wire-node .desc{font-size:14.5px;color:#5c5048;margin-left:auto;max-width:340px;text-align:right;}
+
+.about{
+  position:relative;z-index:2;padding:130px 56px;display:grid;grid-template-columns:1fr 1fr;gap:70px;align-items:center;
+}
+.about-copy .kicker{font-size:14px;color:var(--copper);letter-spacing:1px;text-transform:uppercase;margin-bottom:20px;font-weight:600;}
+.about-copy h2{font-family:var(--font-display);font-size:clamp(30px,4.4vw,50px);font-weight:600;line-height:1.08;}
+.about-copy p{margin-top:24px;font-size:16.5px;line-height:1.7;color:#4a3f36;max-width:460px;}
+.coil-visual{
+  aspect-ratio:1;border-radius:50%;position:relative;
+  background:radial-gradient(circle at 40% 35%, var(--copper-light), var(--copper) 70%);
+  display:flex;align-items:center;justify-content:center;
+}
+.coil-visual svg{width:70%;}
+.coil-visual circle{fill:none;stroke:var(--cream);stroke-width:2;opacity:.85;}
+
+.services{position:relative;z-index:2;padding:0 56px 130px;max-width:1100px;}
+.services h2{font-family:var(--font-display);font-weight:600;font-size:clamp(30px,4.4vw,50px);margin-bottom:50px;}
+.service-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--line);border:1px solid var(--line);}
+.service-cell{background:var(--cream);padding:36px;}
+.service-cell h3{font-family:var(--font-display);font-size:22px;font-weight:600;margin-bottom:10px;}
+.service-cell p{font-size:14.5px;color:#5c5048;line-height:1.55;}
+
+.cta{
+  position:relative;z-index:2;margin:0 24px 24px;border-radius:28px;
+  background:var(--ink);color:var(--cream);padding:110px 56px;text-align:center;
+}
+.cta h2{font-family:var(--font-display);font-weight:600;font-size:clamp(34px,6vw,68px);line-height:1.05;}
+.cta h2 em{font-style:italic;color:var(--copper-light);}
+.cta p{margin-top:22px;opacity:.75;font-size:16px;}
+.cta-actions{display:flex;justify-content:center;gap:18px;margin-top:44px;flex-wrap:wrap;}
+.btn{padding:16px 30px;border-radius:100px;font-size:14.5px;font-weight:500;}
+.btn.solid{background:var(--copper);color:var(--cream);}
+.btn.ghost{border:1.5px solid rgba(246,239,228,.35);}
+.btn:hover{transform:translateY(-2px);}
+
+footer{
+  position:relative;z-index:2;padding:36px 56px 56px;display:flex;justify-content:space-between;
+  font-size:13px;color:#7a6d61;flex-wrap:wrap;gap:12px;
+}
+
+@media(max-width:860px){
+  .nav,.hero,.wire-node,.about,.services,footer{padding-left:24px;padding-right:24px;}
+  .about{grid-template-columns:1fr;}
+  .service-grid{grid-template-columns:1fr;}
+  .wire-node .desc{display:none;}
+  .cta{margin:0 12px 12px;padding:70px 24px;}
+  .wire-svg{display:none;}
+}
+</style>
+</head>
+<body>
+
+<svg class="wire-svg" preserveAspectRatio="none" viewBox="0 0 2 1000">
+  <path d="M1 0 C1 100 1 100 1 200 C1 300 1 300 1 400 C1 500 1 500 1 600 C1 700 1 700 1 800 C1 900 1 900 1 1000" />
+</svg>
+
+<nav class="nav">
+  <span class="logo"><span class="coil"></span>Electro Schaiter</span>
+  <a class="cta" href="#kontakt">Anfrage senden</a>
+</nav>
+
+<section class="hero">
+  <p class="hero-kicker">Elektriker · Sterzing &amp; Wipptal</p>
+  <h1 data-reveal>Strom, der sich<br><em>persönlich</em> anfühlt.</h1>
+  <p data-reveal>
+    Electro Schaiter ist ein kleiner Betrieb mit großem Anspruch: saubere Arbeit, ehrliche
+    Preise und ein Draht, der immer erreichbar ist — wörtlich wie im Übertragenen Sinn.
+  </p>
+</section>
+
+<div class="wire-node" data-reveal>
+  <span class="dot"></span>
+  <span class="txt">Installation</span>
+  <span class="desc">Von der ersten Leitung bis zur letzten Steckdose — alles aus einer Hand.</span>
+</div>
+<div class="wire-node" data-reveal>
+  <span class="dot"></span>
+  <span class="txt">Reparatur</span>
+  <span class="desc">Schnelle Hilfe bei Störungen, ohne langes Warten auf einen Termin.</span>
+</div>
+<div class="wire-node" data-reveal>
+  <span class="dot"></span>
+  <span class="txt">Beratung</span>
+  <span class="desc">Ehrliche Einschätzung statt Verkaufsgespräch — versprochen.</span>
+</div>
+
+<section class="about">
+  <div class="about-copy">
+    <p class="kicker">Über den Betrieb</p>
+    <h2 data-reveal>Ein Name,<br>ein Handschlag.</h2>
+    <p data-reveal>
+      Kein Callcenter, kein Subunternehmen — wer anruft, bekommt Schaiter selbst an die Leitung.
+      Das Wipptal ist überschaubar, und genau deshalb zählt hier der persönliche Kontakt mehr
+      als jede Hochglanzbroschüre.
+    </p>
+  </div>
+  <div class="coil-visual" data-reveal>
+    <svg viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="20"/>
+      <circle cx="50" cy="50" r="32"/>
+      <circle cx="50" cy="50" r="44"/>
+    </svg>
+  </div>
+</section>
+
+<section class="services">
+  <h2 data-reveal>Leistungen</h2>
+  <div class="service-grid">
+    <div class="service-cell" data-reveal>
+      <h3>Hausinstallation</h3>
+      <p>Komplette Elektrik für Neubau und Sanierung, termintreu und sauber verlegt.</p>
+    </div>
+    <div class="service-cell" data-reveal>
+      <h3>Notdienst</h3>
+      <p>Ausfall am Abend? Ein Anruf genügt, Rückmeldung meist innerhalb von Minuten.</p>
+    </div>
+    <div class="service-cell" data-reveal>
+      <h3>Beleuchtung</h3>
+      <p>Von der Werkstattlampe bis zur Stimmungsbeleuchtung im Wohnzimmer.</p>
+    </div>
+    <div class="service-cell" data-reveal>
+      <h3>Prüfung &amp; Wartung</h3>
+      <p>Regelmäßige Kontrolle, damit aus kleinen Problemen keine großen werden.</p>
+    </div>
+  </div>
+</section>
+
+<section class="cta" id="kontakt">
+  <h2 data-reveal>Schreib uns.<br>Wir <em>melden uns.</em></h2>
+  <p data-reveal>Meist innerhalb eines Werktags — versprochen, kein Callcenter.</p>
+  <div class="cta-actions" data-reveal>
+    <a class="btn solid" href="tel:+390472100000">+39 0472 100 000</a>
+    <a class="btn ghost" href="mailto:info@electro-schaiter.it">info@electro-schaiter.it</a>
+  </div>
+</section>
+
+<footer>
+  <span>© 2026 Electro Schaiter — Sterzing</span>
+  <span>Konzept &amp; Design: amstudio</span>
+</footer>
+
+<script>
+document.querySelectorAll('[data-reveal]').forEach(el=>{
+  const io = new IntersectionObserver(([e])=>{ if(e.isIntersecting){ el.classList.add('is-in'); io.disconnect(); } },{threshold:.15});
+  io.observe(el);
+});
+</script>
+</body>
+</html>

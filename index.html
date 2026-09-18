@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elektro Schmid — Strom mit Charakter</title>
+<meta name="description" content="Elektro Schmid — Elektroinstallation, Photovoltaik, Smart Home & Notdienst in Südtirol. Seit über 20 Jahren unter Strom.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><text y=%2220%22 font-size=%2220%22>⚡</text></svg>">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="assets/css/style.css">
+<noscript><style>[data-reveal],[data-reveal-line]{opacity:1 !important;transform:none !important;}</style></noscript>
+</head>
+<body>
+
+<div class="grain"></div>
+<div class="cursor-dot" id="cursorDot"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<div class="progress-bar" id="progressBar"></div>
+
+<!-- ===== NAV ===== -->
+<header class="nav" id="nav">
+  <a href="#top" class="nav-logo" data-magnetic>
+    <span class="bolt">⚡</span>ELEKTRO&nbsp;SCHMID
+  </a>
+  <nav class="nav-links">
+    <a href="#leistungen" data-magnetic>Leistungen</a>
+    <a href="#ueber-uns" data-magnetic>Über uns</a>
+    <a href="#projekte" data-magnetic>Projekte</a>
+    <a href="#prozess" data-magnetic>Ablauf</a>
+    <a href="#kontakt" class="nav-cta" data-magnetic>Kontakt aufnehmen</a>
+  </nav>
+  <button class="nav-burger" id="burger" aria-label="Menü öffnen">
+    <span></span><span></span>
+  </button>
+</header>
+
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#leistungen">Leistungen</a>
+  <a href="#ueber-uns">Über uns</a>
+  <a href="#projekte">Projekte</a>
+  <a href="#prozess">Ablauf</a>
+  <a href="#kontakt">Kontakt</a>
+</div>
+
+<!-- ===== HERO ===== -->
+<section class="hero" id="top">
+  <svg class="hero-bolt" viewBox="0 0 200 400" fill="none">
+    <path id="boltPath" d="M120 10 L40 220 L100 220 L70 390 L170 150 L105 150 L140 10 Z" stroke="var(--accent)" stroke-width="2"/>
+  </svg>
+
+  <div class="hero-inner">
+    <p class="hero-eyebrow" data-reveal>Elektroinstallation · Südtirol · seit 2001</p>
+    <h1 class="hero-title">
+      <span class="line" data-reveal-line>Strom mit</span>
+      <span class="line accent-line" data-reveal-line>Charakter<span class="dot">.</span></span>
+    </h1>
+    <p class="hero-sub" data-reveal>
+      Wir planen, installieren und warten alles, was unter Spannung steht —
+      von der Steckdose bis zur Photovoltaikanlage. Präzise. Zuverlässig. Mit Funken Persönlichkeit.
+    </p>
+    <div class="hero-actions" data-reveal>
+      <a href="#kontakt" class="btn btn-primary" data-magnetic>
+        <span>Projekt anfragen</span>
+      </a>
+      <a href="#leistungen" class="btn btn-ghost" data-magnetic>
+        <span>Leistungen ansehen</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="hero-stats">
+    <div class="stat">
+      <span class="stat-num" data-count="23">0</span><span class="stat-suffix">+</span>
+      <span class="stat-label">Jahre Erfahrung</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num" data-count="640">0</span><span class="stat-suffix">+</span>
+      <span class="stat-label">Projekte realisiert</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num" data-count="12">0</span>
+      <span class="stat-label">Fachkräfte im Team</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num" data-count="24">0</span><span class="stat-suffix">/7</span>
+      <span class="stat-label">Notdienst</span>
+    </div>
+  </div>
+
+  <a href="#leistungen" class="scroll-cue" data-magnetic>
+    <span>Scrollen</span>
+    <svg width="14" height="22" viewBox="0 0 14 22"><path d="M7 1v20M1 15l6 6 6-6" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+  </a>
+</section>
+
+<!-- ===== MARQUEE ===== -->
+<div class="marquee-wrap">
+  <div class="marquee" id="marquee">
+    <span>STROM ⚡ LICHT ⚡ SICHERHEIT ⚡ SMART HOME ⚡ PHOTOVOLTAIK ⚡ NOTDIENST ⚡ </span>
+    <span>STROM ⚡ LICHT ⚡ SICHERHEIT ⚡ SMART HOME ⚡ PHOTOVOLTAIK ⚡ NOTDIENST ⚡ </span>
+  </div>
+</div>
+
+<!-- ===== LEISTUNGEN ===== -->
+<section class="services" id="leistungen">
+  <div class="section-head">
+    <p class="kicker" data-reveal>01 — Leistungen</p>
+    <h2 class="section-title" data-reveal>Alles unter<br>Spannung.</h2>
+  </div>
+
+  <div class="service-list">
+    <article class="service-row" data-service data-magnetic-area>
+      <span class="service-index">01</span>
+      <h3 class="service-name">Elektroinstallation</h3>
+      <p class="service-desc">Neubau, Sanierung, Umbau — normgerecht geplant und sauber verlegt, für Wohnhäuser, Gewerbe und Hotellerie.</p>
+      <span class="service-arrow">↗</span>
+    </article>
+    <article class="service-row" data-service data-magnetic-area>
+      <span class="service-index">02</span>
+      <h3 class="service-name">Photovoltaik &amp; Speicher</h3>
+      <p class="service-desc">Von der Dachanalyse bis zur Inbetriebnahme: PV-Anlagen und Batteriespeicher, die sich rechnen.</p>
+      <span class="service-arrow">↗</span>
+    </article>
+    <article class="service-row" data-service data-magnetic-area>
+      <span class="service-index">03</span>
+      <h3 class="service-name">Smart Home</h3>
+      <p class="service-desc">Licht, Heizung, Jalousien, Sicherheit — alles vernetzt, alles steuerbar, alles intuitiv.</p>
+      <span class="service-arrow">↗</span>
+    </article>
+    <article class="service-row" data-service data-magnetic-area>
+      <span class="service-index">04</span>
+      <h3 class="service-name">Blitz- &amp; Überspannungsschutz</h3>
+      <p class="service-desc">Wir schützen Anlagen und Geräte zuverlässig vor den Launen des Wetters.</p>
+      <span class="service-arrow">↗</span>
+    </article>
+    <article class="service-row" data-service data-magnetic-area>
+      <span class="service-index">05</span>
+      <h3 class="service-name">Beleuchtungskonzepte</h3>
+      <p class="service-desc">Licht, das Räume erzählt — von der ersten Skizze bis zur letzten Fassung.</p>
+      <span class="service-arrow">↗</span>
+    </article>
+    <article class="service-row" data-service data-magnetic-area>
+      <span class="service-index">06</span>
+      <h3 class="service-name">Wartung &amp; Notdienst</h3>
+      <p class="service-desc">Störung um Mitternacht? Wir sind 24/7 erreichbar und meist schneller vor Ort, als du denkst.</p>
+      <span class="service-arrow">↗</span>
+    </article>
+  </div>
+</section>
+
+<!-- ===== ÜBER UNS ===== -->
+<section class="about" id="ueber-uns">
+  <div class="about-grid">
+    <div class="about-text">
+      <p class="kicker" data-reveal>02 — Über uns</p>
+      <h2 class="section-title" data-reveal>Ein Familienbetrieb,<br>der Funken schlägt.</h2>
+      <p class="about-body" data-reveal>
+        Gegründet 2001 in Südtirol, ist Elektro Schmid heute ein eingespieltes Team aus
+        Elektrotechnikern, Planern und Tüftlern. Wir denken in Stromkreisen, aber wir
+        arbeiten für Menschen — deshalb bleiben wir erreichbar, ehrlich und pünktlich.
+      </p>
+      <ul class="about-points">
+        <li data-reveal><span>—</span> Meisterbetrieb mit Landesbefähigung</li>
+        <li data-reveal><span>—</span> Eigenes Planungs- &amp; Montageteam</li>
+        <li data-reveal><span>—</span> Zertifizierte PV- &amp; Speicherpartner</li>
+        <li data-reveal><span>—</span> Deutsch · Italienisch · Englisch</li>
+      </ul>
+    </div>
+    <div class="about-visual">
+      <div class="circuit-card" data-tilt>
+        <svg viewBox="0 0 300 300" class="circuit-svg">
+          <circle cx="150" cy="150" r="6" fill="var(--accent)"/>
+          <path class="circuit-path" d="M150 150 L150 40 L240 40 L240 90" />
+          <path class="circuit-path" d="M150 150 L60 150 L60 240 L120 240" />
+          <path class="circuit-path" d="M150 150 L150 260 L220 260" />
+          <path class="circuit-path" d="M150 150 L220 150 L220 200 L260 200" />
+          <circle cx="240" cy="90" r="4" fill="var(--accent)"/>
+          <circle cx="120" cy="240" r="4" fill="var(--accent)"/>
+          <circle cx="220" cy="260" r="4" fill="var(--accent)"/>
+          <circle cx="260" cy="200" r="4" fill="var(--accent)"/>
+        </svg>
+        <span class="circuit-label">EST. 2001</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== PROJEKTE ===== -->
+<section class="projects" id="projekte">
+  <div class="section-head">
+    <p class="kicker" data-reveal>03 — Projekte</p>
+    <h2 class="section-title" data-reveal>Ausgewählte<br>Arbeiten.</h2>
+  </div>
+
+  <div class="project-track-wrap">
+    <div class="project-track" id="projectTrack">
+      <article class="project-card" style="--hue:48">
+        <div class="project-visual"><span>01</span></div>
+        <h3>Villa Dolomiten</h3>
+        <p>Komplettelektrik &amp; Smart-Home-Steuerung für ein Einfamilienhaus in Ortisei.</p>
+      </article>
+      <article class="project-card" style="--hue:20">
+        <div class="project-visual"><span>02</span></div>
+        <h3>Hotel Adler Spa</h3>
+        <p>Beleuchtungskonzept &amp; Notstromversorgung für ein 4-Sterne-Wellnesshotel.</p>
+      </article>
+      <article class="project-card" style="--hue:150">
+        <div class="project-visual"><span>03</span></div>
+        <h3>Gewerbepark Bruneck</h3>
+        <p>120 kWp Photovoltaikanlage mit Batteriespeicher für ein Logistikzentrum.</p>
+      </article>
+      <article class="project-card" style="--hue:280">
+        <div class="project-visual"><span>04</span></div>
+        <h3>Weingut Sonnleiten</h3>
+        <p>Blitzschutz &amp; Prozessautomation für Produktion und Vinothek.</p>
+      </article>
+      <article class="project-card" style="--hue:200">
+        <div class="project-visual"><span>05</span></div>
+        <h3>Bürohaus Talblick</h3>
+        <p>Smarte Gebäudetechnik für ein modernes Bürogebäude mit sechs Etagen.</p>
+      </article>
+    </div>
+  </div>
+  <p class="project-hint">← scroll oder swipe →</p>
+</section>
+
+<!-- ===== PROZESS ===== -->
+<section class="process" id="prozess">
+  <div class="section-head">
+    <p class="kicker" data-reveal>04 — Ablauf</p>
+    <h2 class="section-title" data-reveal>Von der Idee<br>zur Steckdose.</h2>
+  </div>
+  <div class="process-list">
+    <div class="process-step" data-reveal>
+      <span class="process-num">01</span>
+      <h3>Beratung</h3>
+      <p>Wir hören zu, besichtigen vor Ort und verstehen, was wirklich gebraucht wird.</p>
+    </div>
+    <div class="process-step" data-reveal>
+      <span class="process-num">02</span>
+      <h3>Planung</h3>
+      <p>Normgerechte Auslegung, transparentes Angebot, klarer Zeitplan.</p>
+    </div>
+    <div class="process-step" data-reveal>
+      <span class="process-num">03</span>
+      <h3>Installation</h3>
+      <p>Sauber, termintreu, mit laufender Abstimmung mit allen Gewerken.</p>
+    </div>
+    <div class="process-step" data-reveal>
+      <span class="process-num">04</span>
+      <h3>Wartung</h3>
+      <p>Regelmäßige Prüfung und 24/7-Notdienst — auch Jahre nach Fertigstellung.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== TESTIMONIALS ===== -->
+<section class="testimonials">
+  <div class="testi-track">
+    <blockquote data-reveal>
+      <p>„Termintreu, sauber, kompetent — die Photovoltaikanlage läuft seit zwei Jahren ohne einen einzigen Ausfall.“</p>
+      <cite>— M. Gruber, Bauherr Villa Dolomiten</cite>
+    </blockquote>
+    <blockquote data-reveal>
+      <p>„Bei einem Stromausfall um 2 Uhr nachts waren sie innerhalb von 40 Minuten vor Ort. Das nenne ich Service.“</p>
+      <cite>— Hotel Adler Spa</cite>
+    </blockquote>
+    <blockquote data-reveal>
+      <p>„Das Smart-Home-System funktioniert einfach. Keine Kompromisse, keine Nachbesserungen.“</p>
+      <cite>— Familie Innerhofer</cite>
+    </blockquote>
+  </div>
+</section>
+
+<!-- ===== KONTAKT ===== -->
+<section class="contact" id="kontakt">
+  <svg class="hero-bolt contact-bolt" viewBox="0 0 200 400" fill="none">
+    <path d="M120 10 L40 220 L100 220 L70 390 L170 150 L105 150 L140 10 Z" stroke="var(--bg)" stroke-width="2"/>
+  </svg>
+  <div class="contact-inner">
+    <p class="kicker kicker-light" data-reveal>05 — Kontakt</p>
+    <h2 class="contact-title" data-reveal>Lass uns dein<br>Projekt verkabeln.</h2>
+    <p class="contact-sub" data-reveal>Ob Neubau, Sanierung oder Notfall — wir melden uns innerhalb eines Werktags zurück.</p>
+
+    <form class="contact-form" data-reveal onsubmit="event.preventDefault(); this.querySelector('.form-success').classList.add('is-visible');">
+      <div class="form-row">
+        <input type="text" placeholder="Name" required>
+        <input type="email" placeholder="E-Mail" required>
+      </div>
+      <textarea rows="4" placeholder="Erzähl uns von deinem Projekt…" required></textarea>
+      <button type="submit" class="btn btn-primary btn-dark" data-magnetic><span>Nachricht senden</span></button>
+      <p class="form-success">Danke! Wir melden uns in Kürze. ⚡</p>
+    </form>
+
+    <div class="contact-details">
+      <div>
+        <span class="label">Telefon</span>
+        <a href="tel:+390471123456">+39 0471 123 456</a>
+      </div>
+      <div>
+        <span class="label">E-Mail</span>
+        <a href="mailto:info@elektro-schmid.it">info@elektro-schmid.it</a>
+      </div>
+      <div>
+        <span class="label">Werkstatt</span>
+        <span>Industriezone 12, 39042 Brixen (BZ)</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="footer-top">
+    <span class="footer-logo"><span class="bolt">⚡</span>ELEKTRO SCHMID</span>
+    <a href="#top" class="footer-top-link" data-magnetic>Nach oben ↑</a>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2026 Elektro Schmid GmbH · Südtirol</span>
+    <span>Impressum · Datenschutz</span>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="assets/js/main.js"></script>
+<script>
+  /* Safety net: if GSAP failed to load (CDN blocked/offline), reveal everything statically. */
+  window.addEventListener('load', function () {
+    setTimeout(function () {
+      if (typeof window.gsap === 'undefined') {
+        document.querySelectorAll('[data-reveal],[data-reveal-line]').forEach(function (el) {
+          el.style.opacity = '1';
+          el.style.transform = 'none';
+        });
+        document.querySelectorAll('[data-count]').forEach(function (el) {
+          el.textContent = el.dataset.count;
+        });
+        var bp = document.getElementById('boltPath');
+        if (bp) bp.style.strokeDashoffset = '0';
+      }
+    }, 1200);
+  });
+</script>
+</body>
+</html>

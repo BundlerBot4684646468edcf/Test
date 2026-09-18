@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elektro Riegler — seit 1977</title>
+<meta name="description" content="Elektro Riegler — Elektrotechnik in Deutschnofen und Bozen. Seit 1977 leise verlässlich.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><rect width=%2224%22 height=%2224%22 fill=%22%23726355%22/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#efece6; --ink:#242019; --taupe:#8c7f6f; --line:rgba(36,32,25,.12); --gold:#a6906a;
+  --font-display:"Fraunces", serif; --font-body:"Inter", sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--ink);font-family:var(--font-body);font-weight:300;overflow-x:hidden;letter-spacing:.1px;}
+a{color:inherit;text-decoration:none;}
+[data-reveal]{opacity:0;transform:translateY(24px);transition:opacity 1s ease,transform 1s ease;}
+[data-reveal].is-in{opacity:1;transform:translateY(0);}
+::selection{background:var(--ink);color:var(--bg);}
+
+.nav{display:flex;justify-content:space-between;align-items:center;padding:40px 64px;}
+.logo{font-family:var(--font-display);font-weight:400;font-size:19px;letter-spacing:.5px;}
+.nav-links{display:flex;gap:40px;font-size:13.5px;letter-spacing:.3px;}
+.nav-links a{opacity:.7;transition:opacity .3s;}
+.nav-links a:hover{opacity:1;}
+.nav-links a.cta{border-bottom:1px solid var(--ink);opacity:1;padding-bottom:2px;}
+
+.hero{padding:60px 64px 0;max-width:1200px;}
+.hero-kicker{font-size:12.5px;letter-spacing:2.5px;text-transform:uppercase;color:var(--taupe);margin-bottom:28px;}
+.hero h1{
+  font-family:var(--font-display);font-weight:400;font-size:clamp(42px,7vw,92px);line-height:1.05;letter-spacing:-.5px;
+  max-width:820px;
+}
+.hero p{margin-top:34px;font-size:17px;line-height:1.75;max-width:480px;color:#4a4437;font-weight:300;}
+.hero-frame{
+  margin:70px 0 0;aspect-ratio:21/9;border-radius:2px;
+  background:linear-gradient(120deg,#d8d0c2,#b7ab98);position:relative;overflow:hidden;
+}
+.hero-frame .grain{position:absolute;inset:0;background-image:repeating-linear-gradient(90deg, rgba(36,32,25,.04) 0 1px, transparent 1px 3px);}
+.hero-frame .cap{
+  position:absolute;bottom:24px;left:24px;font-size:12.5px;letter-spacing:1px;background:rgba(239,236,230,.9);
+  padding:8px 14px;
+}
+
+/* Timeline since 1977 */
+.timeline-section{padding:140px 64px;max-width:1200px;}
+.timeline-section .kicker{font-size:12.5px;letter-spacing:2.5px;text-transform:uppercase;color:var(--taupe);margin-bottom:22px;}
+.timeline-section h2{font-family:var(--font-display);font-weight:400;font-size:clamp(30px,4.4vw,50px);line-height:1.1;max-width:680px;}
+.timeline{margin-top:70px;position:relative;padding-left:2px;border-left:1px solid var(--line);}
+.t-item{position:relative;padding:0 0 60px 44px;}
+.t-item:last-child{padding-bottom:0;}
+.t-item::before{
+  content:"";position:absolute;left:-6px;top:4px;width:11px;height:11px;border-radius:50%;
+  background:var(--bg);border:1.5px solid var(--gold);
+}
+.t-item .yr{font-family:var(--font-display);font-size:26px;color:var(--gold);}
+.t-item p{margin-top:10px;font-size:15.5px;line-height:1.65;max-width:480px;color:#4a4437;}
+
+/* Reference stories */
+.refs{padding:0 64px 140px;max-width:1200px;}
+.refs h2{font-family:var(--font-display);font-weight:400;font-size:clamp(30px,4.4vw,50px);margin-bottom:70px;}
+.ref-story{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;margin-bottom:110px;}
+.ref-story:nth-child(even) .ref-img{order:2;}
+.ref-img{aspect-ratio:5/4;border-radius:2px;background:linear-gradient(135deg,var(--i1,#d8d0c2),var(--i2,#b7ab98));position:relative;}
+.ref-img::after{position:absolute;bottom:20px;left:20px;font-size:12px;letter-spacing:1px;background:rgba(239,236,230,.88);padding:7px 12px;content:attr(data-cap);}
+.ref-copy .tag{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--taupe);margin-bottom:16px;}
+.ref-copy h3{font-family:var(--font-display);font-weight:400;font-size:clamp(24px,3vw,32px);margin-bottom:18px;}
+.ref-copy p{font-size:15.5px;line-height:1.7;color:#4a4437;max-width:420px;}
+
+/* Career */
+.career{background:var(--ink);color:var(--bg);padding:130px 64px;border-radius:2px;margin:0 24px;}
+.career-inner{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:1.1fr .9fr;gap:70px;align-items:center;}
+.career .kicker{font-size:12.5px;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);margin-bottom:22px;}
+.career h2{font-family:var(--font-display);font-weight:400;font-size:clamp(30px,4.8vw,52px);line-height:1.1;}
+.career p{margin-top:26px;font-size:16px;line-height:1.75;opacity:.75;max-width:440px;font-weight:300;}
+.career-list{display:flex;flex-direction:column;gap:0;}
+.career-list .row{border-top:1px solid rgba(239,236,230,.18);padding:22px 0;font-size:15px;display:flex;justify-content:space-between;}
+.career-list .row:last-child{border-bottom:1px solid rgba(239,236,230,.18);}
+.career-list .row span:last-child{color:var(--gold);}
+
+.cta{padding:130px 64px;text-align:center;}
+.cta .kicker{font-size:12.5px;letter-spacing:2.5px;text-transform:uppercase;color:var(--taupe);margin-bottom:24px;}
+.cta h2{font-family:var(--font-display);font-weight:400;font-size:clamp(32px,5.6vw,64px);line-height:1.1;}
+.cta-actions{display:flex;justify-content:center;gap:16px;margin-top:44px;flex-wrap:wrap;}
+.btn{padding:16px 30px;border-radius:100px;font-size:14px;letter-spacing:.3px;}
+.btn.solid{background:var(--ink);color:var(--bg);}
+.btn.ghost{border:1px solid var(--ink);}
+.btn:hover{transform:translateY(-2px);}
+
+footer{padding:36px 64px 60px;display:flex;justify-content:space-between;font-size:12.5px;color:var(--taupe);flex-wrap:wrap;gap:12px;}
+
+@media(max-width:900px){
+  .nav,.hero,.timeline-section,.refs,.cta,footer{padding-left:24px;padding-right:24px;}
+  .nav-links a:not(.cta){display:none;}
+  .ref-story{grid-template-columns:1fr;gap:26px;}
+  .ref-story:nth-child(even) .ref-img{order:0;}
+  .career{margin:0 12px;padding:70px 24px;}
+  .career-inner{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <span class="logo">Elektro Riegler</span>
+  <div class="nav-links">
+    <a href="#referenzen">Referenzen</a>
+    <a href="#karriere">Karriere</a>
+    <a class="cta" href="#kontakt">Kontakt</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <p class="hero-kicker">Elektrotechnik · Deutschnofen &amp; Bozen · seit 1977</p>
+  <h1 data-reveal>Leise verlässlich,<br>seit fast fünfzig Jahren.</h1>
+  <p data-reveal>
+    Elektro Riegler baut seit 1977 Elektrotechnik, die man nicht bemerkt, weil sie einfach
+    funktioniert. Kein lautes Versprechen — nur Arbeit, die hält.
+  </p>
+  <div class="hero-frame" data-reveal>
+    <div class="grain"></div>
+    <span class="cap">Werkstatt, Deutschnofen</span>
+  </div>
+</section>
+
+<section class="timeline-section">
+  <p class="kicker">Geschichte</p>
+  <h2 data-reveal>Fast fünf Jahrzehnte,<br>eine Werkstatt.</h2>
+  <div class="timeline">
+    <div class="t-item" data-reveal>
+      <span class="yr">1977</span>
+      <p>Gründung durch Anton Riegler in Deutschnofen — anfangs zu zweit, mit einem Lieferwagen.</p>
+    </div>
+    <div class="t-item" data-reveal>
+      <span class="yr">1996</span>
+      <p>Erweiterung nach Bozen, erste größere Gewerbeprojekte im Unterland.</p>
+    </div>
+    <div class="t-item" data-reveal>
+      <span class="yr">2009</span>
+      <p>Aufnahme von Photovoltaik und erneuerbaren Energien ins Leistungsspektrum.</p>
+    </div>
+    <div class="t-item" data-reveal>
+      <span class="yr">2018</span>
+      <p>Zweite Generation übernimmt die Betriebsführung, Team wächst auf 18 Personen.</p>
+    </div>
+    <div class="t-item" data-reveal>
+      <span class="yr">2026</span>
+      <p>Heute: Hotellerie, Gewerbe und Privathaushalte in ganz Südtirol.</p>
+    </div>
+  </div>
+</section>
+
+<section class="refs" id="referenzen">
+  <h2 data-reveal>Referenzen</h2>
+
+  <div class="ref-story">
+    <div class="ref-img" style="--i1:#c9bda6;--i2:#a89a80;" data-cap="Hotel Sonnhof, Deutschnofen" data-reveal></div>
+    <div class="ref-copy" data-reveal>
+      <p class="tag">Hotellerie</p>
+      <h3>Hotel Sonnhof</h3>
+      <p>Komplette Elektroerneuerung während laufendem Betrieb — Etage für Etage, ohne
+      spürbare Unterbrechung für die Gäste.</p>
+    </div>
+  </div>
+
+  <div class="ref-story">
+    <div class="ref-img" style="--i1:#b7a98d;--i2:#8f8168;" data-cap="Sennerei Latemar" data-reveal></div>
+    <div class="ref-copy" data-reveal>
+      <p class="tag">Gewerbe</p>
+      <h3>Sennerei Latemar</h3>
+      <p>Prozesssichere Elektrik für Produktion und Kühlung, ausgelegt auf durchgehenden
+      24-Stunden-Betrieb.</p>
+    </div>
+  </div>
+
+  <div class="ref-story">
+    <div class="ref-img" style="--i1:#d3c7b0;--i2:#b0a186;" data-cap="Villa Eggental" data-reveal></div>
+    <div class="ref-copy" data-reveal>
+      <p class="tag">Privat</p>
+      <h3>Villa Eggental</h3>
+      <p>Diskrete Gebäudetechnik für ein privates Anwesen — sichtbar ist nur das Ergebnis,
+      nie die Technik dahinter.</p>
+    </div>
+  </div>
+</section>
+
+<section class="career" id="karriere">
+  <div class="career-inner">
+    <div>
+      <p class="kicker">Karriere</p>
+      <h2 data-reveal>Ein Betrieb, der<br>Handwerk ernst nimmt.</h2>
+      <p data-reveal>18 Fachkräfte, drei Lehrlinge, eine offene Tür für alle, die Elektrotechnik
+      als Handwerk und nicht nur als Job verstehen.</p>
+    </div>
+    <div class="career-list" data-reveal>
+      <div class="row"><span>Elektroinstallateur (m/w/d)</span><span>Vollzeit</span></div>
+      <div class="row"><span>Lehrstelle Elektrotechnik</span><span>Ausbildung</span></div>
+      <div class="row"><span>Projektleitung Gewerbe</span><span>Vollzeit</span></div>
+      <div class="row"><span>Initiativbewerbung</span><span>laufend</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="cta" id="kontakt">
+  <p class="kicker">Kontakt</p>
+  <h2 data-reveal>Lassen Sie uns sprechen.</h2>
+  <div class="cta-actions" data-reveal>
+    <a class="btn solid" href="tel:+390471500000">+39 0471 500 000</a>
+    <a class="btn ghost" href="mailto:info@elektro-riegler.it">info@elektro-riegler.it</a>
+  </div>
+</section>
+
+<footer>
+  <span>© 2026 Elektro Riegler — Deutschnofen &amp; Bozen</span>
+  <span>Konzept &amp; Design: amstudio</span>
+</footer>
+
+<script>
+document.querySelectorAll('[data-reveal]').forEach(el=>{
+  const io = new IntersectionObserver(([e])=>{ if(e.isIntersecting){ el.classList.add('is-in'); io.disconnect(); } },{threshold:.12});
+  io.observe(el);
+});
+</script>
+</body>
+</html>
