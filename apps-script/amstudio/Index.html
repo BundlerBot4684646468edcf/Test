@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <style>
+    :root { --ink:#1a1a1a; --muted:#5f6368; --line:#e3e3e3; --accent:#111; --bg:#fafafa; }
+    * { box-sizing:border-box; }
+    body { margin:0; font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,sans-serif; color:var(--ink); background:var(--bg); }
+    main { max-width:760px; margin:0 auto; padding:32px 16px 64px; }
+    header a { color:var(--muted); text-decoration:none; font-weight:600; letter-spacing:.02em; }
+    h1 { font-size:clamp(28px,6vw,40px); line-height:1.15; margin:24px 0 8px; }
+    h2 { font-size:22px; margin:40px 0 8px; }
+    .intro { color:var(--muted); font-size:18px; margin:0 0 24px; }
+    .card { background:#fff; border:1px solid var(--line); border-radius:12px; padding:20px; }
+    label { display:block; font-weight:600; margin:16px 0 6px; }
+    select { width:100%; padding:10px; font:inherit; border:1px solid var(--line); border-radius:8px; background:#fff; }
+    .check { font-weight:400; margin:6px 0; display:flex; gap:8px; align-items:center; }
+    .result { margin-top:20px; padding:16px; border-radius:8px; background:#f1f3f4; font-size:22px; font-weight:700; }
+    .result small { display:block; font-size:14px; font-weight:400; color:var(--muted); }
+    .cta { display:inline-block; margin-top:16px; background:var(--accent); color:#fff; padding:12px 20px; border-radius:8px; text-decoration:none; font-weight:600; }
+    details { border-bottom:1px solid var(--line); padding:12px 0; }
+    summary { font-weight:600; cursor:pointer; }
+    footer { margin-top:48px; color:var(--muted); font-size:14px; }
+    footer a { color:inherit; }
+  </style>
+</head>
+<body>
+<main>
+  <header><a href="<?= cfg.website ?>"><?= cfg.company ?></a></header>
+
+  <h1><?= cfg.headline ?></h1>
+  <p class="intro"><?= cfg.intro ?></p>
+
+  <section class="card">
+    <label for="type">Project type</label>
+    <select id="type">
+      <? for (var i = 0; i < cfg.projectTypes.length; i++) { ?>
+        <option value="<?= cfg.projectTypes[i].base ?>"><?= cfg.projectTypes[i].label ?></option>
+      <? } ?>
+    </select>
+
+    <label for="size">Size</label>
+    <select id="size">
+      <? for (var i = 0; i < cfg.sizes.length; i++) { ?>
+        <option value="<?= cfg.sizes[i].factor ?>"><?= cfg.sizes[i].label ?></option>
+      <? } ?>
+    </select>
+
+    <label>Extras</label>
+    <? for (var i = 0; i < cfg.extras.length; i++) { ?>
+      <div class="check"><input type="checkbox" id="x<?= i ?>" value="<?= cfg.extras[i].price ?>"><label class="check" for="x<?= i ?>" style="margin:0"><?= cfg.extras[i].label ?></label></div>
+    <? } ?>
+
+    <div class="result" id="result"></div>
+    <a class="cta" href="<?= cfg.contactUrl ?>">Get an exact quote from <?= cfg.company ?> →</a>
+  </section>
+
+  <? for (var i = 0; i < cfg.sections.length; i++) { ?>
+    <h2><?= cfg.sections[i].heading ?></h2>
+    <p><?= cfg.sections[i].body ?></p>
+  <? } ?>
+
+  <h2>FAQ</h2>
+  <? for (var i = 0; i < cfg.faq.length; i++) { ?>
+    <details><summary><?= cfg.faq[i].q ?></summary><p><?= cfg.faq[i].a ?></p></details>
+  <? } ?>
+
+  <footer>© <?= cfg.company ?> · <a href="<?= cfg.website ?>"><?= cfg.website.replace(/^https?:\/\//, '') ?></a></footer>
+</main>
+
+<script>
+  var CURRENCY = <?!= JSON.stringify(cfg.currency) ?>;
+  var SPREAD = <?!= JSON.stringify(cfg.rangeSpread) ?>;
+  var fmt = function (n) { return CURRENCY + Math.round(n / 50) * 50; };
+
+  function calc() {
+    var base = +document.getElementById('type').value;
+    var factor = +document.getElementById('size').value;
+    var extras = 0;
+    document.querySelectorAll('input[type=checkbox]:checked').forEach(function (c) { extras += +c.value; });
+    var total = base * factor + extras;
+    document.getElementById('result').innerHTML =
+      fmt(total * (1 - SPREAD)) + ' – ' + fmt(total * (1 + SPREAD)) +
+      '<small>Typical price range for this project</small>';
+  }
+  document.querySelectorAll('select, input').forEach(function (el) { el.addEventListener('change', calc); });
+  calc();
+</script>
+</body>
+</html>
