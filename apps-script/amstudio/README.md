@@ -25,3 +25,14 @@ Google has to discover the URL before it can rank it:
 - After editing, use **Deploy → Manage deployments → Edit → New version**, or the public URL keeps serving the old code.
 - Consumer (non-Workspace) accounts show a Google banner saying the app was made by a user, not by Google. This can't be removed.
 - Google can remove the page from search at any time, so keep the main version on AMStudio's own domain.
+
+## Preview locally first
+
+Needs only Node.js (no npm install):
+
+```bash
+node apps-script/amstudio/dev-server.js
+# open http://localhost:8080 — edit Code.gs / Index.html and refresh
+```
+
+`dev-server.js` mimics Apps Script's template tags and runs `doGet()` from `Code.gs`, so what you see locally is what gets deployed. It isn't uploaded to Apps Script.
