@@ -220,6 +220,48 @@ function rauheitAusHoehe(quelle: HTMLCanvasElement, min = 0.45, max = 0.9): HTML
  */
 const vorlagen = new Map<string, { farbe: HTMLCanvasElement; normal: HTMLCanvasElement; rauheit: HTMLCanvasElement }>();
 
+/**
+ * Fotografierte Hölzer einsetzen. Die Normal- und Rauheitskarte werden aus
+ * dem Foto selbst abgeleitet, es braucht also nur das eine Bild je Sorte:
+ * flach ausgeleuchtet, nahtlos kachelbar, ohne Schatten und Glanzlichter.
+ *
+ *   await holzFotos({ 'eiche-hell': '/holz/eiche-hell.jpg', … });
+ *
+ * Schlägt ein Bild fehl, bleibt die gezeichnete Maserung stehen – die Seite
+ * darf an einem fehlenden Foto nicht scheitern.
+ */
+export async function holzFotos(
+  quellen: Partial<Record<HolzArt, string>>,
+  kante = 1024,
+): Promise<HolzArt[]> {
+  const geladen: HolzArt[] = [];
+  await Promise.all(
+    (Object.keys(quellen) as HolzArt[]).map(async (art) => {
+      const url = quellen[art];
+      if (!url) return;
+      try {
+        const bild = new Image();
+        bild.crossOrigin = 'anonymous';
+        bild.decoding = 'async';
+        await new Promise<void>((fertig, fehler) => {
+          bild.onload = () => fertig();
+          bild.onerror = () => fehler(new Error(url));
+          bild.src = url;
+        });
+        const [c, g] = leinwand(kante, kante);
+        g.drawImage(bild, 0, 0, kante, kante);
+        // Gleiche Ableitung wie bei der gezeichneten Vorlage.
+        const vorlage = { farbe: c, normal: normalAusHoehe(c, 2.6), rauheit: rauheitAusHoehe(c) };
+        for (const dielen of [3, 4, 5, 6]) vorlagen.set(`${art}|${dielen}`, vorlage);
+        geladen.push(art);
+      } catch {
+        // Bewusst still: die gezeichnete Vorlage bleibt gültig.
+      }
+    }),
+  );
+  return geladen;
+}
+
 function holzVorlage(art: HolzArt, dielen: number) {
   const schluessel = `${art}|${dielen}`;
   let v = vorlagen.get(schluessel);
@@ -882,23 +924,44 @@ const rH = 2.3;
 
   /* --------------------------------------------------------------- Kamera */
 
+  /**
+   * Abstand, bei dem der ganze Raum ins Bild passt – waagrecht wie senkrecht.
+   * Am Handy ist das Bild fast quadratisch, da reicht der vertikale
+   * Blickwinkel allein nicht und die Zeile wird rechts abgeschnitten.
+   */
+  private noetigerAbstand(B: number, T: number): number {
+    const radius = Math.hypot(B, T, 2.7) / 2 + 0.5;
+    const vFov = (this.kamera.fov * Math.PI) / 180;
+    const hFov = 2 * Math.atan(Math.tan(vFov / 2) * this.kamera.aspect);
+    return Math.max(radius / Math.sin(vFov / 2), radius / Math.sin(hFov / 2));
+  }
+
   private kameraSetzen(B: number, T: number): void {
     const ziel = new THREE.Vector3(B / 2, 1.05, T / 2);
     this.steuerung.target.copy(ziel);
-    // Abstand am größeren Raummaß ausrichten, damit nie etwas abgeschnitten wird.
-    const d = Math.max(B, T) * 1.3 + 2.0;
-    this.steuerung.minDistance = d * 0.55;
-    this.steuerung.maxDistance = d * 1.7;
+    const d = this.noetigerAbstand(B, T);
+    this.steuerung.minDistance = d * 0.5;
+    this.steuerung.maxDistance = d * 1.6;
     if (!this.laeuft) {
       // Startblick: von schräg vorne rechts, ähnlich der bisherigen Isometrie.
       const winkel = Math.PI * 0.27;
       this.kamera.position.set(
-        ziel.x + Math.sin(winkel) * d,
-        ziel.y + d * 0.55,
-        ziel.z + Math.cos(winkel) * d,
+        ziel.x + Math.sin(winkel) * d * 0.78,
+        ziel.y + d * 0.52,
+        ziel.z + Math.cos(winkel) * d * 0.78,
       );
+    } else {
+      this.abstandNachziehen(d);
     }
     this.steuerung.update();
+  }
+
+  /** Nach Drehen des Geräts oder größeren Maßen wieder alles ins Bild holen. */
+  private abstandNachziehen(d: number): void {
+    const richtung = this.kamera.position.clone().sub(this.steuerung.target);
+    if (richtung.length() < d) {
+      this.kamera.position.copy(this.steuerung.target).add(richtung.setLength(d));
+    }
   }
 
   private groesse(): void {
@@ -907,6 +970,13 @@ const rH = 2.3;
     this.renderer.setSize(b, h, false);
     this.kamera.aspect = b / h;
     this.kamera.updateProjectionMatrix();
+    if (this.laeuft) {
+      const d = this.noetigerAbstand(this.konfig.breite, this.konfig.tiefe);
+      this.steuerung.minDistance = d * 0.5;
+      this.steuerung.maxDistance = d * 1.6;
+      this.abstandNachziehen(d);
+      this.steuerung.update();
+    }
   }
 
   /* ------------------------------------------------------------- Öffentlich */

@@ -97,3 +97,36 @@ Quadern (Maße stufenlos, deshalb keine importierten Modelle):
 - Die Möbelproportionen sind Normmaße (Arbeitshöhe 88 cm, Korpustiefe 62 cm).
   Wenn die Tischlerei anders baut, stehen die Werte gesammelt oben in den
   jeweiligen Raum-Methoden.
+
+## Fotografierte Hölzer einsetzen
+
+Die gezeichnete Maserung ist nur der Platzhalter. Sobald Fotos da sind:
+
+```js
+import { holzFotos } from '../scripts/raumplaner-szene';
+
+await holzFotos({
+  'eiche-hell': '/holz/eiche-hell.jpg',
+  'altholz':    '/holz/altholz.jpg',
+  'nussbaum':   '/holz/nussbaum.jpg',
+  'fichte-hell':'/holz/fichte-hell.jpg',
+});
+```
+
+Aufrufen, bevor `planer.start()` läuft (oder danach, dann einmal
+`aktualisieren({})` hinterher). Normal- und Rauheitskarte werden aus dem
+Foto abgeleitet, es braucht also nur ein Bild je Sorte.
+
+Anforderungen an die Bilder:
+
+- **nahtlos kachelbar**, sonst sieht man das Raster im Boden
+- **flach ausgeleuchtet**, ohne Schatten und ohne Glanzlichter – sonst
+  wandern die Reflexe mit dem Möbel mit
+- quadratisch, 1024 px reichen (mehr kostet nur Ladezeit)
+- Ausschnitt etwa 1 × 1 m, damit die Kachelung im Raum stimmt
+
+Schlägt ein Bild fehl, bleibt die gezeichnete Maserung stehen; die Seite
+läuft weiter. Geprüft mit fehlender Datei.
+
+Bezugsquellen mit sauberer Lizenz für gewerbliche Nutzung: ambientCG und
+Poly Haven, beide CC0.
