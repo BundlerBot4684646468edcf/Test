@@ -1,0 +1,402 @@
+---
+/**
+ * Raumplaner – Bedienfeld und 3D-Bühne.
+ *
+ * three.js wird erst geladen, wenn der Abschnitt in Sichtweite kommt
+ * (~145 kB gzip), davor steht das Vorschaubild. Ohne WebGL bleibt es dabei.
+ */
+interface Props {
+  /** Vorschaubild, das bis zum Laden und ohne WebGL sichtbar bleibt. */
+  vorschau?: string;
+}
+const { vorschau = '/bilder/raumplaner-vorschau.jpg' } = Astro.props;
+
+const raeume = [
+  { wert: 'hotelzimmer', text: 'Hotelzimmer' },
+  { wert: 'kueche', text: 'Küche & Essen' },
+  { wert: 'wohnzimmer', text: 'Wohnzimmer' },
+  { wert: 'laden', text: 'Laden & Theke' },
+];
+const hoelzer = [
+  { wert: 'eiche-hell', text: 'Eiche hell', farbe: '#d3a05a' },
+  { wert: 'altholz', text: 'Altholz', farbe: '#7d6a56' },
+  { wert: 'nussbaum', text: 'Nussbaum', farbe: '#5a3a26' },
+  { wert: 'fichte-hell', text: 'Fichte hell', farbe: '#e8d6ae' },
+];
+const fronten = [
+  { wert: 'holz', text: 'Holz' },
+  { wert: 'weiss', text: 'Weiß' },
+  { wert: 'anthrazit', text: 'Anthrazit' },
+  { wert: 'betonoptik', text: 'Betonoptik' },
+];
+---
+
+<section class="rp" id="raumplaner" data-raumplaner>
+  <div class="rp-buehne">
+    <figure class="rp-leinwand" data-rp-leinwand>
+      <figcaption class="rp-titel" data-rp-titel>Küche &amp; Essen</figcaption>
+      <img class="rp-vorschau" src={vorschau} alt="Beispielansicht des Raumplaners" width="810" height="680" loading="lazy" />
+      <p class="rp-hinweis" data-rp-hinweis>↔ Ziehen zum Drehen</p>
+    </figure>
+  </div>
+
+  <div class="rp-steuerung">
+    <fieldset class="rp-block">
+      <legend class="rp-marke">01 · Raum</legend>
+      <div class="rp-raster">
+        {raeume.map((r) => (
+          <button type="button" class="rp-knopf" data-rp-raum={r.wert} aria-pressed={r.wert === 'kueche'}>
+            {r.text}
+          </button>
+        ))}
+      </div>
+    </fieldset>
+
+    <fieldset class="rp-block">
+      <legend class="rp-marke">02 · Maße</legend>
+      <label class="rp-regler">
+        <span class="rp-regler-kopf">
+          <span>Breite</span>
+          <output data-rp-anzeige="breite">4,4 m</output>
+        </span>
+        <input type="range" min="2.4" max="8" step="0.1" value="4.4" data-rp-bereich="breite" aria-label="Breite in Metern" />
+      </label>
+      <label class="rp-regler">
+        <span class="rp-regler-kopf">
+          <span>Tiefe</span>
+          <output data-rp-anzeige="tiefe">4,2 m</output>
+        </span>
+        <input type="range" min="2.4" max="8" step="0.1" value="4.2" data-rp-bereich="tiefe" aria-label="Tiefe in Metern" />
+      </label>
+    </fieldset>
+
+    <fieldset class="rp-block">
+      <legend class="rp-marke">03 · Holz</legend>
+      <div class="rp-muster">
+        {hoelzer.map((h) => (
+          <button
+            type="button"
+            class="rp-probe"
+            data-rp-holz={h.wert}
+            aria-pressed={h.wert === 'eiche-hell'}
+            style={`--probe:${h.farbe}`}
+          >
+            <span class="rp-probe-flaeche"></span>
+            <span class="rp-probe-text">{h.text}</span>
+          </button>
+        ))}
+      </div>
+    </fieldset>
+
+    <fieldset class="rp-block">
+      <legend class="rp-marke">04 · Fronten</legend>
+      <div class="rp-reihe">
+        {fronten.map((f) => (
+          <button type="button" class="rp-chip" data-rp-front={f.wert} aria-pressed={f.wert === 'weiss'}>
+            {f.text}
+          </button>
+        ))}
+      </div>
+    </fieldset>
+
+    <fieldset class="rp-block">
+      <legend class="rp-marke">05 · Kombination &amp; Licht</legend>
+      <div class="rp-reihe">
+        <button type="button" class="rp-chip" data-rp-schalter="glas" aria-pressed="false">Glas</button>
+        <button type="button" class="rp-chip" data-rp-schalter="metall" aria-pressed="false">Metall</button>
+        <button type="button" class="rp-chip" data-rp-schalter="licht" aria-pressed="true">Lichtleisten</button>
+      </div>
+    </fieldset>
+  </div>
+</section>
+
+<style>
+  .rp {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 20.5rem;
+    gap: 2.5rem;
+    align-items: start;
+  }
+
+  /* Bühne */
+  .rp-leinwand {
+    position: relative;
+    margin: 0;
+    aspect-ratio: 4 / 3.35;
+    border: 1px solid var(--rp-linie, #d8d1c2);
+    background: #f6f2ea;
+    overflow: hidden;
+  }
+  .rp-leinwand :global(canvas) {
+    position: absolute;
+    inset: 0;
+  }
+  .rp-vorschau {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  /* Sobald die Szene läuft, verschwindet das Vorschaubild. */
+  .rp-leinwand[data-aktiv] .rp-vorschau {
+    display: none;
+  }
+  .rp-titel {
+    position: absolute;
+    top: 1.1rem;
+    left: 1.4rem;
+    z-index: 2;
+    font-family: var(--schrift-serif, 'Brygada 1918 Variable', Georgia, serif);
+    font-style: italic;
+    font-size: 1.15rem;
+    color: #3a372f;
+  }
+  .rp-hinweis {
+    position: absolute;
+    bottom: 1rem;
+    left: 1.4rem;
+    z-index: 2;
+    margin: 0;
+    font-family: var(--schrift-mono, 'DM Mono', ui-monospace, monospace);
+    font-size: 0.78rem;
+    letter-spacing: 0.02em;
+    color: #8c8578;
+  }
+
+  /* Steuerung */
+  .rp-steuerung {
+    display: flex;
+    flex-direction: column;
+    gap: 1.6rem;
+  }
+  .rp-block {
+    border: 0;
+    border-top: 1px solid var(--rp-linie, #d8d1c2);
+    margin: 0;
+    padding: 0.9rem 0 0;
+  }
+  .rp-marke {
+    padding: 0;
+    font-family: var(--schrift-mono, 'DM Mono', ui-monospace, monospace);
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #8c8578;
+  }
+  .rp-raster {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    margin-top: 0.7rem;
+  }
+  .rp-reihe {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.7rem;
+  }
+
+  .rp-knopf,
+  .rp-chip {
+    font: inherit;
+    cursor: pointer;
+    border: 1px solid var(--rp-linie, #d8d1c2);
+    background: #f5f1e8;
+    color: #26241f;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+  .rp-knopf {
+    padding: 0.85rem 1rem;
+    text-align: left;
+  }
+  .rp-chip {
+    /* Knapp gehalten, damit die vier Fronten in eine Zeile passen. */
+    padding: 0.6rem 0.78rem;
+    font-size: 0.88rem;
+  }
+  .rp-knopf:hover,
+  .rp-chip:hover {
+    border-color: #a8a192;
+  }
+  .rp-knopf[aria-pressed='true'] {
+    background: var(--rp-gruen, #4c7a45);
+    border-color: var(--rp-gruen, #4c7a45);
+    color: #fff;
+  }
+  .rp-chip[aria-pressed='true'] {
+    background: #1f2124;
+    border-color: #1f2124;
+    color: #fff;
+  }
+
+  /* Maße */
+  .rp-regler {
+    display: block;
+    margin-top: 0.9rem;
+  }
+  .rp-regler-kopf {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.45rem;
+  }
+  .rp-regler-kopf output {
+    font-family: var(--schrift-mono, 'DM Mono', ui-monospace, monospace);
+    font-size: 0.86rem;
+  }
+  input[type='range'] {
+    width: 100%;
+    accent-color: var(--rp-gruen, #4c7a45);
+  }
+
+  /* Holzproben */
+  .rp-muster {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+    margin-top: 0.7rem;
+  }
+  .rp-probe {
+    font: inherit;
+    cursor: pointer;
+    background: none;
+    border: 0;
+    padding: 0;
+    text-align: left;
+  }
+  .rp-probe-flaeche {
+    display: block;
+    aspect-ratio: 1;
+    background:
+      repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.09) 0 1px, transparent 1px 9px),
+      var(--probe);
+    border: 2px solid transparent;
+    outline: 1px solid var(--rp-linie, #d8d1c2);
+  }
+  .rp-probe[aria-pressed='true'] .rp-probe-flaeche {
+    border-color: var(--rp-gruen, #4c7a45);
+    outline-color: var(--rp-gruen, #4c7a45);
+  }
+  .rp-probe-text {
+    display: block;
+    margin-top: 0.4rem;
+    font-size: 0.76rem;
+    color: #6d675c;
+  }
+
+  :where(.rp-knopf, .rp-chip, .rp-probe):focus-visible {
+    outline: 2px solid var(--rp-gruen, #4c7a45);
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 62rem) {
+    .rp {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1.6rem;
+    }
+    .rp-leinwand {
+      aspect-ratio: 4 / 3.6;
+    }
+  }
+</style>
+
+<script>
+  import type { Konfiguration, Raumplaner } from '../scripts/raumplaner-szene';
+
+  const abschnitt = document.querySelector<HTMLElement>('[data-raumplaner]');
+  if (abschnitt) {
+    const leinwand = abschnitt.querySelector<HTMLElement>('[data-rp-leinwand]')!;
+    const titel = abschnitt.querySelector<HTMLElement>('[data-rp-titel]')!;
+    const hinweis = abschnitt.querySelector<HTMLElement>('[data-rp-hinweis]')!;
+
+    const namen: Record<string, string> = {
+      hotelzimmer: 'Hotelzimmer',
+      kueche: 'Küche & Essen',
+      wohnzimmer: 'Wohnzimmer',
+      laden: 'Laden & Theke',
+    };
+
+    const konfig: Konfiguration = {
+      raum: 'kueche',
+      breite: 4.4,
+      tiefe: 4.2,
+      holz: 'eiche-hell',
+      front: 'weiss',
+      glas: false,
+      metall: false,
+      licht: true,
+    };
+
+    let planer: Raumplaner | null = null;
+
+    /** Nach jeder Änderung: Szene nachziehen und die Seite informieren. */
+    function anwenden(teil: Partial<Konfiguration>) {
+      Object.assign(konfig, teil);
+      titel.textContent = namen[konfig.raum];
+      planer?.aktualisieren(teil);
+      abschnitt!.dispatchEvent(
+        new CustomEvent('raumplaner:aenderung', { detail: { ...konfig }, bubbles: true }),
+      );
+    }
+
+    /** Eine Gruppe von Knöpfen, von denen genau einer aktiv ist. */
+    function gruppe(attribut: string, schluessel: keyof Konfiguration) {
+      const knoepfe = abschnitt!.querySelectorAll<HTMLButtonElement>(`[${attribut}]`);
+      for (const k of knoepfe) {
+        k.addEventListener('click', () => {
+          for (const anderer of knoepfe) anderer.setAttribute('aria-pressed', String(anderer === k));
+          anwenden({ [schluessel]: k.getAttribute(attribut) } as Partial<Konfiguration>);
+        });
+      }
+    }
+    gruppe('data-rp-raum', 'raum');
+    gruppe('data-rp-holz', 'holz');
+    gruppe('data-rp-front', 'front');
+
+    for (const k of abschnitt.querySelectorAll<HTMLButtonElement>('[data-rp-schalter]')) {
+      k.addEventListener('click', () => {
+        const an = k.getAttribute('aria-pressed') !== 'true';
+        k.setAttribute('aria-pressed', String(an));
+        anwenden({ [k.dataset.rpSchalter!]: an } as Partial<Konfiguration>);
+      });
+    }
+
+    for (const r of abschnitt.querySelectorAll<HTMLInputElement>('[data-rp-bereich]')) {
+      const feld = r.dataset.rpBereich as 'breite' | 'tiefe';
+      const anzeige = abschnitt.querySelector<HTMLOutputElement>(`[data-rp-anzeige="${feld}"]`)!;
+      r.addEventListener('input', () => {
+        const wert = Number(r.value);
+        anzeige.textContent = `${wert.toFixed(1).replace('.', ',')} m`;
+        anwenden({ [feld]: wert } as Partial<Konfiguration>);
+      });
+    }
+
+    /* three.js erst laden, wenn der Abschnitt sichtbar wird. */
+    const starten = async () => {
+      const modul = await import('../scripts/raumplaner-szene');
+      if (!modul.unterstuetzt()) {
+        hinweis.textContent = 'Ansicht als Bild – dieser Browser kann kein 3D.';
+        return;
+      }
+      planer = new modul.Raumplaner(leinwand);
+      planer.aktualisieren(konfig);
+      planer.start();
+      leinwand.dataset.aktiv = 'ja';
+      // Für das Anfrageformular: aktuelle Auswahl plus Bild der Ansicht.
+      Object.assign(window as unknown as Record<string, unknown>, {
+        raumplanerStand: () => ({ ...konfig, bild: planer?.bild() }),
+      });
+    };
+
+    const beobachter = new IntersectionObserver(
+      (eintraege) => {
+        if (eintraege.some((e) => e.isIntersecting)) {
+          beobachter.disconnect();
+          starten();
+        }
+      },
+      { rootMargin: '200px' },
+    );
+    beobachter.observe(abschnitt);
+  }
+</script>
