@@ -1,0 +1,4 @@
+# Die Panoramen liegen hier, sobald sie gerendert sind:
+#   node serie-rundum-rendern.mjs
+# Bis dahin bleibt der Ordner leer – eine gespiegelte Zwischenfassung
+# gehoert nicht ins Repo.
