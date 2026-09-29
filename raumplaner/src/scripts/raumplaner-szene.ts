@@ -305,6 +305,68 @@ function betonLeinwand(): HTMLCanvasElement {
   return c;
 }
 
+/**
+ * Bergpanorama hinter der Verglasung. Gezeichnet, nicht fotografiert –
+ * aber ein Fenster, hinter dem etwas liegt, macht aus dem Kasten einen Raum.
+ */
+function landschaftLeinwand(): HTMLCanvasElement {
+  const [c, g] = leinwand(1600, 900);
+
+  const himmel = g.createLinearGradient(0, 0, 0, 640);
+  himmel.addColorStop(0, '#b9d4e6');
+  himmel.addColorStop(0.55, '#d8e6ee');
+  himmel.addColorStop(1, '#eceee9');
+  g.fillStyle = himmel;
+  g.fillRect(0, 0, 1600, 900);
+
+  // Drei Bergketten, nach hinten heller – das ergibt die Tiefe.
+  const kette = (grund: number, farbe: string, zacken: number, hoehe: number) => {
+    g.fillStyle = farbe;
+    g.beginPath();
+    g.moveTo(0, 900);
+    g.lineTo(0, grund);
+    let x = 0;
+    let auf = true;
+    while (x < 1600) {
+      const schritt = 1600 / zacken / 2;
+      x += schritt;
+      g.lineTo(x, auf ? grund - hoehe * (0.6 + Math.random() * 0.6) : grund + hoehe * 0.15);
+      auf = !auf;
+    }
+    g.lineTo(1600, grund);
+    g.lineTo(1600, 900);
+    g.closePath();
+    g.fill();
+  };
+  kette(560, '#9fb4c4', 6, 200);
+  kette(625, '#7d95a3', 8, 155);
+  kette(678, '#63796b', 11, 115);
+
+  // Nadelwald am Hang
+  g.fillStyle = '#5d7757';
+  for (let i = 0; i < 420; i++) {
+    const x = Math.random() * 1600;
+    const y = 660 + Math.random() * 120;
+    const h = 14 + Math.random() * 22;
+    g.beginPath();
+    g.moveTo(x, y);
+    g.lineTo(x - h * 0.28, y + h);
+    g.lineTo(x + h * 0.28, y + h);
+    g.closePath();
+    g.fill();
+  }
+
+  // Wiese
+  g.fillStyle = '#7d9550';
+  g.fillRect(0, 760, 1600, 140);
+
+  // Etwas Dunst über dem Tal, aber nicht so viel, dass die Ketten verschwinden
+  g.fillStyle = 'rgba(255,255,255,0.14)';
+  g.fillRect(0, 590, 1600, 90);
+
+  return c;
+}
+
 /** Textbeschriftung für die Maßlinien als Sprite. */
 function beschriftung(text: string): THREE.Sprite {
   const [c, g] = leinwand(256, 64);
@@ -624,14 +686,22 @@ export class Raumplaner {
       new THREE.MeshStandardMaterial({ color: WAND, roughness: 0.95, envMapIntensity: 0.3, side: THREE.DoubleSide }),
     );
 
-    const hinten = new THREE.Mesh(new THREE.PlaneGeometry(B, H), wand);
-    hinten.position.set(B / 2, H / 2, 0);
+    // Das Wohnzimmer bekommt statt der halben Rückwand eine Verglasung.
+    const verglast = this.konfig.raum === 'wohnzimmer';
+    const massivAb = verglast ? B * 0.52 : 0;
+    const massivB = B - massivAb;
+    const hinten = new THREE.Mesh(new THREE.PlaneGeometry(massivB, H), wand);
+    hinten.position.set(massivAb + massivB / 2, H / 2, 0);
     hinten.receiveShadow = true;
     this.inhalt.add(hinten);
+    if (verglast) this.verglasung(massivAb, H, B, T);
 
-    const links = new THREE.Mesh(new THREE.PlaneGeometry(T, H), wand);
+    // Beim verglasten Wohnzimmer bleibt links nur der hintere Rest stehen.
+    const linksAb = verglast ? T * 0.55 : 0;
+    const linksT = T - linksAb;
+    const links = new THREE.Mesh(new THREE.PlaneGeometry(linksT, H), wand);
     links.rotation.y = Math.PI / 2;
-    links.position.set(0, H / 2, T / 2);
+    links.position.set(0, H / 2, linksAb + linksT / 2);
     links.receiveShadow = true;
     this.inhalt.add(links);
 
@@ -655,13 +725,17 @@ export class Raumplaner {
       rechts.receiveShadow = true;
       this.inhalt.add(rechts);
 
-      const deckeMat = this.merke(
-        new THREE.MeshStandardMaterial({ color: 0xf7f4ee, roughness: 1, envMapIntensity: 0.2 }),
-      );
-      const decke = new THREE.Mesh(new THREE.PlaneGeometry(B, T), deckeMat);
-      decke.rotation.x = Math.PI / 2;
-      decke.position.set(B / 2, H, T / 2);
-      this.inhalt.add(decke);
+      if (this.konfig.raum === 'wohnzimmer') {
+        this.holzdecke(B, T, H);
+      } else {
+        const deckeMat = this.merke(
+          new THREE.MeshStandardMaterial({ color: 0xf7f4ee, roughness: 1, envMapIntensity: 0.2 }),
+        );
+        const decke = new THREE.Mesh(new THREE.PlaneGeometry(B, T), deckeMat);
+        decke.rotation.x = Math.PI / 2;
+        decke.position.set(B / 2, H, T / 2);
+        this.inhalt.add(decke);
+      }
     }
 
     // Sockelleiste an beiden Wänden.
@@ -670,6 +744,109 @@ export class Raumplaner {
     );
     this.inhalt.add(quader(B, 0.08, 0.02, sockel, 0, 0, 0));
     this.inhalt.add(quader(0.02, 0.08, T, sockel, 0, 0, 0));
+  }
+
+  /**
+   * Raumhohe Verglasung in der Rückwand, mit Bergpanorama dahinter.
+   * Die Landschaft hängt weit hinter der Scheibe, damit die Fensterpfosten
+   * Tiefe bekommen statt wie aufgeklebt zu wirken.
+   */
+  private verglasung(bisX: number, H: number, B: number, T: number): void {
+    const landschaft = this.merkeTextur(ausLeinwand(landschaftLeinwand()));
+    const panorama = this.merke(
+      new THREE.MeshBasicMaterial({ map: landschaft, toneMapped: false }),
+    );
+    const weite = Math.max(B, T) * 2.6;
+    const fern = new THREE.Mesh(new THREE.PlaneGeometry(weite, weite * 0.56), panorama);
+    fern.position.set(B / 2, H * 0.6, -weite * 0.26);
+    this.inhalt.add(fern);
+
+    // Tageslicht von draußen herein
+    const tag = new THREE.DirectionalLight(0xf2f7ff, 1.5);
+    tag.position.set(bisX * 0.4, 3.2, -6);
+    tag.target.position.set(B * 0.6, 0.8, T * 0.5);
+    this.inhalt.add(tag);
+    this.inhalt.add(tag.target);
+
+    const scheibe = this.merke(
+      new THREE.MeshPhysicalMaterial({
+        color: 0xdce7ea,
+        roughness: 0.02,
+        metalness: 0,
+        transparent: true,
+        opacity: 0.12,
+        envMapIntensity: 2.4,
+      }),
+    );
+    const g = new THREE.Mesh(new THREE.PlaneGeometry(bisX, H), scheibe);
+    g.position.set(bisX / 2, H / 2, 0.01);
+    this.inhalt.add(g);
+
+    // Zweite Panoramafläche und Verglasung über Eck, wie in der Referenz.
+    const fern2 = new THREE.Mesh(new THREE.PlaneGeometry(weite, weite * 0.56), panorama);
+    fern2.rotation.y = Math.PI / 2;
+    fern2.position.set(-weite * 0.26, H * 0.6, T / 2);
+    this.inhalt.add(fern2);
+
+    const linksTiefe = T * 0.55;
+    const gl = new THREE.Mesh(new THREE.PlaneGeometry(linksTiefe, H), scheibe);
+    gl.rotation.y = Math.PI / 2;
+    gl.position.set(0.01, H / 2, linksTiefe / 2);
+    this.inhalt.add(gl);
+
+    // Schwarze Rahmenprofile, wie im Bild
+    const profil = this.merke(
+      new THREE.MeshStandardMaterial({ color: 0x24262a, roughness: 0.42, metalness: 0.5 }),
+    );
+    const felder = Math.max(2, Math.round(bisX / 1.5));
+    for (let i = 0; i <= felder; i++) {
+      const x = (bisX * i) / felder;
+      this.inhalt.add(quader(0.055, H, 0.09, profil, Math.min(x, bisX - 0.055), 0, -0.04));
+    }
+    this.inhalt.add(quader(bisX, 0.07, 0.09, profil, 0, H - 0.07, -0.04));
+    this.inhalt.add(quader(bisX, 0.05, 0.09, profil, 0, 0, -0.04));
+
+    const lFelder = Math.max(2, Math.round(linksTiefe / 1.5));
+    for (let i = 0; i <= lFelder; i++) {
+      const z = (linksTiefe * i) / lFelder;
+      this.inhalt.add(quader(0.09, H, 0.055, profil, -0.04, 0, Math.min(z, linksTiefe - 0.055)));
+    }
+    this.inhalt.add(quader(0.09, 0.07, linksTiefe, profil, -0.04, H - 0.07, 0));
+    this.inhalt.add(quader(0.09, 0.05, linksTiefe, profil, -0.04, 0, 0));
+  }
+
+  /** Holzdecke mit eingelassenen Lichtlinien – das Stück der Tischlerei. */
+  private holzdecke(B: number, T: number, H: number): void {
+    const holz = this.holzMaterial(1, 9);
+    const map = holz.map as THREE.Texture;
+    // Schmale Leisten quer, deutlich feiner als beim Boden.
+    map.repeat.set(Math.max(1, B / 2.4), Math.max(1, T / 0.85));
+    for (const k of [holz.normalMap, holz.roughnessMap]) if (k) k.repeat.copy(map.repeat);
+
+    const decke = new THREE.Mesh(new THREE.PlaneGeometry(B, T), holz);
+    decke.rotation.x = Math.PI / 2;
+    decke.position.set(B / 2, H, T / 2);
+    decke.receiveShadow = true;
+    this.inhalt.add(decke);
+
+    if (!this.konfig.licht) return;
+    const leuchte = this.merke(new THREE.MeshBasicMaterial({ color: 0xffe6b8, toneMapped: false }));
+    const bahnen = 3;
+    for (let i = 0; i < bahnen; i++) {
+      const z = (T * (i + 0.7)) / (bahnen + 0.4);
+      const laenge = B * (i % 2 ? 0.42 : 0.62);
+      const x = i % 2 ? B * 0.3 : B * 0.12;
+      const streifen = new THREE.Mesh(new THREE.BoxGeometry(laenge, 0.012, 0.045), leuchte);
+      streifen.position.set(x + laenge / 2, H - 0.008, z);
+      this.inhalt.add(streifen);
+      const l = new THREE.PointLight(0xffdca8, 1.1, 5.5, 2);
+      l.position.set(x + laenge / 2, H - 0.25, z);
+      this.inhalt.add(l);
+    }
+    // Lichtvoute an der Rückwand
+    const voute = new THREE.Mesh(new THREE.BoxGeometry(B * 0.92, 0.012, 0.05), leuchte);
+    voute.position.set(B / 2, H - 0.02, 0.22);
+    this.inhalt.add(voute);
   }
 
   /** Maßlinien mit Beschriftung, wie in der bisherigen Zeichnung. */
@@ -907,60 +1084,177 @@ export class Raumplaner {
     }
   }
 
+  /**
+   * Wohnzimmer nach der Referenz: Verglasung mit Panorama in der Rückwand,
+   * Hängekamin davor, Ecksofa mit Récamiere auf einem Teppich, Lowboard mit
+   * Fernseher an der rechten Wand. Decke und Boden sind das Holz der Wahl.
+   */
   private wohnzimmer(B: number, T: number): void {
-    const holz = this.holzMaterial(1, 4);
+    const holz = this.holzMaterial(1, 3);
     const front = this.frontMaterial();
-    const stoff = this.merke(new THREE.MeshStandardMaterial({ color: 0x8d9384, roughness: 1 }));
+    const stoff = this.merke(new THREE.MeshStandardMaterial({ color: 0x6f6a63, roughness: 1 }));
+    const dunkel = this.merke(
+      new THREE.MeshStandardMaterial({ color: 0x24262a, roughness: 0.45, metalness: 0.35 }),
+    );
 
-    // Regalwand an der Rückwand
-    const rB = Math.min(B - 0.6, B * 0.72);
-    const rx = (B - rB) / 2;
-    const rH = 2.1;
-    this.inhalt.add(quader(rB, 0.04, 0.34, holz, rx, rH, 0));
-    this.inhalt.add(quader(0.04, rH, 0.34, holz, rx, 0, 0));
-    this.inhalt.add(quader(0.04, rH, 0.34, holz, rx + rB - 0.04, 0, 0));
-    const boeden = 4;
-    for (let i = 1; i <= boeden; i++) {
-      const y = (rH / (boeden + 1)) * i;
-      this.inhalt.add(quader(rB - 0.08, 0.03, 0.34, holz, rx + 0.04, y, 0));
-      this.lichtleiste(rx + 0.06, y - 0.03, 0.28, rB - 0.12);
-    }
-    // Geschlossene Fächer unten, ggf. mit Glas
-    const faecher = Math.max(2, Math.round(rB / 0.9));
-    for (let i = 0; i < faecher; i++) {
-      const fb = (rB - 0.08) / faecher - 0.012;
-      const mat = this.konfig.glas && i % 2 === 0 ? this.glasMaterial() : front;
-      this.inhalt.add(quader(fb, rH / (boeden + 1) - 0.06, 0.02, mat, rx + 0.04 + ((rB - 0.08) * i) / faecher, 0.03, 0.34));
-    }
-    this.griffe(rx + 0.04, 0.2, 0.375, rB - 0.08, faecher);
+    this.haengekamin(B * 0.38, T * 0.3, 2.7, B, T);
 
-    // Sofa
-    const sB = Math.min(2.2, B * 0.55);
-    const sx = (B - sB) / 2;
-    const sz = Math.min(T - 1.2, 2.1);
-    this.inhalt.add(quader(sB, 0.34, 0.9, stoff, sx, 0.08, sz));
-    this.inhalt.add(quader(sB, 0.5, 0.18, stoff, sx, 0.42, sz + 0.72));
-    this.inhalt.add(quader(0.18, 0.28, 0.9, stoff, sx, 0.42, sz));
-    this.inhalt.add(quader(0.18, 0.28, 0.9, stoff, sx + sB - 0.18, 0.42, sz));
-    for (const fx of [sx + 0.08, sx + sB - 0.14]) {
-      for (const fz of [sz + 0.08, sz + 0.76]) {
-        this.inhalt.add(quader(0.06, 0.08, 0.06, holz, fx, 0, fz));
+    // Teppich unter der Sitzgruppe
+    const teppich = this.merke(new THREE.MeshStandardMaterial({ color: 0x4f4a44, roughness: 1 }));
+    const tB = Math.min(B * 0.72, 3.4);
+    const tT = Math.min(T * 0.46, 2.5);
+    const tx = B * 0.06;
+    const tz = T * 0.42;
+    this.inhalt.add(quader(tB, 0.014, tT, teppich, tx, 0.001, tz));
+
+    // Ecksofa: Längsteil zur Verglasung, Récamiere nach rechts
+    const sB = Math.min(2.5, B * 0.55);
+    const sx = tx + 0.14;
+    const sz = tz + 0.2;
+    const sitzH = 0.34;
+    this.inhalt.add(quader(sB, sitzH, 0.98, stoff, sx, 0.08, sz));
+    this.inhalt.add(quader(sB, 0.42, 0.22, stoff, sx, sitzH + 0.08, sz + 0.76)); // Rückenlehne
+    this.inhalt.add(quader(0.2, 0.26, 0.98, stoff, sx, sitzH + 0.08, sz)); // Armlehne links
+    // Récamiere
+    const rB = Math.min(1.5, B * 0.3);
+    this.inhalt.add(quader(rB, sitzH, 1.5, stoff, sx + sB, 0.08, sz - 0.52));
+    this.inhalt.add(quader(0.2, 0.26, 1.5, stoff, sx + sB + rB - 0.2, sitzH + 0.08, sz - 0.52));
+    // Kissen
+    for (let i = 0; i < 3; i++) {
+      const k = quader(0.42, 0.14, 0.4, stoff, sx + 0.28 + i * 0.5, sitzH + 0.08, sz + 0.5);
+      k.rotation.x = -0.22;
+      this.inhalt.add(k);
+    }
+    // Plaid auf der Récamiere
+    const plaid = this.merke(new THREE.MeshStandardMaterial({ color: 0x8a8378, roughness: 1 }));
+    this.inhalt.add(quader(rB * 0.8, 0.05, 0.5, plaid, sx + sB + 0.1, sitzH + 0.08, sz - 0.3));
+
+    // Beistelltisch: Steinplatte auf dünnem schwarzem Gestell
+    const stein = this.merke(
+      new THREE.MeshPhysicalMaterial({ color: 0xe8e4dc, roughness: 0.18, clearcoat: 0.7 }),
+    );
+    const btx = sx + sB * 0.25;
+    const btz = sz - 0.62;
+    const platte = new THREE.Mesh(new THREE.CylinderGeometry(0.29, 0.29, 0.035, 28), stein);
+    platte.position.set(btx, 0.5, btz);
+    platte.castShadow = true;
+    this.inhalt.add(platte);
+    for (let i = 0; i < 3; i++) {
+      const w = (i / 3) * Math.PI * 2;
+      const bein = quader(0.022, 0.5, 0.022, dunkel, btx + Math.cos(w) * 0.2, 0, btz + Math.sin(w) * 0.2);
+      this.inhalt.add(bein);
+    }
+    // Tischleuchte, Kugel
+    const kugel = new THREE.Mesh(
+      new THREE.SphereGeometry(0.085, 20, 14),
+      this.merke(new THREE.MeshBasicMaterial({ color: 0xffe9c0, toneMapped: false })),
+    );
+    kugel.position.set(btx + 0.05, 0.6, btz);
+    this.inhalt.add(kugel);
+    if (this.konfig.licht) {
+      const l = new THREE.PointLight(0xffd9a0, 1.4, 2.8, 2);
+      l.position.copy(kugel.position);
+      this.inhalt.add(l);
+    }
+
+    // Lowboard mit Fernseher auf dem massiven Teil der Rückwand. Dort sieht
+    // die Kamera es auch – an der rechten Wand läge es außerhalb des Bildes,
+    // und die Frontenwahl wäre in diesem Raum unsichtbar.
+    const lwX = B * 0.58;
+    const lwB = Math.min(B * 0.38, 2.6);
+    this.inhalt.add(quader(lwB, 0.4, 0.4, holz, lwX, 0.42, 0.02));
+    // Griffmulde als dunkler Schlitz
+    this.inhalt.add(quader(lwB * 0.42, 0.05, 0.02, dunkel, lwX + lwB * 0.08, 0.62, 0.42));
+    this.inhalt.add(
+      quader(Math.min(1.3, lwB * 0.68), 0.74, 0.05, dunkel, lwX + lwB * 0.14, 1.18, 0.03),
+    );
+
+    // Holzscheite neben dem Kamin
+    if (this.konfig.deko) {
+      const korb = this.merke(new THREE.MeshStandardMaterial({ color: 0x2c2e31, roughness: 0.8 }));
+      const kx = B * 0.62;
+      const kz = T * 0.16;
+      const schale = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.22, 0.3, 20, 1, true), korb);
+      schale.position.set(kx, 0.15, kz);
+      schale.castShadow = true;
+      this.inhalt.add(schale);
+      for (let i = 0; i < 7; i++) {
+        const scheit = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.34, 9), holz);
+        scheit.position.set(kx + (Math.random() - 0.5) * 0.24, 0.32 + Math.random() * 0.06, kz + (Math.random() - 0.5) * 0.2);
+        scheit.rotation.set(Math.PI / 2, 0, Math.random() * Math.PI);
+        scheit.castShadow = true;
+        this.inhalt.add(scheit);
       }
     }
 
-    // Couchtisch aus Holz mit Metallgestell
-    const tB = Math.min(1.1, sB * 0.5);
-    const tx = (B - tB) / 2;
-    const tz = sz - 0.85;
-    if (tz > 0.5) {
-      this.inhalt.add(quader(tB, 0.05, 0.6, holz, tx, 0.36, tz));
-      const beinMat = this.konfig.metall ? this.metallMaterial() : holz;
-      for (const px of [tx + 0.05, tx + tB - 0.09]) {
-        for (const pz of [tz + 0.05, tz + 0.51]) {
-          this.inhalt.add(quader(0.04, 0.36, 0.04, beinMat, px, 0, pz));
-        }
-      }
+    // Hochschrank neben dem Lowboard in der gewählten Front – sonst hätte die
+    // Frontenwahl in diesem Raum keine sichtbare Fläche.
+    const hsB = Math.min(0.62, B - (lwX + lwB) - 0.06);
+    if (hsB > 0.25) {
+      this.inhalt.add(quader(hsB, 2.05, 0.42, this.korpusMaterial(), lwX + lwB + 0.04, 0, 0.02));
+      this.inhalt.add(quader(hsB - 0.03, 1.99, 0.02, front, lwX + lwB + 0.055, 0.03, 0.44));
     }
+  }
+
+  /** Hängekamin: Rohr von der Decke, runder Korpus, offene Feuerseite. */
+  private haengekamin(x: number, z: number, H: number, B: number, T: number): void {
+    const stahl = this.merke(
+      new THREE.MeshStandardMaterial({ color: 0x1f2124, roughness: 0.5, metalness: 0.45 }),
+    );
+
+    const rohr = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.085, H - 1.72, 18), stahl);
+    rohr.position.set(x, 1.72 + (H - 1.72) / 2, z);
+    rohr.castShadow = true;
+    this.inhalt.add(rohr);
+
+    const haube = new THREE.Mesh(new THREE.ConeGeometry(0.44, 0.34, 26), stahl);
+    haube.position.set(x, 1.62, z);
+    haube.castShadow = true;
+    this.inhalt.add(haube);
+
+    // Die Feuerseite bleibt offen, sonst sieht man von schräg oben nur den
+    // geschlossenen Topf – und das Feuer ist der Punkt, auf den alles zuläuft.
+    // Die Öffnung zeigt dorthin, wo die Innenkamera steht.
+    const zurKamera = Math.atan2(B * 0.86 - x, T * 0.97 - z);
+    const luecke = 1.15; // Radiant, gut 65 Grad
+    const korpus = new THREE.Mesh(
+      new THREE.CylinderGeometry(
+        0.44, 0.3, 0.42, 26, 1, true,
+        zurKamera + luecke / 2,
+        Math.PI * 2 - luecke,
+      ),
+      this.merke(
+        new THREE.MeshStandardMaterial({
+          color: 0x1f2124,
+          roughness: 0.5,
+          metalness: 0.45,
+          side: THREE.DoubleSide,
+        }),
+      ),
+    );
+    korpus.position.set(x, 1.26, z);
+    korpus.castShadow = true;
+    this.inhalt.add(korpus);
+
+    // Bodenplatte und Scheite im Feuerraum
+    const platte = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.025, 26), stahl);
+    platte.position.set(x, 1.06, z);
+    this.inhalt.add(platte);
+    const glut = this.merke(new THREE.MeshBasicMaterial({ color: 0xff8a2b, toneMapped: false }));
+    const asche = this.merke(new THREE.MeshStandardMaterial({ color: 0x2a2521, roughness: 1 }));
+    for (let i = 0; i < 4; i++) {
+      const sch = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.3, 8), asche);
+      sch.rotation.set(Math.PI / 2, 0, (i / 4) * Math.PI);
+      sch.position.set(x + (i - 1.5) * 0.045, 1.11, z);
+      this.inhalt.add(sch);
+    }
+    const feuer = new THREE.Mesh(new THREE.SphereGeometry(0.15, 16, 10), glut);
+    feuer.scale.set(1.05, 0.95, 0.75);
+    feuer.position.set(x, 1.2, z);
+    this.inhalt.add(feuer);
+    const flamme = new THREE.PointLight(0xff9c40, 2.6, 4.5, 2);
+    flamme.position.set(x, 1.3, z + 0.1);
+    this.inhalt.add(flamme);
   }
 
   private laden(B: number, T: number): void {
@@ -998,7 +1292,7 @@ const rH = 2.3;
     // Theke: L-förmig, Korpus Holz, Platte dunkel
     const tB = Math.min(B * 0.6, 2.8);
     const tx = Math.max(0.3, (B - tB) / 2);
-    const tz = Math.min(T - 1.4, 1.9);
+    const tz = Math.min(T * 0.34, 1.5);
     const tH = 1.06;
     this.inhalt.add(quader(tB, tH, 0.68, holz, tx, 0, tz));
     this.inhalt.add(quader(tB + 0.1, 0.06, 0.8, platte, tx - 0.05, tH, tz - 0.06));
@@ -1011,7 +1305,7 @@ const rH = 2.3;
     this.lichtleiste(tx, tH - 0.16, tz + 0.72, tB);
 
     // Seitlicher Schenkel der Theke
-    const sT = Math.min(1.2, T - tz - 0.6);
+    const sT = Math.min(1.0, T - tz - 1.9);
     if (sT > 0.5) {
       this.inhalt.add(quader(0.68, tH, sT, holz, tx, 0, tz + 0.68));
       this.inhalt.add(quader(0.8, 0.06, sT, platte, tx - 0.06, tH, tz + 0.68));
@@ -1034,12 +1328,21 @@ const rH = 2.3;
 
   private kameraSetzen(B: number, T: number): void {
     if (this.konfig.blick === 'innen') {
-      // Weitwinkel auf Augenhöhe, aus der vorderen linken Ecke in den Raum.
-      this.kamera.fov = 48;
+      // Je Raum ein eigener Standpunkt: eine gemeinsame Ecke funktioniert
+      // nicht, weil die Möbel unterschiedlich stehen – im Wohnzimmer säße
+      // die Kamera sonst mitten im Sofa.
+      const blicke: Record<RaumTyp, { pos: [number, number, number]; ziel: [number, number, number]; fov: number }> = {
+        kueche:      { pos: [0.12, 1.58, 0.90], ziel: [0.68, 1.00, 0.14], fov: 48 },
+        wohnzimmer:  { pos: [0.86, 1.64, 0.97], ziel: [0.30, 1.15, 0.04], fov: 52 },
+        hotelzimmer: { pos: [0.88, 1.60, 0.93], ziel: [0.30, 1.00, 0.12], fov: 50 },
+        laden:       { pos: [0.90, 1.66, 0.95], ziel: [0.34, 1.02, 0.12], fov: 52 },
+      };
+      const w = blicke[this.konfig.raum];
+      this.kamera.fov = w.fov;
       this.kamera.near = 0.05;
       this.kamera.updateProjectionMatrix();
-      this.kamera.position.set(B * 0.12, 1.58, T * 0.9);
-      this.steuerung.target.set(B * 0.68, 1.0, T * 0.14);
+      this.kamera.position.set(B * w.pos[0], w.pos[1], T * w.pos[2]);
+      this.steuerung.target.set(B * w.ziel[0], w.ziel[1], T * w.ziel[2]);
       this.steuerung.minDistance = 0.3;
       this.steuerung.maxDistance = Math.hypot(B, T) * 1.2;
       this.steuerung.update();
