@@ -1,0 +1,450 @@
+[
+ {
+  "raum": "kueche",
+  "holz": "eiche-hell",
+  "front": "holz",
+  "datei": "kueche_eiche-hell_holz.jpg",
+  "kb": 109
+ },
+ {
+  "raum": "kueche",
+  "holz": "eiche-hell",
+  "front": "weiss",
+  "datei": "kueche_eiche-hell_weiss.jpg",
+  "kb": 102
+ },
+ {
+  "raum": "kueche",
+  "holz": "eiche-hell",
+  "front": "anthrazit",
+  "datei": "kueche_eiche-hell_anthrazit.jpg",
+  "kb": 102
+ },
+ {
+  "raum": "kueche",
+  "holz": "eiche-hell",
+  "front": "betonoptik",
+  "datei": "kueche_eiche-hell_betonoptik.jpg",
+  "kb": 106
+ },
+ {
+  "raum": "kueche",
+  "holz": "altholz",
+  "front": "holz",
+  "datei": "kueche_altholz_holz.jpg",
+  "kb": 98
+ },
+ {
+  "raum": "kueche",
+  "holz": "altholz",
+  "front": "weiss",
+  "datei": "kueche_altholz_weiss.jpg",
+  "kb": 95
+ },
+ {
+  "raum": "kueche",
+  "holz": "altholz",
+  "front": "anthrazit",
+  "datei": "kueche_altholz_anthrazit.jpg",
+  "kb": 93
+ },
+ {
+  "raum": "kueche",
+  "holz": "altholz",
+  "front": "betonoptik",
+  "datei": "kueche_altholz_betonoptik.jpg",
+  "kb": 98
+ },
+ {
+  "raum": "kueche",
+  "holz": "nussbaum",
+  "front": "holz",
+  "datei": "kueche_nussbaum_holz.jpg",
+  "kb": 75
+ },
+ {
+  "raum": "kueche",
+  "holz": "nussbaum",
+  "front": "weiss",
+  "datei": "kueche_nussbaum_weiss.jpg",
+  "kb": 74
+ },
+ {
+  "raum": "kueche",
+  "holz": "nussbaum",
+  "front": "anthrazit",
+  "datei": "kueche_nussbaum_anthrazit.jpg",
+  "kb": 72
+ },
+ {
+  "raum": "kueche",
+  "holz": "nussbaum",
+  "front": "betonoptik",
+  "datei": "kueche_nussbaum_betonoptik.jpg",
+  "kb": 78
+ },
+ {
+  "raum": "kueche",
+  "holz": "fichte-hell",
+  "front": "holz",
+  "datei": "kueche_fichte-hell_holz.jpg",
+  "kb": 116
+ },
+ {
+  "raum": "kueche",
+  "holz": "fichte-hell",
+  "front": "weiss",
+  "datei": "kueche_fichte-hell_weiss.jpg",
+  "kb": 109
+ },
+ {
+  "raum": "kueche",
+  "holz": "fichte-hell",
+  "front": "anthrazit",
+  "datei": "kueche_fichte-hell_anthrazit.jpg",
+  "kb": 109
+ },
+ {
+  "raum": "kueche",
+  "holz": "fichte-hell",
+  "front": "betonoptik",
+  "datei": "kueche_fichte-hell_betonoptik.jpg",
+  "kb": 113
+ },
+ {
+  "raum": "hotelzimmer",
+  "holz": "eiche-hell",
+  "front": "holz",
+  "datei": "hotelzimmer_eiche-hell_holz.jpg",
+  "kb": 109
+ },
+ {
+  "raum": "hotelzimmer",
+  "holz": "eiche-hell",
+  "front": "weiss",
+  "datei": "hotelzimmer_eiche-hell_weiss.jpg",
+  "kb": 107
+ },
+ {
+  "raum": "hotelzimmer",
+  "holz": "eiche-hell",
+  "front": "anthrazit",
+  "datei": "hotelzimmer_eiche-hell_anthrazit.jpg",
+  "kb": 107
+ },
+ {
+  "raum": "hotelzimmer",
+  "holz": "eiche-hell",
+  "front": "betonoptik",
+  "datei": "hotelzimmer_eiche-hell_betonoptik.jpg",
+  "kb": 107
+ },
+ {
+  "raum": "hotelzimmer",
+  "holz": "altholz",
+  "front": "holz",
+  "datei": "hotelzimmer_altholz_holz.jpg",
+  "kb": 99
+ },
+ {
+  "raum": "hotelzimmer",
+  "holz": "altholz",
+  "front": "weiss",
+  "datei": "hotelzimmer_altholz_weiss.jpg",
+  "kb": 97
+ },
+ {
+  "raum": "hotelzimmer",
+  "holz": "altholz",
+  "front": "anthrazit",
+  "datei": "hotelzimmer_altholz_anthrazit.jpg",
+  "kb": 98
+ },
+ {
+  "raum": "hotelzimmer",
+  "holz": "altholz",
+  "front": "betonoptik",
+  "datei": "hotelzimmer_altholz_betonoptik.jpg",
+  "kb": 98
+ },
+ {
+  "raum": "hotelzimmer",
+  "holz": "nussbaum",
+  "front": "holz",
+  "datei": "hotelzimmer_nussbaum_holz.jpg",
+  "kb": 76
+ },
+ {
+  "raum": "hotelzimmer",
+  "holz": "nussbaum",
+  "front": "weiss",
+  "datei": "hotelzimmer_nussbaum_weiss.jpg",
+  "kb": 75
+ },
+ {
+  "raum": "hotelzimmer",
+  "holz": "nussbaum",
+  "front": "anthrazit",
+  "datei": "hotelzimmer_nussbaum_anthrazit.jpg",
+  "kb": 75
+ },
+ {
+  "raum": "hotelzimmer",
+  "holz": "nussbaum",
+  "front": "betonoptik",
+  "datei": "hotelzimmer_nussbaum_betonoptik.jpg",
+  "kb": 76
+ },
+ {
+  "raum": "hotelzimmer",
+  "holz": "fichte-hell",
+  "front": "holz",
+  "datei": "hotelzimmer_fichte-hell_holz.jpg",
+  "kb": 117
+ },
+ {
+  "raum": "hotelzimmer",
+  "holz": "fichte-hell",
+  "front": "weiss",
+  "datei": "hotelzimmer_fichte-hell_weiss.jpg",
+  "kb": 114
+ },
+ {
+  "raum": "hotelzimmer",
+  "holz": "fichte-hell",
+  "front": "anthrazit",
+  "datei": "hotelzimmer_fichte-hell_anthrazit.jpg",
+  "kb": 115
+ },
+ {
+  "raum": "hotelzimmer",
+  "holz": "fichte-hell",
+  "front": "betonoptik",
+  "datei": "hotelzimmer_fichte-hell_betonoptik.jpg",
+  "kb": 114
+ },
+ {
+  "raum": "wohnzimmer",
+  "holz": "eiche-hell",
+  "front": "holz",
+  "datei": "wohnzimmer_eiche-hell_holz.jpg",
+  "kb": 199
+ },
+ {
+  "raum": "wohnzimmer",
+  "holz": "eiche-hell",
+  "front": "weiss",
+  "datei": "wohnzimmer_eiche-hell_weiss.jpg",
+  "kb": 199
+ },
+ {
+  "raum": "wohnzimmer",
+  "holz": "eiche-hell",
+  "front": "anthrazit",
+  "datei": "wohnzimmer_eiche-hell_anthrazit.jpg",
+  "kb": 199
+ },
+ {
+  "raum": "wohnzimmer",
+  "holz": "eiche-hell",
+  "front": "betonoptik",
+  "datei": "wohnzimmer_eiche-hell_betonoptik.jpg",
+  "kb": 199
+ },
+ {
+  "raum": "wohnzimmer",
+  "holz": "altholz",
+  "front": "holz",
+  "datei": "wohnzimmer_altholz_holz.jpg",
+  "kb": 186
+ },
+ {
+  "raum": "wohnzimmer",
+  "holz": "altholz",
+  "front": "weiss",
+  "datei": "wohnzimmer_altholz_weiss.jpg",
+  "kb": 186
+ },
+ {
+  "raum": "wohnzimmer",
+  "holz": "altholz",
+  "front": "anthrazit",
+  "datei": "wohnzimmer_altholz_anthrazit.jpg",
+  "kb": 186
+ },
+ {
+  "raum": "wohnzimmer",
+  "holz": "altholz",
+  "front": "betonoptik",
+  "datei": "wohnzimmer_altholz_betonoptik.jpg",
+  "kb": 186
+ },
+ {
+  "raum": "wohnzimmer",
+  "holz": "nussbaum",
+  "front": "holz",
+  "datei": "wohnzimmer_nussbaum_holz.jpg",
+  "kb": 159
+ },
+ {
+  "raum": "wohnzimmer",
+  "holz": "nussbaum",
+  "front": "weiss",
+  "datei": "wohnzimmer_nussbaum_weiss.jpg",
+  "kb": 159
+ },
+ {
+  "raum": "wohnzimmer",
+  "holz": "nussbaum",
+  "front": "anthrazit",
+  "datei": "wohnzimmer_nussbaum_anthrazit.jpg",
+  "kb": 159
+ },
+ {
+  "raum": "wohnzimmer",
+  "holz": "nussbaum",
+  "front": "betonoptik",
+  "datei": "wohnzimmer_nussbaum_betonoptik.jpg",
+  "kb": 159
+ },
+ {
+  "raum": "wohnzimmer",
+  "holz": "fichte-hell",
+  "front": "holz",
+  "datei": "wohnzimmer_fichte-hell_holz.jpg",
+  "kb": 210
+ },
+ {
+  "raum": "wohnzimmer",
+  "holz": "fichte-hell",
+  "front": "weiss",
+  "datei": "wohnzimmer_fichte-hell_weiss.jpg",
+  "kb": 211
+ },
+ {
+  "raum": "wohnzimmer",
+  "holz": "fichte-hell",
+  "front": "anthrazit",
+  "datei": "wohnzimmer_fichte-hell_anthrazit.jpg",
+  "kb": 211
+ },
+ {
+  "raum": "wohnzimmer",
+  "holz": "fichte-hell",
+  "front": "betonoptik",
+  "datei": "wohnzimmer_fichte-hell_betonoptik.jpg",
+  "kb": 211
+ },
+ {
+  "raum": "laden",
+  "holz": "eiche-hell",
+  "front": "holz",
+  "datei": "laden_eiche-hell_holz.jpg",
+  "kb": 109
+ },
+ {
+  "raum": "laden",
+  "holz": "eiche-hell",
+  "front": "weiss",
+  "datei": "laden_eiche-hell_weiss.jpg",
+  "kb": 104
+ },
+ {
+  "raum": "laden",
+  "holz": "eiche-hell",
+  "front": "anthrazit",
+  "datei": "laden_eiche-hell_anthrazit.jpg",
+  "kb": 109
+ },
+ {
+  "raum": "laden",
+  "holz": "eiche-hell",
+  "front": "betonoptik",
+  "datei": "laden_eiche-hell_betonoptik.jpg",
+  "kb": 108
+ },
+ {
+  "raum": "laden",
+  "holz": "altholz",
+  "front": "holz",
+  "datei": "laden_altholz_holz.jpg",
+  "kb": 99
+ },
+ {
+  "raum": "laden",
+  "holz": "altholz",
+  "front": "weiss",
+  "datei": "laden_altholz_weiss.jpg",
+  "kb": 94
+ },
+ {
+  "raum": "laden",
+  "holz": "altholz",
+  "front": "anthrazit",
+  "datei": "laden_altholz_anthrazit.jpg",
+  "kb": 97
+ },
+ {
+  "raum": "laden",
+  "holz": "altholz",
+  "front": "betonoptik",
+  "datei": "laden_altholz_betonoptik.jpg",
+  "kb": 98
+ },
+ {
+  "raum": "laden",
+  "holz": "nussbaum",
+  "front": "holz",
+  "datei": "laden_nussbaum_holz.jpg",
+  "kb": 80
+ },
+ {
+  "raum": "laden",
+  "holz": "nussbaum",
+  "front": "weiss",
+  "datei": "laden_nussbaum_weiss.jpg",
+  "kb": 76
+ },
+ {
+  "raum": "laden",
+  "holz": "nussbaum",
+  "front": "anthrazit",
+  "datei": "laden_nussbaum_anthrazit.jpg",
+  "kb": 77
+ },
+ {
+  "raum": "laden",
+  "holz": "nussbaum",
+  "front": "betonoptik",
+  "datei": "laden_nussbaum_betonoptik.jpg",
+  "kb": 80
+ },
+ {
+  "raum": "laden",
+  "holz": "fichte-hell",
+  "front": "holz",
+  "datei": "laden_fichte-hell_holz.jpg",
+  "kb": 116
+ },
+ {
+  "raum": "laden",
+  "holz": "fichte-hell",
+  "front": "weiss",
+  "datei": "laden_fichte-hell_weiss.jpg",
+  "kb": 110
+ },
+ {
+  "raum": "laden",
+  "holz": "fichte-hell",
+  "front": "anthrazit",
+  "datei": "laden_fichte-hell_anthrazit.jpg",
+  "kb": 117
+ },
+ {
+  "raum": "laden",
+  "holz": "fichte-hell",
+  "front": "betonoptik",
+  "datei": "laden_fichte-hell_betonoptik.jpg",
+  "kb": 116
+ }
+]

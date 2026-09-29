@@ -165,3 +165,49 @@ Was den Unterschied zur Planansicht ausmacht, in dieser Reihenfolge:
 Nicht enthalten: Glas, Metall und Lichtleisten als Schalter. Mit ihnen
 wären es 512 statt 64 Bilder und über eine Stunde Rechenzeit.
 Lichtleisten sind in allen Bildern an.
+
+## 360-Grad-Rundgang
+
+Dritter Ansatz, der den Widerspruch zwischen fotorealistisch und beweglich
+auflöst: pro Kombination ein Kugelpanorama, in dem man sich umschaut.
+
+| Datei | Zweck |
+|---|---|
+| `src/scripts/vorab-render.ts` | `PanoramaRenderer`: Würfelkamera in sechs Richtungen, Shader rechnet in die Kugelprojektion um. |
+| `serie-rundum-rendern.mjs` | Fährt die Kombinationen durch und schreibt `rundum/`. |
+| `src/scripts/rundgang.ts` | Der Betrachter für die Seite. |
+| `raumplaner-rundgang.html` | Die Seite. |
+| `rundum/` | 64 Panoramen, 2048 × 1024, 7,7 MB. |
+
+Neu rendern:
+
+```bash
+npx esbuild src/scripts/vorab-render.ts --bundle --format=iife --outfile=out/vorab.js --minify
+npx http-server out -p 8324 --silent &
+node serie-rundum-rendern.mjs          # rund 5 Minuten für 64 Panoramen
+```
+
+**Die eine Falle:** Render-Shader und Betrachter müssen dieselbe
+Achsenkonvention benutzen. Beide folgen der Formel aus three.js'
+`equirectUv()`:
+
+```
+u = atan(dir.z, dir.x) / 2PI + 0.5
+v = asin(dir.y) / PI + 0.5
+```
+
+Der Shader in `vorab-render.ts` ist genau deren Umkehrung, der Betrachter
+legt das Bild über `scene.background` mit `EquirectangularReflectionMapping`
+an, damit three.js selbst zurückrechnet. Baut man den Betrachter stattdessen
+aus einer eigenen Kugel, stimmt die Zuordnung nicht mehr: das Panorama
+erscheint gespiegelt und um eine Vierteldrehung versetzt.
+
+**Standpunkte** stehen in `raumplaner-szene.ts` unter `blick === 'rundum'`.
+Abstand ist wichtiger als Raummitte: einen Meter vor der Küchenzeile füllen
+die Fronten das halbe Panorama. Der Blickmodus `'rundum'` baut zusätzlich
+die vierte Wand – ohne sie steht man beim Umdrehen vor einem Loch.
+
+Was der Rundgang **nicht** kann: herumgehen. Man schaut sich von einem
+Standpunkt aus um. Für echtes Bewegen bräuchte es mehrere Standpunkte je
+Raum, zwischen denen man springt – das vervielfacht die Renderzeit
+entsprechend.
