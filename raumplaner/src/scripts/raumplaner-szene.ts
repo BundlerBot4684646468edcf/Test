@@ -33,8 +33,10 @@ export interface Konfiguration {
    * 'plan' – Puppenhausansicht von außen, zum Planen.
    * 'innen' – Augenhöhe im Raum, wie eine Innenaufnahme. Dafür braucht es
    * die rechte Wand und eine Decke, sonst schaut man ins Leere.
+   * 'rundum' – wie 'innen', aber zusätzlich mit der vierten Wand: beim
+   * 360-Grad-Blick dreht man sich auch dorthin um.
    */
-  blick?: 'plan' | 'innen';
+  blick?: 'plan' | 'innen' | 'rundum';
 }
 
 export const STANDARD: Konfiguration = {
@@ -685,6 +687,9 @@ export class Raumplaner {
     const wand = this.merke(
       new THREE.MeshStandardMaterial({ color: WAND, roughness: 0.95, envMapIntensity: 0.3, side: THREE.DoubleSide }),
     );
+    const sockelVorn = this.merke(
+      new THREE.MeshStandardMaterial({ color: 0xf2efe8, roughness: 0.85, envMapIntensity: 0.3 }),
+    );
 
     // Das Wohnzimmer bekommt statt der halben Rückwand eine Verglasung.
     const verglast = this.konfig.raum === 'wohnzimmer';
@@ -718,12 +723,23 @@ export class Raumplaner {
     const rahmen = this.merke(new THREE.MeshStandardMaterial({ color: 0xf6f4ef, roughness: 0.7 }));
     this.inhalt.add(quader(0.05, 1.33, fb + 0.08, rahmen, 0.0, 1.45 - 1.25 / 2 - 0.04, T * 0.78 - fb / 2 - 0.04));
 
-    if (this.konfig.blick === 'innen') {
+    const geschlossen = this.konfig.blick === 'innen' || this.konfig.blick === 'rundum';
+    if (geschlossen) {
       const rechts = new THREE.Mesh(new THREE.PlaneGeometry(T, H), wand);
       rechts.rotation.y = -Math.PI / 2;
       rechts.position.set(B, H / 2, T / 2);
       rechts.receiveShadow = true;
       this.inhalt.add(rechts);
+
+      if (this.konfig.blick === 'rundum') {
+        // Vierte Wand: beim Rundumblick steht man sonst vor einem Loch.
+        const vorne = new THREE.Mesh(new THREE.PlaneGeometry(B, H), wand);
+        vorne.rotation.y = Math.PI;
+        vorne.position.set(B / 2, H / 2, T);
+        vorne.receiveShadow = true;
+        this.inhalt.add(vorne);
+        this.inhalt.add(quader(B, 0.08, 0.02, sockelVorn, 0, 0, T - 0.02));
+      }
 
       if (this.konfig.raum === 'wohnzimmer') {
         this.holzdecke(B, T, H);
@@ -739,9 +755,7 @@ export class Raumplaner {
     }
 
     // Sockelleiste an beiden Wänden.
-    const sockel = this.merke(
-      new THREE.MeshStandardMaterial({ color: 0xf2efe8, roughness: 0.85, envMapIntensity: 0.3 }),
-    );
+    const sockel = sockelVorn;
     this.inhalt.add(quader(B, 0.08, 0.02, sockel, 0, 0, 0));
     this.inhalt.add(quader(0.02, 0.08, T, sockel, 0, 0, 0));
   }
@@ -839,7 +853,7 @@ export class Raumplaner {
       const streifen = new THREE.Mesh(new THREE.BoxGeometry(laenge, 0.012, 0.045), leuchte);
       streifen.position.set(x + laenge / 2, H - 0.008, z);
       this.inhalt.add(streifen);
-      const l = new THREE.PointLight(0xffdca8, 1.1, 5.5, 2);
+      const l = new THREE.PointLight(0xffdca8, 0.7, 5.0, 2);
       l.position.set(x + laenge / 2, H - 0.25, z);
       this.inhalt.add(l);
     }
@@ -1327,7 +1341,7 @@ const rH = 2.3;
   }
 
   private kameraSetzen(B: number, T: number): void {
-    if (this.konfig.blick === 'innen') {
+    if (this.konfig.blick === 'innen' || this.konfig.blick === 'rundum') {
       // Je Raum ein eigener Standpunkt: eine gemeinsame Ecke funktioniert
       // nicht, weil die Möbel unterschiedlich stehen – im Wohnzimmer säße
       // die Kamera sonst mitten im Sofa.
@@ -1337,6 +1351,25 @@ const rH = 2.3;
         hotelzimmer: { pos: [0.88, 1.60, 0.93], ziel: [0.30, 1.00, 0.12], fov: 50 },
         laden:       { pos: [0.90, 1.66, 0.95], ziel: [0.34, 1.02, 0.12], fov: 52 },
       };
+      if (this.konfig.blick === 'rundum') {
+        // Standpunkt je Raum in eine freie Fläche gelegt – in der Raummitte
+        // stünde man im Wohnzimmer mitten im Sofa und in der Küche in der
+        // Insel. Die Blickrichtung setzt der Betrachter selbst.
+        const stand: Record<RaumTyp, [number, number]> = {
+          kueche: [0.5, 0.26], // zwischen Zeile und Insel
+          wohnzimmer: [0.62, 0.3], // zwischen Kamin und Sitzgruppe
+          hotelzimmer: [0.5, 0.72], // am Fußende des Betts
+          laden: [0.55, 0.85], // vor der Theke, wo der Kunde steht
+        };
+        const [fx, fz] = stand[this.konfig.raum];
+        this.kamera.fov = 70;
+        this.kamera.near = 0.05;
+        this.kamera.updateProjectionMatrix();
+        this.kamera.position.set(B * fx, 1.62, T * fz);
+        this.steuerung.target.set(B * fx, 1.5, T * (fz - 0.4));
+        this.steuerung.update();
+        return;
+      }
       const w = blicke[this.konfig.raum];
       this.kamera.fov = w.fov;
       this.kamera.near = 0.05;
@@ -1383,7 +1416,7 @@ const rH = 2.3;
     this.renderer.setSize(b, h, false);
     this.kamera.aspect = b / h;
     this.kamera.updateProjectionMatrix();
-    if (this.laeuft && this.konfig.blick !== 'innen') {
+    if (this.laeuft && this.konfig.blick === 'plan') {
       const d = this.noetigerAbstand(this.konfig.breite, this.konfig.tiefe);
       this.steuerung.minDistance = d * 0.5;
       this.steuerung.maxDistance = d * 1.6;

@@ -91,12 +91,115 @@ export class VorabRenderer {
   }
 }
 
+/**
+ * 360-Grad-Panorama. Die Würfelkamera nimmt sechs Richtungen auf, ein
+ * Shader rechnet den Würfel in die Kugelprojektion um, die jeder
+ * Panorama-Betrachter erwartet (equirectangular, Seitenverhältnis 2:1).
+ */
+export class PanoramaRenderer {
+  private planer: Raumplaner;
+  private breite: number;
+  private hoehe: number;
+  private wuerfelZiel: THREE.WebGLCubeRenderTarget;
+  private wuerfelKamera: THREE.CubeCamera;
+  private flachZiel: THREE.WebGLRenderTarget;
+  private flachSzene = new THREE.Scene();
+  private flachKamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+  private material: THREE.ShaderMaterial;
+  private ausgabe: HTMLCanvasElement;
+
+  constructor(huelle: HTMLElement, kante = 1024) {
+    this.breite = kante * 2;
+    this.hoehe = kante;
+    this.planer = new Raumplaner(huelle);
+    this.planer.hintergrund(0xede7dc);
+
+    const { renderer } = this.planer.intern();
+    renderer.setPixelRatio(1);
+    renderer.setSize(kante, kante, false);
+
+    this.wuerfelZiel = new THREE.WebGLCubeRenderTarget(kante, {
+      generateMipmaps: false,
+      minFilter: THREE.LinearFilter,
+      magFilter: THREE.LinearFilter,
+      colorSpace: THREE.SRGBColorSpace,
+    });
+    this.wuerfelKamera = new THREE.CubeCamera(0.05, 100, this.wuerfelZiel);
+
+    this.flachZiel = new THREE.WebGLRenderTarget(this.breite, this.hoehe, {
+      colorSpace: THREE.SRGBColorSpace,
+    });
+
+    this.material = new THREE.ShaderMaterial({
+      uniforms: { wuerfel: { value: this.wuerfelZiel.texture } },
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = vec4(position.xy, 0.0, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform samplerCube wuerfel;
+        varying vec2 vUv;
+        #define PI 3.141592653589793
+        void main() {
+          // Bildkoordinate -> Längen- und Breitengrad -> Richtungsvektor
+          float laenge = (vUv.x - 0.5) * 2.0 * PI;
+          float breite = (vUv.y - 0.5) * PI;
+          vec3 richtung = vec3(
+            cos(breite) * sin(laenge),
+            sin(breite),
+            cos(breite) * cos(laenge)
+          );
+          gl_FragColor = textureCube(wuerfel, richtung);
+        }
+      `,
+    });
+    this.flachSzene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), this.material));
+
+    this.ausgabe = document.createElement('canvas');
+    this.ausgabe.width = this.breite;
+    this.ausgabe.height = this.hoehe;
+  }
+
+  /** Eine Konfiguration als Kugelpanorama, JPEG als Data-URL. */
+  bild(konfig: Partial<Konfiguration>, guete = 0.84): string {
+    this.planer.aktualisieren({ masse: false, deko: true, blick: 'rundum', ...konfig });
+    const { szene, kamera, renderer } = this.planer.intern();
+
+    // Die Würfelkamera steht dort, wo die Szene den Standpunkt gesetzt hat.
+    this.wuerfelKamera.position.copy(kamera.position);
+    this.wuerfelKamera.update(renderer, szene);
+
+    renderer.setRenderTarget(this.flachZiel);
+    renderer.render(this.flachSzene, this.flachKamera);
+
+    const pixel = new Uint8Array(this.breite * this.hoehe * 4);
+    renderer.readRenderTargetPixels(this.flachZiel, 0, 0, this.breite, this.hoehe, pixel);
+    renderer.setRenderTarget(null);
+
+    // readRenderTargetPixels liefert die unterste Zeile zuerst – umdrehen.
+    const g = this.ausgabe.getContext('2d')!;
+    const bild = g.createImageData(this.breite, this.hoehe);
+    const zeile = this.breite * 4;
+    for (let y = 0; y < this.hoehe; y++) {
+      const von = (this.hoehe - 1 - y) * zeile;
+      bild.data.set(pixel.subarray(von, von + zeile), y * zeile);
+    }
+    g.putImageData(bild, 0, 0);
+    return this.ausgabe.toDataURL('image/jpeg', guete);
+  }
+}
+
 /** Vom Render-Skript aus aufrufbar machen. */
 declare global {
   interface Window {
     VorabRenderer: typeof VorabRenderer;
+    PanoramaRenderer: typeof PanoramaRenderer;
     holzFotos: typeof holzFotos;
   }
 }
 window.VorabRenderer = VorabRenderer;
+window.PanoramaRenderer = PanoramaRenderer;
 window.holzFotos = holzFotos;
