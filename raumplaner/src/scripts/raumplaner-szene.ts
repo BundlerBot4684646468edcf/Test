@@ -10,6 +10,7 @@
  */
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 
 export type RaumTyp = 'hotelzimmer' | 'kueche' | 'wohnzimmer' | 'laden';
 export type HolzArt = 'eiche-hell' | 'altholz' | 'nussbaum' | 'fichte-hell';
@@ -52,7 +53,7 @@ const FRONT_TON: Record<FrontArt, number> = {
   betonoptik: 0x9d9a93,
 };
 
-const WAND = 0xe9e3d9;
+const WAND = 0xefe9df;
 const ARBEITSPLATTE = 0x1c1c1c;
 
 /* ---------------------------------------------------------------- Texturen */
@@ -64,62 +65,174 @@ function leinwand(w: number, h: number): [HTMLCanvasElement, CanvasRenderingCont
   return [c, c.getContext('2d')!];
 }
 
-/** Holzmaserung: Grundton, Dielenfugen, ein paar Faserstreifen. */
-function holzTextur(art: HolzArt, dielen = 6): THREE.CanvasTexture {
+/**
+ * Holzmaserung. Jede Diele bekommt einen eigenen Helligkeitsversatz, eine
+ * eigene Maserungsphase und eine Fase an der Fuge – ohne diesen Kontrast
+ * zwischen den Dielen sieht der Boden aus wie bedrucktes Plastik.
+ */
+function holzLeinwand(art: HolzArt, dielen = 6): HTMLCanvasElement {
   const { grund, maser } = HOLZ_TON[art];
-  const [c, g] = leinwand(512, 512);
-  g.fillStyle = '#' + grund.toString(16).padStart(6, '0');
-  g.fillRect(0, 0, 512, 512);
+  const [c, g] = leinwand(1024, 1024);
+  const N = 1024;
+  const hoehe = N / dielen;
 
-  const maserHex = '#' + maser.toString(16).padStart(6, '0');
-  // Faserstreifen längs, leicht wellig
-  g.strokeStyle = maserHex;
-  g.lineWidth = 1;
-  for (let i = 0; i < 160; i++) {
-    const y = Math.random() * 512;
-    g.globalAlpha = 0.04 + Math.random() * 0.1;
-    g.beginPath();
-    g.moveTo(0, y);
-    for (let x = 0; x <= 512; x += 32) {
-      g.lineTo(x, y + Math.sin((x + i * 40) / 90) * 3.5);
+  const kanal = (farbe: number, i: number) => (farbe >> (16 - i * 8)) & 0xff;
+  const mische = (farbe: number, f: number) =>
+    `rgb(${Math.min(255, Math.max(0, Math.round(kanal(farbe, 0) * f)))},` +
+    `${Math.min(255, Math.max(0, Math.round(kanal(farbe, 1) * f)))},` +
+    `${Math.min(255, Math.max(0, Math.round(kanal(farbe, 2) * f)))})`;
+
+  const rustikal = art === 'altholz' || art === 'fichte-hell';
+
+  for (let d = 0; d < dielen; d++) {
+    const y0 = d * hoehe;
+    // Helligkeit von Diele zu Diele – das Wichtigste am ganzen Bild.
+    const versatz = 0.8 + Math.random() * 0.4;
+    g.fillStyle = mische(grund, versatz);
+    g.fillRect(0, y0, N, hoehe);
+
+    // Längsmaserung, an der Diele ausgerichtet
+    const phase = Math.random() * 100;
+    const dichte = rustikal ? 55 : 38;
+    for (let i = 0; i < dichte; i++) {
+      const y = y0 + Math.random() * hoehe;
+      const staerke = 0.06 + Math.random() * 0.16;
+      g.strokeStyle = mische(maser, 0.75 + Math.random() * 0.5);
+      g.globalAlpha = staerke;
+      g.lineWidth = 1.2 + Math.random() * 4.5;
+      g.beginPath();
+      g.moveTo(0, y);
+      for (let x = 0; x <= N; x += 24) {
+        g.lineTo(x, y + Math.sin((x + phase * 60) / 160) * (hoehe * 0.06));
+      }
+      g.stroke();
     }
-    g.stroke();
-  }
-  // Astlöcher nur bei den rustikalen Sorten
-  if (art === 'altholz' || art === 'fichte-hell') {
-    for (let i = 0; i < 5; i++) {
-      const x = Math.random() * 512;
-      const y = Math.random() * 512;
-      g.globalAlpha = 0.25;
-      for (let r = 10; r > 0; r -= 2) {
+
+    // Kathedralfigur: ein paar lange, spitz zulaufende Bögen
+    g.globalAlpha = rustikal ? 0.16 : 0.09;
+    for (let i = 0; i < 3; i++) {
+      const mx = Math.random() * N;
+      const my = y0 + hoehe * (0.3 + Math.random() * 0.4);
+      g.strokeStyle = mische(maser, 0.85);
+      for (let r = 0; r < 7; r++) {
+        g.lineWidth = 1.1;
         g.beginPath();
-        g.ellipse(x, y, r * 1.6, r, 0, 0, Math.PI * 2);
+        g.ellipse(mx, my, 80 + r * 26, hoehe * 0.1 + r * 3, 0, 0, Math.PI * 2);
         g.stroke();
       }
     }
-  }
-  // Dielenfugen quer
-  g.globalAlpha = 0.5;
-  g.strokeStyle = 'rgba(0,0,0,0.35)';
-  g.lineWidth = 2;
-  const schritt = 512 / dielen;
-  for (let i = 1; i < dielen; i++) {
-    g.beginPath();
-    g.moveTo(0, i * schritt);
-    g.lineTo(512, i * schritt);
-    g.stroke();
-  }
-  g.globalAlpha = 1;
 
+    if (rustikal) {
+      for (let i = 0; i < 2; i++) {
+        const x = Math.random() * N;
+        const y = y0 + hoehe * (0.25 + Math.random() * 0.5);
+        g.globalAlpha = 0.5;
+        g.strokeStyle = mische(maser, 0.55);
+        for (let r = 12; r > 0; r -= 2.5) {
+          g.beginPath();
+          g.ellipse(x, y, r * 1.7, r * 0.8, 0, 0, Math.PI * 2);
+          g.stroke();
+        }
+      }
+    }
+
+    // Fuge: dunkler Schatten oben, heller Grat darunter
+    g.globalAlpha = 1;
+    g.fillStyle = 'rgba(0,0,0,0.45)';
+    g.fillRect(0, y0, N, 2.5);
+    g.fillStyle = 'rgba(255,255,255,0.14)';
+    g.fillRect(0, y0 + 2.5, N, 1.5);
+  }
+
+  g.globalAlpha = 1;
+  return c;
+}
+
+/** Aus einer Vorlage eine Textur bauen; Datenkarten dürfen nicht sRGB sein. */
+function ausLeinwand(c: HTMLCanvasElement, daten = false): THREE.CanvasTexture {
   const t = new THREE.CanvasTexture(c);
-  t.colorSpace = THREE.SRGBColorSpace;
+  if (!daten) t.colorSpace = THREE.SRGBColorSpace;
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
   t.anisotropy = 8;
   return t;
 }
 
+/**
+ * Normalmap aus der Helligkeit einer Vorlage (Sobel).
+ * Ohne sie sieht Holz aus wie bedrucktes Papier – mit ihr bekommt es Poren.
+ */
+function normalAusHoehe(quelle: HTMLCanvasElement, staerke = 3.5): HTMLCanvasElement {
+  const b = quelle.width;
+  const h = quelle.height;
+  const q = quelle.getContext('2d')!.getImageData(0, 0, b, h).data;
+  const [ziel, zg] = leinwand(b, h);
+  const aus = zg.createImageData(b, h);
+
+  const hell = (x: number, y: number) => {
+    const i = (((y + h) % h) * b + ((x + b) % b)) * 4;
+    return (q[i] * 0.299 + q[i + 1] * 0.587 + q[i + 2] * 0.114) / 255;
+  };
+
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < b; x++) {
+      const dx =
+        hell(x - 1, y - 1) + 2 * hell(x - 1, y) + hell(x - 1, y + 1) -
+        (hell(x + 1, y - 1) + 2 * hell(x + 1, y) + hell(x + 1, y + 1));
+      const dy =
+        hell(x - 1, y - 1) + 2 * hell(x, y - 1) + hell(x + 1, y - 1) -
+        (hell(x - 1, y + 1) + 2 * hell(x, y + 1) + hell(x + 1, y + 1));
+      // Normieren, damit der Vektor wirklich Länge 1 hat.
+      const nx = dx * staerke;
+      const ny = dy * staerke;
+      const nz = 1;
+      const l = Math.hypot(nx, ny, nz);
+      const i = (y * b + x) * 4;
+      aus.data[i] = ((nx / l) * 0.5 + 0.5) * 255;
+      aus.data[i + 1] = ((ny / l) * 0.5 + 0.5) * 255;
+      aus.data[i + 2] = ((nz / l) * 0.5 + 0.5) * 255;
+      aus.data[i + 3] = 255;
+    }
+  }
+  zg.putImageData(aus, 0, 0);
+  return ziel;
+}
+
+/** Rauheitsmap: dunkle Maserung ist offenporiger, also matter. */
+function rauheitAusHoehe(quelle: HTMLCanvasElement, min = 0.45, max = 0.9): HTMLCanvasElement {
+  const b = quelle.width;
+  const h = quelle.height;
+  const q = quelle.getContext('2d')!.getImageData(0, 0, b, h);
+  const d = q.data;
+  for (let i = 0; i < d.length; i += 4) {
+    const hell = (d[i] * 0.299 + d[i + 1] * 0.587 + d[i + 2] * 0.114) / 255;
+    const r = (max - (max - min) * hell) * 255;
+    d[i] = d[i + 1] = d[i + 2] = r;
+    d[i + 3] = 255;
+  }
+  const [ziel, zg] = leinwand(b, h);
+  zg.putImageData(q, 0, 0);
+  return ziel;
+}
+
+/**
+ * Die Vorlagen sind teuer (Sobel über 262k Pixel) und hängen nur an der
+ * Holzart – einmal zeichnen reicht, auch wenn am Regler gezogen wird.
+ */
+const vorlagen = new Map<string, { farbe: HTMLCanvasElement; normal: HTMLCanvasElement; rauheit: HTMLCanvasElement }>();
+
+function holzVorlage(art: HolzArt, dielen: number) {
+  const schluessel = `${art}|${dielen}`;
+  let v = vorlagen.get(schluessel);
+  if (!v) {
+    const farbe = holzLeinwand(art, dielen);
+    v = { farbe, normal: normalAusHoehe(farbe), rauheit: rauheitAusHoehe(farbe) };
+    vorlagen.set(schluessel, v);
+  }
+  return v;
+}
+
 /** Betonoptik: feine Sprenkel und ein paar Schlieren. */
-function betonTextur(): THREE.CanvasTexture {
+function betonLeinwand(): HTMLCanvasElement {
   const [c, g] = leinwand(256, 256);
   g.fillStyle = '#9d9a93';
   g.fillRect(0, 0, 256, 256);
@@ -137,10 +250,7 @@ function betonTextur(): THREE.CanvasTexture {
     g.lineTo(Math.random() * 256, Math.random() * 256);
     g.stroke();
   }
-  const t = new THREE.CanvasTexture(c);
-  t.colorSpace = THREE.SRGBColorSpace;
-  t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  return t;
+  return c;
 }
 
 /** Textbeschriftung für die Maßlinien als Sprite. */
@@ -195,6 +305,7 @@ export class Raumplaner {
   private materialien: THREE.Material[] = [];
   private geometrien: THREE.BufferGeometry[] = [];
 
+  private umgebung?: THREE.Texture;
   private konfig: Konfiguration = { ...STANDARD };
   private laeuft = false;
   private beobachter?: ResizeObserver;
@@ -212,7 +323,7 @@ export class Raumplaner {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.05;
+    this.renderer.toneMappingExposure = 1.0;
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     huelle.appendChild(this.renderer.domElement);
     this.renderer.domElement.style.touchAction = 'none';
@@ -221,6 +332,13 @@ export class Raumplaner {
     this.renderer.domElement.style.height = '100%';
 
     this.szene.background = null;
+    // Prozedurale Umgebung für Spiegelungen: kein Download, aber Glas,
+    // Metall und die Arbeitsplatte bekommen etwas zum Spiegeln.
+    const pmrem = new THREE.PMREMGenerator(this.renderer);
+    this.umgebung = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    this.szene.environment = this.umgebung;
+    this.szene.environmentIntensity = 0.35;
+    pmrem.dispose();
 
     this.kamera = new THREE.PerspectiveCamera(34, 1, 0.1, 100);
     this.steuerung = new OrbitControls(this.kamera, this.renderer.domElement);
@@ -246,9 +364,10 @@ export class Raumplaner {
   /* --------------------------------------------------------- Beleuchtung */
 
   private licht(): void {
-    this.szene.add(new THREE.HemisphereLight(0xffffff, 0xd8cfc0, 1.6));
+    // Die Umgebung liefert schon Grundhelligkeit, deshalb weniger Himmelslicht.
+    this.szene.add(new THREE.HemisphereLight(0xffffff, 0xd8cfc0, 0.8));
 
-    const sonne = new THREE.DirectionalLight(0xfff4e2, 2.4);
+    const sonne = new THREE.DirectionalLight(0xfff4e2, 2.2);
     sonne.position.set(-4, 6.5, 6);
     sonne.castShadow = true;
     sonne.shadow.mapSize.set(2048, 2048);
@@ -265,7 +384,7 @@ export class Raumplaner {
     this.szene.add(sonne.target);
 
     // Aufheller von vorne, damit die Fronten nicht absaufen.
-    const fuell = new THREE.DirectionalLight(0xffffff, 0.5);
+    const fuell = new THREE.DirectionalLight(0xffffff, 0.3);
     fuell.position.set(6, 3, 8);
     this.szene.add(fuell);
   }
@@ -283,9 +402,22 @@ export class Raumplaner {
   }
 
   private holzMaterial(wiederholung = 1, dielen = 6): THREE.MeshStandardMaterial {
-    const t = this.merkeTextur(holzTextur(this.konfig.holz, dielen));
-    t.repeat.set(wiederholung, wiederholung);
-    return this.merke(new THREE.MeshStandardMaterial({ map: t, roughness: 0.72, metalness: 0.02 }));
+    const v = holzVorlage(this.konfig.holz, dielen);
+    const map = this.merkeTextur(ausLeinwand(v.farbe));
+    const normalMap = this.merkeTextur(ausLeinwand(v.normal, true));
+    const roughnessMap = this.merkeTextur(ausLeinwand(v.rauheit, true));
+    for (const t of [map, normalMap, roughnessMap]) t.repeat.set(wiederholung, wiederholung);
+    return this.merke(
+      new THREE.MeshStandardMaterial({
+        map,
+        normalMap,
+        normalScale: new THREE.Vector2(0.55, 0.55),
+        roughnessMap,
+        roughness: 1,
+        metalness: 0,
+        envMapIntensity: 0.25,
+      }),
+    );
   }
 
   /** Material der Möbelfronten – Holz erbt die gewählte Sorte. */
@@ -293,42 +425,75 @@ export class Raumplaner {
     const f = this.konfig.front;
     if (f === 'holz') return this.holzMaterial(1, 3);
     if (f === 'betonoptik') {
-      const t = this.merkeTextur(betonTextur());
-      return this.merke(new THREE.MeshStandardMaterial({ map: t, roughness: 0.88, metalness: 0.0 }));
+      const c = betonLeinwand();
+      const map = this.merkeTextur(ausLeinwand(c));
+      const normalMap = this.merkeTextur(ausLeinwand(normalAusHoehe(c, 1.1), true));
+      return this.merke(
+        new THREE.MeshStandardMaterial({
+          map,
+          normalMap,
+          normalScale: new THREE.Vector2(0.3, 0.3),
+          roughness: 0.85,
+          metalness: 0,
+          envMapIntensity: 0.25,
+        }),
+      );
     }
     return this.merke(
-      new THREE.MeshStandardMaterial({
+      new THREE.MeshPhysicalMaterial({
         color: FRONT_TON[f],
-        roughness: f === 'weiss' ? 0.58 : 0.5,
-        metalness: 0.03,
+        roughness: f === 'weiss' ? 0.45 : 0.38,
+        metalness: 0,
+        clearcoat: 0.35,
+        clearcoatRoughness: 0.35,
+        envMapIntensity: 0.8,
       }),
     );
   }
 
   private korpusMaterial(): THREE.MeshStandardMaterial {
-    return this.merke(new THREE.MeshStandardMaterial({ color: 0xf4f2ec, roughness: 0.8 }));
+    return this.merke(
+      new THREE.MeshStandardMaterial({ color: 0xf4f2ec, roughness: 0.8, envMapIntensity: 0.3 }),
+    );
   }
 
-  private plattenMaterial(): THREE.MeshStandardMaterial {
+  private plattenMaterial(): THREE.MeshPhysicalMaterial {
     return this.merke(
-      new THREE.MeshStandardMaterial({ color: ARBEITSPLATTE, roughness: 0.35, metalness: 0.12 }),
+      new THREE.MeshPhysicalMaterial({
+        color: ARBEITSPLATTE,
+        roughness: 0.22,
+        metalness: 0.1,
+        clearcoat: 0.6,
+        clearcoatRoughness: 0.2,
+        envMapIntensity: 2.6,
+      }),
     );
   }
 
   private metallMaterial(): THREE.MeshStandardMaterial {
     return this.merke(
-      new THREE.MeshStandardMaterial({ color: 0xb9bcc0, roughness: 0.28, metalness: 0.92 }),
+      new THREE.MeshStandardMaterial({
+        color: 0xc6c9cd,
+        roughness: 0.22,
+        metalness: 1,
+        envMapIntensity: 3.2,
+      }),
     );
   }
 
-  private glasMaterial(): THREE.MeshStandardMaterial {
+  private glasMaterial(): THREE.MeshPhysicalMaterial {
+    // Kein transmission: das kostet auf dem Handy einen eigenen Renderdurchgang.
+    // Spiegelung aus der Umgebung reicht optisch völlig.
     return this.merke(
-      new THREE.MeshStandardMaterial({
-        color: 0xcfe0e3,
-        roughness: 0.06,
-        metalness: 0.1,
+      new THREE.MeshPhysicalMaterial({
+        color: 0xdbe7ea,
+        roughness: 0.03,
+        metalness: 0,
         transparent: true,
-        opacity: 0.32,
+        opacity: 0.28,
+        clearcoat: 1,
+        clearcoatRoughness: 0.02,
+        envMapIntensity: 4,
       }),
     );
   }
@@ -388,7 +553,9 @@ export class Raumplaner {
     b.receiveShadow = true;
     this.inhalt.add(b);
 
-    const wand = this.merke(new THREE.MeshStandardMaterial({ color: WAND, roughness: 0.95, side: THREE.DoubleSide }));
+    const wand = this.merke(
+      new THREE.MeshStandardMaterial({ color: WAND, roughness: 0.95, envMapIntensity: 0.3, side: THREE.DoubleSide }),
+    );
 
     const hinten = new THREE.Mesh(new THREE.PlaneGeometry(B, H), wand);
     hinten.position.set(B / 2, H / 2, 0);
@@ -415,7 +582,9 @@ export class Raumplaner {
     this.inhalt.add(quader(0.05, 1.33, fb + 0.08, rahmen, 0.0, 1.45 - 1.25 / 2 - 0.04, T * 0.78 - fb / 2 - 0.04));
 
     // Sockelleiste an beiden Wänden.
-    const sockel = this.merke(new THREE.MeshStandardMaterial({ color: 0xf2efe8, roughness: 0.85 }));
+    const sockel = this.merke(
+      new THREE.MeshStandardMaterial({ color: 0xf2efe8, roughness: 0.85, envMapIntensity: 0.3 }),
+    );
     this.inhalt.add(quader(B, 0.08, 0.02, sockel, 0, 0, 0));
     this.inhalt.add(quader(0.02, 0.08, T, sockel, 0, 0, 0));
   }
@@ -776,6 +945,7 @@ const rH = 2.3;
     this.beobachter?.disconnect();
     this.leeren();
     this.steuerung.dispose();
+    this.umgebung?.dispose();
     this.renderer.dispose();
     this.renderer.domElement.remove();
   }
