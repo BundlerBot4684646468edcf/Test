@@ -130,3 +130,38 @@ läuft weiter. Geprüft mit fehlender Datei.
 
 Bezugsquellen mit sauberer Lizenz für gewerbliche Nutzung: ambientCG und
 Poly Haven, beide CC0.
+
+## Fotorealistische Fassung (vorab gerendert)
+
+Zweiter Ansatz: statt live zu rechnen werden alle Kombinationen einmal
+vorab gerendert, die Seite schaltet nur noch Bilder um. Dafür fallen die
+Maß-Regler weg – ein fertiges Bild hat feste Geometrie.
+
+| Datei | Zweck |
+|---|---|
+| `src/scripts/vorab-render.ts` | Render-Aufbau mit Supersampling, GTAO und Tiefenunschärfe. Läuft nur offline, nicht im Browser des Besuchers. |
+| `serie-rendern.mjs` | Fährt die Kombinationen durch und schreibt `bilder/`. |
+| `raumplaner-bilder.html` | Die Seite, die die Bilder umschaltet. |
+| `bilder/` | 64 Ansichten, 4,8 MB, plus `index.json`. |
+
+Neu rendern:
+
+```bash
+npx esbuild src/scripts/vorab-render.ts --bundle --format=iife --outfile=out/vorab.js --minify
+npx http-server out -p 8324 --silent &
+node serie-rendern.mjs          # rund 6 Minuten für 64 Bilder
+```
+
+Was den Unterschied zur Planansicht ausmacht, in dieser Reihenfolge:
+
+1. **Kamera auf Augenhöhe** (`blick: 'innen'`) statt Puppenhaus. Das ist
+   der mit Abstand größte Effekt – dafür braucht es rechte Wand und Decke.
+2. **Korpus im Ton der Fronten.** Ein weißer Korpus zeichnet helle Linien
+   um jede Tür, das sieht sofort nach Modell aus.
+3. **Deko** (`deko: true`): Brett, Schale, Pflanze. Ein leerer Raum wirkt
+   immer unfertig.
+4. GTAO und Tiefenunschärfe.
+
+Nicht enthalten: Glas, Metall und Lichtleisten als Schalter. Mit ihnen
+wären es 512 statt 64 Bilder und über eine Stunde Rechenzeit.
+Lichtleisten sind in allen Bildern an.

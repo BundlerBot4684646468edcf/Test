@@ -25,6 +25,16 @@ export interface Konfiguration {
   glas: boolean;
   metall: boolean;
   licht: boolean;
+  /** Maßlinien zeigen – im vorab gerenderten Standbild stören sie. */
+  masse?: boolean;
+  /** Deko: Brett, Schale, Pflanze. Kostet Geometrie, bringt viel Bild. */
+  deko?: boolean;
+  /**
+   * 'plan' – Puppenhausansicht von außen, zum Planen.
+   * 'innen' – Augenhöhe im Raum, wie eine Innenaufnahme. Dafür braucht es
+   * die rechte Wand und eine Decke, sonst schaut man ins Leere.
+   */
+  blick?: 'plan' | 'innen';
 }
 
 export const STANDARD: Konfiguration = {
@@ -493,9 +503,24 @@ export class Raumplaner {
     );
   }
 
+  /**
+   * Korpus im Ton der Fronten. Ein weißer Korpus hinter dunklen Fronten
+   * zeichnet helle Linien um jede Tür – das sieht nach Modell aus, nicht
+   * nach Möbel.
+   */
   private korpusMaterial(): THREE.MeshStandardMaterial {
+    const nach: Record<FrontArt, number> = {
+      weiss: 0xf1efe9,
+      anthrazit: 0x2b2e30,
+      betonoptik: 0x8b8882,
+      holz: 0x6d5642,
+    };
     return this.merke(
-      new THREE.MeshStandardMaterial({ color: 0xf4f2ec, roughness: 0.8, envMapIntensity: 0.3 }),
+      new THREE.MeshStandardMaterial({
+        color: nach[this.konfig.front],
+        roughness: 0.8,
+        envMapIntensity: 0.3,
+      }),
     );
   }
 
@@ -558,7 +583,7 @@ export class Raumplaner {
     const { breite: B, tiefe: T } = this.konfig;
 
     this.raumhuelle(B, T);
-    this.masslinien(B, T);
+    if (this.konfig.masse !== false) this.masslinien(B, T);
 
     switch (this.konfig.raum) {
       case 'kueche':
@@ -622,6 +647,22 @@ export class Raumplaner {
 
     const rahmen = this.merke(new THREE.MeshStandardMaterial({ color: 0xf6f4ef, roughness: 0.7 }));
     this.inhalt.add(quader(0.05, 1.33, fb + 0.08, rahmen, 0.0, 1.45 - 1.25 / 2 - 0.04, T * 0.78 - fb / 2 - 0.04));
+
+    if (this.konfig.blick === 'innen') {
+      const rechts = new THREE.Mesh(new THREE.PlaneGeometry(T, H), wand);
+      rechts.rotation.y = -Math.PI / 2;
+      rechts.position.set(B, H / 2, T / 2);
+      rechts.receiveShadow = true;
+      this.inhalt.add(rechts);
+
+      const deckeMat = this.merke(
+        new THREE.MeshStandardMaterial({ color: 0xf7f4ee, roughness: 1, envMapIntensity: 0.2 }),
+      );
+      const decke = new THREE.Mesh(new THREE.PlaneGeometry(B, T), deckeMat);
+      decke.rotation.x = Math.PI / 2;
+      decke.position.set(B / 2, H, T / 2);
+      this.inhalt.add(decke);
+    }
 
     // Sockelleiste an beiden Wänden.
     const sockel = this.merke(
@@ -764,6 +805,61 @@ export class Raumplaner {
         this.inhalt.add(quader(fb, hoeheUS - 0.09, 0.02, front, ix + (iB * i) / iFelder + 0.006, 0.06, iz + iT));
       }
       this.griffe(ix, hoeheUS - 0.14, iz + iT + 0.035, iB, iFelder);
+      if (this.konfig.deko) this.kuechenDeko(ix, iB, hoeheUS + 0.05, iz, iT);
+    }
+  }
+
+  /**
+   * Deko auf der Insel. Ein leerer Raum sieht immer nach Modell aus –
+   * Brett, Schale und Pflanze machen daraus eine Küche.
+   */
+  private kuechenDeko(x: number, b: number, y: number, z: number, t: number): void {
+    const holz = this.holzMaterial(1, 2);
+    const keramik = this.merke(
+      new THREE.MeshPhysicalMaterial({ color: 0xf0ece3, roughness: 0.35, clearcoat: 0.5 }),
+    );
+
+    // Schneidebrett, leicht schräg
+    const brett = quader(0.42, 0.028, 0.3, holz, x + b * 0.08, y, z + t * 0.34);
+    brett.rotation.y = -0.16;
+    this.inhalt.add(brett);
+
+    // Schale
+    const schale = new THREE.Mesh(new THREE.SphereGeometry(0.13, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), keramik);
+    schale.rotation.x = Math.PI;
+    schale.position.set(x + b * 0.52, y + 0.065, z + t * 0.45);
+    schale.castShadow = true;
+    this.inhalt.add(schale);
+    const inhalt = this.merke(new THREE.MeshStandardMaterial({ color: 0x86a04a, roughness: 0.6 }));
+    for (let i = 0; i < 5; i++) {
+      const o = new THREE.Mesh(new THREE.SphereGeometry(0.037, 12, 8), inhalt);
+      const w = (i / 5) * Math.PI * 2;
+      o.position.set(x + b * 0.52 + Math.cos(w) * 0.055, y + 0.055, z + t * 0.45 + Math.sin(w) * 0.055);
+      o.castShadow = true;
+      this.inhalt.add(o);
+    }
+
+    // Topfpflanze
+    const topfMat = this.merke(new THREE.MeshStandardMaterial({ color: 0x8d6a52, roughness: 0.8 }));
+    const topf = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.058, 0.13, 18), topfMat);
+    topf.position.set(x + b * 0.82, y + 0.065, z + t * 0.4);
+    topf.castShadow = true;
+    this.inhalt.add(topf);
+    const blattMat = this.merke(
+      new THREE.MeshStandardMaterial({ color: 0x4e7a3c, roughness: 0.65, side: THREE.DoubleSide }),
+    );
+    for (let i = 0; i < 9; i++) {
+      const blatt = new THREE.Mesh(new THREE.SphereGeometry(0.075, 8, 5), blattMat);
+      blatt.scale.set(0.42, 1.5, 0.12);
+      const w = (i / 9) * Math.PI * 2;
+      blatt.position.set(
+        x + b * 0.82 + Math.cos(w) * 0.05,
+        y + 0.2 + Math.sin(i * 1.7) * 0.05,
+        z + t * 0.4 + Math.sin(w) * 0.05,
+      );
+      blatt.rotation.set(Math.cos(w) * 0.5, w, Math.sin(w) * 0.5);
+      blatt.castShadow = true;
+      this.inhalt.add(blatt);
     }
   }
 
@@ -937,6 +1033,20 @@ const rH = 2.3;
   }
 
   private kameraSetzen(B: number, T: number): void {
+    if (this.konfig.blick === 'innen') {
+      // Weitwinkel auf Augenhöhe, aus der vorderen linken Ecke in den Raum.
+      this.kamera.fov = 48;
+      this.kamera.near = 0.05;
+      this.kamera.updateProjectionMatrix();
+      this.kamera.position.set(B * 0.12, 1.58, T * 0.9);
+      this.steuerung.target.set(B * 0.68, 1.0, T * 0.14);
+      this.steuerung.minDistance = 0.3;
+      this.steuerung.maxDistance = Math.hypot(B, T) * 1.2;
+      this.steuerung.update();
+      return;
+    }
+    this.kamera.fov = 34;
+    this.kamera.updateProjectionMatrix();
     const ziel = new THREE.Vector3(B / 2, 1.05, T / 2);
     this.steuerung.target.copy(ziel);
     const d = this.noetigerAbstand(B, T);
@@ -970,7 +1080,7 @@ const rH = 2.3;
     this.renderer.setSize(b, h, false);
     this.kamera.aspect = b / h;
     this.kamera.updateProjectionMatrix();
-    if (this.laeuft) {
+    if (this.laeuft && this.konfig.blick !== 'innen') {
       const d = this.noetigerAbstand(this.konfig.breite, this.konfig.tiefe);
       this.steuerung.minDistance = d * 0.5;
       this.steuerung.maxDistance = d * 1.6;
@@ -980,6 +1090,11 @@ const rH = 2.3;
   }
 
   /* ------------------------------------------------------------- Öffentlich */
+
+  /** Deckende Hintergrundfarbe statt Transparenz – nötig fürs JPEG. */
+  hintergrund(farbe: number | null): void {
+    this.szene.background = farbe === null ? null : new THREE.Color(farbe);
+  }
 
   aktualisieren(teil: Partial<Konfiguration>): void {
     const vorher = this.konfig;
@@ -1008,6 +1123,16 @@ const rH = 2.3;
   bild(qualitaet = 0.85): string {
     this.renderer.render(this.szene, this.kamera);
     return this.renderer.domElement.toDataURL('image/jpeg', qualitaet);
+  }
+
+  /** Nur fürs Vorab-Rendern: Zugriff auf die Innereien der Szene. */
+  intern() {
+    return {
+      szene: this.szene,
+      kamera: this.kamera,
+      renderer: this.renderer,
+      steuerung: this.steuerung,
+    };
   }
 
   aufraeumen(): void {

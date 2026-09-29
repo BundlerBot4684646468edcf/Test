@@ -1,0 +1,317 @@
+<title>Ralser Raumbilder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Brygada+1918:ital,wght@0,400..700;1,400..600&family=Hanken+Grotesk:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap">
+
+<style>
+  /* Layout: Bild oben in voller Breite, Auswahl darunter; ab 62rem daneben.
+     Farben und Schriften von ralser.amstudio.ink. */
+  :root {
+    --grund: #ede7dc;
+    --flaeche: #f5f1e8;
+    --linie: #d8d1c2;
+    --text: #26241f;
+    --gedimmt: #7d766a;
+    --gruen: #4c7a45;
+    --kontrast: #1f2124;
+    --kontrast-text: #f5f1e8;
+
+    --serif: 'Brygada 1918', Georgia, 'Times New Roman', serif;
+    --grotesk: 'Hanken Grotesk', system-ui, -apple-system, sans-serif;
+    --mono: 'DM Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+      --grund: #1b1916; --flaeche: #24211d; --linie: #38342d;
+      --text: #ece6da; --gedimmt: #9b9386; --gruen: #83ab74;
+      --kontrast: #ece6da; --kontrast-text: #1b1916;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme='dark'] {
+    --grund: #1b1916; --flaeche: #24211d; --linie: #38342d;
+    --text: #ece6da; --gedimmt: #9b9386; --gruen: #83ab74;
+    --kontrast: #ece6da; --kontrast-text: #1b1916;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+
+  body {
+    margin: 0;
+    background: var(--grund);
+    color: var(--text);
+    font-family: var(--grotesk);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  .huelle {
+    max-width: 82rem;
+    margin: 0 auto;
+    padding-inline: 1rem;
+    padding-block: 1.5rem 3rem;
+  }
+
+  .marke {
+    display: flex; align-items: center; gap: 0.7rem;
+    font-family: var(--mono); font-size: 0.7rem;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--gruen);
+  }
+  .marke::before { content: ''; width: 1.6rem; height: 1px; background: currentColor; }
+
+  h1 {
+    font-family: var(--serif); font-weight: 500;
+    font-size: clamp(1.85rem, 7.5vw, 3rem);
+    line-height: 1.12; letter-spacing: -0.015em;
+    text-wrap: balance; margin: 0.7rem 0 0;
+  }
+  h1 em { font-style: italic; color: var(--gruen); }
+  .vorspann { max-width: 36rem; margin: 0.85rem 0 0; color: var(--gedimmt); }
+
+  .werk { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.5rem; margin-top: 1.75rem; }
+  @media (min-width: 62rem) {
+    .werk { grid-template-columns: minmax(0, 1fr) 20rem; gap: 2.5rem; align-items: start; }
+  }
+
+  /* Bild */
+  .buehne {
+    position: relative; margin: 0; min-width: 0;
+    aspect-ratio: 4 / 3;
+    border: 1px solid var(--linie);
+    background: var(--flaeche);
+    overflow: hidden;
+  }
+  .buehne img {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover; display: block;
+    opacity: 0; transition: opacity 0.28s ease;
+  }
+  .buehne img.sichtbar { opacity: 1; }
+  @media (prefers-reduced-motion: reduce) {
+    .buehne img { transition: none; }
+  }
+  .fuss {
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 2;
+    margin: 0; padding: 2.2rem 1.1rem 0.8rem;
+    display: flex; justify-content: space-between; gap: 1rem;
+    font-family: var(--mono); font-size: 0.72rem;
+    color: #f2ede3;
+    background: linear-gradient(to top, rgba(20,18,15,0.62), rgba(20,18,15,0));
+  }
+  .dreht {
+    position: absolute; inset: 0; z-index: 3;
+    display: grid; place-content: center; gap: 0.6rem; justify-items: center;
+    font-family: var(--mono); font-size: 0.75rem; color: var(--gedimmt);
+    background: color-mix(in srgb, var(--flaeche) 80%, transparent);
+  }
+  .balken { width: 6rem; height: 2px; background: var(--linie); overflow: hidden; }
+  .balken::after {
+    content: ''; display: block; width: 40%; height: 100%;
+    background: var(--gruen); animation: schieben 1.1s ease-in-out infinite;
+  }
+  @keyframes schieben { 0% { transform: translateX(-100%); } 100% { transform: translateX(250%); } }
+  @media (prefers-reduced-motion: reduce) { .balken::after { animation: none; width: 100%; } }
+
+  /* Auswahl */
+  .steuerung { display: flex; flex-direction: column; gap: 1.4rem; min-width: 0; }
+  .block { border: 0; border-top: 1px solid var(--linie); margin: 0; padding: 0.85rem 0 0; min-width: 0; }
+  legend {
+    padding: 0; font-family: var(--mono); font-size: 0.68rem;
+    letter-spacing: 0.18em; text-transform: uppercase; color: var(--gedimmt);
+  }
+  .raster { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.7rem; }
+  .reihe { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.7rem; }
+
+  button {
+    font: inherit; color: var(--text); cursor: pointer;
+    border: 1px solid var(--linie); background: var(--flaeche);
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .knopf { padding: 0.8rem 0.9rem; text-align: left; min-height: 2.9rem; }
+  .chip { padding: 0.62rem 0.78rem; font-size: 0.88rem; min-height: 2.6rem; }
+  .knopf[aria-pressed='true'] { background: var(--gruen); border-color: var(--gruen); color: #fff; }
+  .chip[aria-pressed='true'] { background: var(--kontrast); border-color: var(--kontrast); color: var(--kontrast-text); }
+  button:focus-visible { outline: 2px solid var(--gruen); outline-offset: 2px; }
+
+  .muster { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; margin-top: 0.7rem; }
+  .probe { border: 0; background: none; padding: 0; text-align: left; }
+  .probe-flaeche {
+    display: block; aspect-ratio: 1; max-width: 100%;
+    background: repeating-linear-gradient(0deg, rgba(0,0,0,0.1) 0 1px, transparent 1px 9px), var(--probe);
+    border: 2px solid transparent; outline: 1px solid var(--linie);
+  }
+  .probe[aria-pressed='true'] .probe-flaeche { border-color: var(--gruen); outline-color: var(--gruen); }
+  .probe-text { display: block; margin-top: 0.35rem; font-size: 0.74rem; color: var(--gedimmt); }
+
+  .zettel { margin-top: 1.4rem; border: 1px solid var(--linie); background: var(--flaeche); padding: 1rem 1.1rem; }
+  .zettel h2 {
+    margin: 0 0 0.6rem; font-family: var(--mono); font-size: 0.68rem; font-weight: 500;
+    letter-spacing: 0.18em; text-transform: uppercase; color: var(--gedimmt);
+  }
+  .zettel dl { display: grid; grid-template-columns: auto 1fr; gap: 0.3rem 1rem; margin: 0; font-size: 0.9rem; }
+  .zettel dt { color: var(--gedimmt); }
+  .zettel dd { margin: 0; font-family: var(--mono); font-size: 0.84rem; text-align: right; }
+
+  footer {
+    margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--linie);
+    font-size: 0.82rem; color: var(--gedimmt); max-width: 46rem;
+  }
+</style>
+
+<div class="huelle">
+  <p class="marke">Raumplaner · Testansicht</p>
+  <h1>Such dir die Ausstattung aus. <em>Wir bauen sie.</em></h1>
+  <p class="vorspann">
+    Raum, Holz und Fronten wählen — das Bild wechselt mit. Jede Kombination
+    ist eine fertige Ansicht, keine Skizze.
+  </p>
+
+  <div class="werk">
+    <figure class="buehne" id="buehne">
+      <div class="dreht" id="laedt"><div class="balken"></div><span>Ansicht wird geladen</span></div>
+      <p class="fuss">
+        <span id="fuss-raum">Küche &amp; Essen</span>
+        <span id="fuss-material">Eiche hell · Weiß</span>
+      </p>
+    </figure>
+
+    <div class="steuerung">
+      <fieldset class="block"><legend>01 · Raum</legend><div class="raster" id="raeume"></div></fieldset>
+      <fieldset class="block"><legend>02 · Holz</legend><div class="muster" id="hoelzer"></div></fieldset>
+      <fieldset class="block"><legend>03 · Fronten</legend><div class="reihe" id="fronten"></div></fieldset>
+
+      <div class="zettel">
+        <h2>Deine Auswahl</h2>
+        <dl id="zettel"></dl>
+      </div>
+    </div>
+  </div>
+
+  <footer id="fussnote"></footer>
+</div>
+
+<script>
+  (function () {
+    var raeume = [
+      { wert: 'hotelzimmer', text: 'Hotelzimmer' },
+      { wert: 'kueche', text: 'Küche & Essen' },
+      { wert: 'wohnzimmer', text: 'Wohnzimmer' },
+      { wert: 'laden', text: 'Laden & Theke' },
+    ];
+    var hoelzer = [
+      { wert: 'eiche-hell', text: 'Eiche hell', farbe: '#d3a05a' },
+      { wert: 'altholz', text: 'Altholz', farbe: '#7d6a56' },
+      { wert: 'nussbaum', text: 'Nussbaum', farbe: '#5a3a26' },
+      { wert: 'fichte-hell', text: 'Fichte hell', farbe: '#e8d6ae' },
+    ];
+    var fronten = [
+      { wert: 'holz', text: 'Holz' },
+      { wert: 'weiss', text: 'Weiß' },
+      { wert: 'anthrazit', text: 'Anthrazit' },
+      { wert: 'betonoptik', text: 'Betonoptik' },
+    ];
+    var texte = {};
+    raeume.concat(hoelzer, fronten).forEach(function (e) { texte[e.wert] = e.text; });
+
+    var wahl = { raum: 'kueche', holz: 'eiche-hell', front: 'weiss' };
+    var el = function (id) { return document.getElementById(id); };
+    var pfad = function (w) { return 'bilder/' + w.raum + '_' + w.holz + '_' + w.front + '.jpg'; };
+
+    /* Bereits geladene Bilder bleiben im DOM und werden nur ein-/ausgeblendet. */
+    var bilder = {};
+    var aktuell = null;
+
+    function zeigen() {
+      var schluessel = pfad(wahl);
+      var bild = bilder[schluessel];
+      if (!bild) {
+        bild = new Image();
+        bild.alt = texte[wahl.raum] + ' in ' + texte[wahl.holz] + ' mit Fronten in ' + texte[wahl.front];
+        bild.decoding = 'async';
+        bild.src = schluessel;
+        el('buehne').insertBefore(bild, el('buehne').firstChild);
+        bilder[schluessel] = bild;
+      }
+      el('laedt').hidden = bild.complete;
+      var einblenden = function () {
+        // Zwischenzeitlich weitergeklickt? Dann gilt die neuere Auswahl.
+        if (pfad(wahl) !== schluessel) return;
+        if (aktuell && aktuell !== bild) aktuell.classList.remove('sichtbar');
+        bild.classList.add('sichtbar');
+        aktuell = bild;
+        el('laedt').hidden = true;
+      };
+      if (bild.complete) einblenden();
+      else {
+        bild.addEventListener('load', einblenden, { once: true });
+        bild.addEventListener('error', function () {
+          el('laedt').hidden = false;
+          el('laedt').lastElementChild.textContent = 'Diese Ansicht fehlt noch.';
+        }, { once: true });
+      }
+      vorladen();
+    }
+
+    /* Die Fronten der aktuellen Wahl kommen als nächstes dran – vorladen. */
+    function vorladen() {
+      fronten.forEach(function (f) {
+        var s = pfad({ raum: wahl.raum, holz: wahl.holz, front: f.wert });
+        if (bilder[s]) return;
+        var i = new Image();
+        i.decoding = 'async';
+        i.src = s;
+        bilder[s] = i;
+        i.classList.add('vorrat');
+        el('buehne').insertBefore(i, el('buehne').firstChild);
+      });
+    }
+
+    function beschriften() {
+      el('fuss-raum').textContent = texte[wahl.raum];
+      el('fuss-material').textContent = texte[wahl.holz] + ' · ' + texte[wahl.front];
+      el('zettel').innerHTML =
+        '<dt>Raum</dt><dd>' + texte[wahl.raum] + '</dd>' +
+        '<dt>Holz</dt><dd>' + texte[wahl.holz] + '</dd>' +
+        '<dt>Fronten</dt><dd>' + texte[wahl.front] + '</dd>';
+    }
+
+    function gruppe(behaelter, eintraege, feld, klasse, inhalt) {
+      eintraege.forEach(function (e) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = klasse;
+        b.setAttribute('aria-pressed', String(wahl[feld] === e.wert));
+        if (e.farbe) b.style.setProperty('--probe', e.farbe);
+        b.innerHTML = inhalt(e);
+        b.addEventListener('click', function () {
+          behaelter.querySelectorAll('button').forEach(function (a) {
+            a.setAttribute('aria-pressed', String(a === b));
+          });
+          wahl[feld] = e.wert;
+          beschriften();
+          zeigen();
+        });
+        behaelter.appendChild(b);
+      });
+    }
+
+    gruppe(el('raeume'), raeume, 'raum', 'knopf', function (e) { return e.text; });
+    gruppe(el('fronten'), fronten, 'front', 'chip', function (e) { return e.text; });
+    gruppe(el('hoelzer'), hoelzer, 'holz', 'probe', function (e) {
+      return '<span class="probe-flaeche"></span><span class="probe-text">' + e.text + '</span>';
+    });
+
+    el('fussnote').textContent =
+      'Testansicht für die Tischlerei Ralser. ' + 64 + ' vorab gerenderte Ansichten, ' +
+      'je Kombination aus Raum, Holz und Front eine. Die Holzmaserung ist noch ' +
+      'gezeichnet, nicht fotografiert.';
+
+    beschriften();
+    zeigen();
+  })();
+</script>
