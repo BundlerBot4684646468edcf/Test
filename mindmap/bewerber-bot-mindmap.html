@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>amstudio Bewerber-Bot</title>
+<style>
+@page { size: 594mm 420mm; margin: 0; }
+:root{ --bg:#111216; --card:#1A1C22; --line:#34373F; --ink:#F2F2F0; --muted:#A3A7AF; --y:#F4C500; --yl:#FFE27A; }
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,'Liberation Sans',Inter,sans-serif;-webkit-font-smoothing:antialiased}
+body{min-height:100vh;display:grid;place-items:center;overflow:auto}
+#fit{width:2380px;height:1684px;transform-origin:0 0}
+#stage{position:relative;width:2380px;height:1684px;overflow:hidden;
+  background:radial-gradient(900px 620px at 88% 0%, rgba(244,197,0,.13), transparent 70%),
+             radial-gradient(800px 560px at 50% 34%, rgba(244,197,0,.06), transparent 70%),
+             radial-gradient(rgba(255,255,255,.035) 1px, transparent 1.2px) 0 0/28px 28px, var(--bg)}
+@media print{ body{display:block} #fit{transform:none!important} }
+.black{font-family:'Arial Black','Inter Display',Inter,sans-serif;font-weight:900}
+
+svg#links{position:absolute;inset:0;width:2380px;height:1684px;z-index:0}
+.layer{position:absolute;inset:0;z-index:1}
+.layer > *{position:absolute}
+
+.logo{left:36px;top:30px;display:flex;align-items:center;gap:14px;font:800 40px/1 'Inter Display',Inter,sans-serif;letter-spacing:-.01em}
+.logo i{width:22px;height:22px;background:var(--y);transform:rotate(45deg);border-radius:4px}
+.top{left:790px;top:40px;width:800px;text-align:center;font:700 14px Arial,'Liberation Sans',sans-serif;letter-spacing:.42em;color:var(--muted);text-transform:uppercase}
+
+#glow{left:840px;top:250px;width:700px;height:560px;border-radius:50%;background:radial-gradient(closest-side, rgba(244,197,0,.22), transparent);filter:blur(8px)}
+#hub{left:950px;top:378px;width:480px;height:300px;border-radius:34px;background:#16171C;border:2.5px solid var(--y);
+  box-shadow:0 0 0 8px rgba(244,197,0,.08),0 30px 80px -20px rgba(0,0,0,.8),0 0 80px -10px rgba(244,197,0,.35);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px}
+#hub .e{font:700 14px Arial,'Liberation Sans',sans-serif;letter-spacing:.32em;color:var(--y);text-transform:uppercase}
+#hub h1{margin:16px 0 18px;font-size:56px;line-height:1.02;text-transform:uppercase;color:var(--ink)}
+#hub .t{font:700 22px Arial,'Liberation Sans',sans-serif;color:var(--muted)}
+#hub .t b{color:var(--yl)}
+
+.node{border-radius:22px;padding:20px 22px;background:linear-gradient(150deg,#26241A 0%,#1A1C22 70%);border:1.5px solid rgba(244,197,0,.6);
+  box-shadow:0 24px 60px -26px rgba(244,197,0,.45)}
+.node .eyebrow{display:flex;align-items:center;gap:10px;font:700 12px/1 Arial,'Liberation Sans',sans-serif;letter-spacing:.16em;color:var(--yl);text-transform:uppercase;white-space:nowrap}
+.node .badge{flex:none;width:32px;height:32px;border-radius:50%;background:var(--y);color:#111216;display:grid;place-items:center;font:900 13px 'Inter Display',Inter,sans-serif;letter-spacing:0}
+.node h3{margin:14px 0 8px;font:700 23px/1.15 Arial,'Liberation Sans',sans-serif;color:var(--ink);white-space:nowrap}
+.node .big{font-family:'Arial Black','Inter Display',Inter,sans-serif;font-weight:900;font-size:33px;line-height:1.05;color:var(--y);white-space:nowrap}
+.node .sub{margin-top:8px;font:500 14px Arial,'Liberation Sans',sans-serif;color:var(--muted);white-space:nowrap}
+
+.chips{display:flex;flex-direction:column;gap:9px}
+.chip{display:flex;align-items:center;gap:10px;height:34px;padding:0 14px;border-radius:17px;white-space:nowrap;overflow:hidden;
+  font:500 15.5px/1 Arial,'Liberation Sans',sans-serif;color:#E6E6E8;background:#1A1C22;border:1.2px solid var(--line)}
+.chip::before{content:"";flex:none;width:7px;height:7px;transform:rotate(45deg);background:var(--y)}
+.chip.key{font-weight:700;color:#fff;border-color:rgba(244,197,0,.75);background:linear-gradient(90deg,rgba(244,197,0,.16),#1A1C22)}
+.chip.plan{border-style:dashed;border-color:rgba(255,226,122,.8);color:var(--yl)}
+.chip.x{color:#C9CCD2;border-color:rgba(255,120,120,.5);background:linear-gradient(90deg,rgba(255,110,110,.12),#1A1C22)}
+.chip.x::before{content:"×";transform:none;width:auto;height:auto;background:none;color:#FF8C8C;font:800 18px/1 Arial,sans-serif;margin-top:-2px}
+
+.bcard{top:1150px;height:470px;border-radius:26px;padding:26px 32px;background:#16171C;border:1.5px solid var(--line);box-shadow:0 30px 70px -30px rgba(0,0,0,.8)}
+.bhead{display:flex;align-items:baseline;gap:16px;margin-bottom:22px}
+.bhead .num{font:900 16px 'Inter Display',Inter,sans-serif;letter-spacing:.2em;color:var(--y)}
+.bhead h2{margin:0;font-family:'Arial Black','Inter Display',Inter,sans-serif;font-weight:900;font-size:32px;text-transform:uppercase;color:var(--ink)}
+.bhead .hint{font:500 15px Arial,'Liberation Sans',sans-serif;color:var(--muted)}
+.flow{display:flex;align-items:center;gap:8px;flex-wrap:nowrap}
+.flow + .flow{margin-top:14px}
+.step{display:inline-flex;align-items:center;gap:10px;height:46px;padding:0 18px 0 8px;border-radius:12px;white-space:nowrap;
+  font:600 16.5px Arial,'Liberation Sans',sans-serif;color:var(--ink);background:#1F2128;border:1.2px solid var(--line)}
+.step b{display:grid;place-items:center;width:30px;height:30px;border-radius:8px;background:#2B2E36;color:var(--yl);font:900 14px 'Inter Display',Inter,sans-serif}
+.step.hot{border-color:var(--y);background:linear-gradient(90deg,rgba(244,197,0,.22),#1F2128);font-weight:800}
+.step.hot b,.step.done b{background:var(--y);color:#111216}
+.step.done{border-color:rgba(244,197,0,.75)}
+.step.warn{border-style:dashed;border-color:#4A4E58;color:#C9CCD2;height:40px;font-size:15px}
+.step.warn b{background:transparent;color:var(--muted);font-size:17px}
+.arr{flex:none;width:26px;height:12px;position:relative}
+.arr::before{content:"";position:absolute;left:0;right:6px;top:5px;height:2px;background:var(--y);opacity:.8}
+.arr::after{content:"";position:absolute;right:2px;top:1px;width:8px;height:8px;border-top:2px solid var(--y);border-right:2px solid var(--y);transform:rotate(45deg);opacity:.8}
+.alt{margin-top:26px;padding-top:20px;border-top:1px dashed #3A3D45;display:grid;grid-template-columns:auto 1fr;gap:12px 18px;align-items:center}
+.alt .flow + .flow{margin-top:0}
+.alt .lbl{font:700 12px Arial,'Liberation Sans',sans-serif;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+
+.kpis{display:flex;flex-direction:column;gap:10px}
+.kpi{display:flex;justify-content:space-between;align-items:center;height:50px;padding:0 20px;border-radius:12px;background:#1F2128;border:1.2px solid var(--line)}
+.kpi span{font:600 17px Arial,'Liberation Sans',sans-serif;color:#E6E6E8}
+.kpi b{font-family:'Arial Black','Inter Display',Inter,sans-serif;font-weight:900;font-size:22px;color:var(--y)}
+.note{margin:18px 0 0;font:500 15px/1.45 Arial,'Liberation Sans',sans-serif;color:var(--muted)}
+
+.foot{left:36px;top:1642px;width:2308px;display:flex;justify-content:space-between;font:500 13px Arial,'Liberation Sans',sans-serif;color:#6E727B;letter-spacing:.06em;text-transform:uppercase}
+</style>
+</head>
+<body>
+<div id="fit"><div id="stage">
+<svg id="links" viewBox="0 0 2380 1684" aria-hidden="true">
+  <defs><filter id="glowf" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="5"/></filter></defs>
+  <g id="lg"></g><g id="lm"></g><g id="ld"></g>
+</svg>
+<div class="layer">
+  <div class="logo"><i></i>amstudio</div>
+  <div class="top">Recruiting · Bewerber-Bot · Konzept</div>
+  <div id="glow"></div>
+  <div id="hub">
+    <div class="e">Bewerber-Bot</div>
+    <h1 class="black">Anruf in<br>5 Minuten.</h1>
+    <div class="t">Bot fragt. <b>Chef entscheidet.</b></div>
+  </div>
+  
+<div class="node" id="n1" style="left:420px;top:232px;width:266px;transform:translateY(-50%)">
+  <div class="eyebrow"><span class="badge">01</span>Meta</div>
+  <h3>Instant-Formular</h3>
+  <div class="big">In der App</div>
+  <div class="sub">Instagram &amp; Facebook</div>
+</div><div class="chips" id="n1c" data-parent="n1" data-dir="left" style="left:36px;top:232px;width:320px;transform:translateY(-50%)"><div class="chip ">Typ „Höhere Kaufabsicht“</div><div class="chip ">Nummer bestätigen lassen</div><div class="chip key">Häkchen: Einwilligung Anruf</div><div class="chip ">Frage: Wann erreichbar?</div><div class="chip ">Abschluss: „Anruf in Minuten“</div><div class="chip ">Button „Anrufen“ mit Nummer</div></div>
+<div class="node" id="n2" style="left:420px;top:560px;width:266px;transform:translateY(-50%)">
+  <div class="eyebrow"><span class="badge">02</span>Wann</div>
+  <h3>Anrufregeln</h3>
+  <div class="big">8–20 Uhr</div>
+  <div class="sub">Mo–Fr · Sa 9–13 Uhr</div>
+</div><div class="chips" id="n2c" data-parent="n2" data-dir="left" style="left:36px;top:560px;width:320px;transform:translateY(-50%)"><div class="chip ">Mo–Fr 8–20 Uhr</div><div class="chip ">Samstag 9–13 Uhr</div><div class="chip x">Sonntag &amp; Feiertage: nie</div><div class="chip ">Südtiroler Feiertagskalender</div><div class="chip ">Außerhalb: sofort SMS</div><div class="chip key">„Nicht anrufen“ = sofort Stopp</div></div>
+<div class="node" id="n3" style="left:420px;top:880px;width:266px;transform:translateY(-50%)">
+  <div class="eyebrow"><span class="badge">03</span>Nicht erreicht</div>
+  <h3>Wiederholung</h3>
+  <div class="big">max. 3×</div>
+  <div class="sub">dann nur noch SMS</div>
+</div><div class="chips" id="n3c" data-parent="n3" data-dir="left" style="left:36px;top:880px;width:320px;transform:translateY(-50%)"><div class="chip ">1. Anruf nach 5 Minuten</div><div class="chip ">2. Anruf nach 2 Stunden</div><div class="chip ">3. Anruf am nächsten Tag</div><div class="chip ">Andere Uhrzeit wählen</div><div class="chip ">Danach nur SMS mit Link</div></div>
+<div class="node" id="n4" style="left:1694px;top:232px;width:266px;transform:translateY(-50%)">
+  <div class="eyebrow"><span class="badge">04</span>Im Gespräch</div>
+  <h3>Bot fragt</h3>
+  <div class="big">7 Infos</div>
+  <div class="sub">kurz, freundlich, DE / IT</div>
+</div><div class="chips" id="n4c" data-parent="n4" data-dir="right" style="left:2024px;top:232px;width:320px;transform:translateY(-50%)"><div class="chip ">Berufserfahrung</div><div class="chip ">Führerschein</div><div class="chip ">Anfahrtsweg</div><div class="chip ">Gehaltswunsch</div><div class="chip ">Verfügbar ab</div><div class="chip ">Wechselgrund</div><div class="chip ">Sprache DE / IT</div></div>
+<div class="node" id="n5" style="left:1694px;top:572px;width:266px;transform:translateY(-50%)">
+  <div class="eyebrow"><span class="badge">05</span>An den Chef</div>
+  <h3>Nachricht</h3>
+  <div class="big">1 Klick</div>
+  <div class="sub">WhatsApp oder E-Mail</div>
+</div><div class="chips" id="n5c" data-parent="n5" data-dir="right" style="left:2024px;top:572px;width:320px;transform:translateY(-50%)"><div class="chip ">Name, Ort, Nummer</div><div class="chip ">Alle Antworten kompakt</div><div class="chip ">Wunschtermin</div><div class="chip key">Bestätigen · Absagen · Rückruf</div><div class="chip ">Termin direkt im Kalender</div></div>
+<div class="node" id="n6" style="left:1694px;top:890px;width:266px;transform:translateY(-50%)">
+  <div class="eyebrow"><span class="badge">06</span>Grenzen</div>
+  <h3>Spielregeln</h3>
+  <div class="big">Mensch</div>
+  <div class="sub">entscheidet, nicht der Bot</div>
+</div><div class="chips" id="n6c" data-parent="n6" data-dir="right" style="left:2024px;top:890px;width:320px;transform:translateY(-50%)"><div class="chip key">Bot sortiert nicht aus</div><div class="chip ">Sagt „digitale Assistentin“</div><div class="chip ">Südtiroler Nummer</div><div class="chip ">DSGVO + AV-Vertrag</div><div class="chip plan">Vor Verkauf rechtlich prüfen</div></div>
+  
+<div class="bcard" id="bF" style="left:36px;width:1500px">
+  <div class="bhead"><span class="num">07</span><h2>Ablauf</h2><span class="hint">vom Klick auf die Anzeige bis zum Termin</span></div>
+  <div class="flow"><span class="step "><b>1</b>Anzeige Instagram / Facebook</span><span class="arr"></span><span class="step "><b>2</b>Instant-Formular</span><span class="arr"></span><span class="step "><b>3</b>Abschluss: „Anruf in Minuten“</span><span class="arr"></span><span class="step "><b>4</b>Lead sofort per Webhook</span></div>
+  <div class="flow"><span class="step hot"><b>5</b>Anruf nach 5 Minuten</span><span class="arr"></span><span class="step "><b>6</b>Infos + Wunschtermin</span><span class="arr"></span><span class="step "><b>7</b>Nachricht an Chef</span><span class="arr"></span><span class="step "><b>8</b>Chef bestätigt</span><span class="arr"></span><span class="step done"><b>9</b>Termin im Kalender</span></div>
+  <div class="alt">
+    <span class="lbl">Nicht abgenommen</span>
+    <div class="flow"><span class="step warn"><b>↺</b>SMS mit Buchungslink</span><span class="arr"></span><span class="step warn"><b>↺</b>Wiederholung nach Regel 03</span></div>
+    <span class="lbl">Außerhalb 8–20 Uhr</span>
+    <div class="flow"><span class="step warn"><b>☾</b>Sofort SMS</span><span class="arr"></span><span class="step warn"><b>☀</b>Anruf am Morgen</span></div>
+  </div>
+</div>
+<div class="bcard" id="bP" style="left:1566px;width:778px">
+  <div class="bhead"><span class="num">08</span><h2>Im Pilot messen</h2></div>
+  <div class="kpis">
+    <div class="kpi"><span>Zeit bis zum 1. Anruf</span><b>? Min</b></div>
+    <div class="kpi"><span>Bewerber erreicht</span><b>? %</b></div>
+    <div class="kpi"><span>Termin ausgemacht</span><b>? %</b></div>
+    <div class="kpi"><span>Zum Termin erschienen</span><b>? %</b></div>
+    <div class="kpi"><span>Eingestellt</span><b>?</b></div>
+  </div>
+  <p class="note">Erst messen, dann im Pitch nennen. Keine Zahl versprechen, die wir nicht belegt haben.</p>
+</div>
+  <div class="foot"><span>Konzept · Wirkung erst im Pilot belegen · rechtliche Prüfung (AI Act, DSGVO) vor Verkauf</span><span>amstudio.ink</span></div>
+</div>
+</div></div>
+<script>
+(function(){
+  const Y='#F4C500', NS='http://www.w3.org/2000/svg', stage=document.getElementById('stage'), $=id=>document.getElementById(id);
+  function rel(el){const s=stage.getBoundingClientRect(),r=el.getBoundingClientRect(),k=s.width/2380;return {x:(r.left-s.left)/k,y:(r.top-s.top)/k,w:r.width/k,h:r.height/k};}
+  function pt(el,side,f){f=f==null?.5:f;const r=rel(el);return side==='l'?[r.x,r.y+r.h*f]:side==='r'?[r.x+r.w,r.y+r.h*f]:side==='t'?[r.x+r.w*f,r.y]:[r.x+r.w*f,r.y+r.h];}
+  function add(g,tag,a){const e=document.createElementNS(NS,tag);for(const k in a)e.setAttribute(k,a[k]);$(g).appendChild(e);}
+  function h(a,b){const m=(a[0]+b[0])/2;return 'M'+a[0]+' '+a[1]+' C'+m+' '+a[1]+' '+m+' '+b[1]+' '+b[0]+' '+b[1];}
+  function v(a,b){const c=b[1]-90;return 'M'+a[0]+' '+a[1]+' C'+a[0]+' '+c+' '+b[0]+' '+c+' '+b[0]+' '+b[1];}
+  function main(d,end){add('lg','path',{d,stroke:Y,'stroke-width':14,fill:'none',opacity:.22,filter:'url(#glowf)'});
+    add('lm','path',{d,stroke:Y,'stroke-width':4.5,fill:'none','stroke-linecap':'round'});
+    add('ld','circle',{cx:end[0],cy:end[1],r:7,fill:Y,stroke:'#111216','stroke-width':3});}
+  function draw(){
+    const hub=$('hub');
+    [['n1',.28],['n2',.5],['n3',.72]].forEach(([id,f])=>{const a=pt(hub,'l',f),b=pt($(id),'r');main(h(a,b),b);});
+    [['n4',.28],['n5',.5],['n6',.72]].forEach(([id,f])=>{const a=pt(hub,'r',f),b=pt($(id),'l');main(h(a,b),b);});
+    [['bF',.42,.62],['bP',.58,.35]].forEach(([id,fa,fb])=>{const a=pt(hub,'b',fa),b=pt($(id),'t',fb);main(v(a,b),b);});
+    document.querySelectorAll('.chips[data-parent]').forEach(box=>{const p=$(box.dataset.parent),L=box.dataset.dir==='left';
+      [...box.children].forEach(k=>{const a=pt(p,L?'l':'r'),b=pt(k,L?'r':'l');
+        add('lm','path',{d:h(a,b),stroke:Y,'stroke-width':1.8,opacity:.5,fill:'none'});
+        add('ld','circle',{cx:b[0],cy:b[1],r:3.2,fill:Y});});});
+  }
+  function fit(){const k=Math.min(innerWidth/2380,innerHeight/1684,1);$('fit').style.transform='scale('+k+')';
+    document.body.style.width=(2380*k)+'px';document.body.style.height=(1684*k)+'px';document.body.style.margin='0 auto';}
+  (document.fonts&&document.fonts.ready?document.fonts.ready:Promise.resolve()).then(()=>{fit();draw();window.__ready=true;});
+  addEventListener('resize',fit);
+})();
+</script>
+</body>
+</html>
