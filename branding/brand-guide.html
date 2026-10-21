@@ -78,6 +78,17 @@ section.ch { padding-block: 72px; border-bottom: 1px solid var(--line); }
 .t-yellow { background: var(--yellow); } .t-yellow .label { color: var(--blue-deep); }
 .t-deep { background: var(--blue-deep); } .t-deep .label { color: #B9C8E0; }
 .logo { width: min(320px, 100%); height: auto; }
+.logo-slot { width: min(300px, 100%); min-height: 84px; border: 2px dashed currentColor; display: grid; place-items: center; text-align: center; padding: 12px; font: 500 .78rem var(--f-mono); letter-spacing: .06em; text-transform: uppercase; line-height: 1.5; }
+.logo-slot b { display: block; font: 900 1.6rem var(--f-display); font-stretch: 75%; letter-spacing: .02em; }
+.t-white .logo-slot { color: var(--blue); }
+.t-blue .logo-slot, .t-deep .logo-slot { color: #fff; }
+.t-yellow .logo-slot { color: var(--blue-deep); }
+.nav-bar .logo-slot { width: 170px; min-height: 44px; padding: 4px; color: var(--blue); font-size: .62rem; }
+.nav-bar .logo-slot b { font-size: 1.1rem; }
+footer .logo-slot { width: 180px; min-height: 48px; padding: 4px; color: #fff; font-size: .62rem; }
+footer .logo-slot b { font-size: 1.1rem; }
+.dont-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.dont-list div { background: var(--white); border: 1px solid var(--line); border-top: 3px solid var(--no); padding: 12px; font-size: .86rem; }
 .rules { margin-top: 28px; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; }
 .rules > div { display: grid; gap: 8px; align-content: start; }
 .zone { background: var(--white); border: 1px dashed var(--blue); padding: 18px; display: grid; place-items: center; position: relative; }
@@ -199,18 +210,6 @@ footer .logo { width: 180px; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 
-<!-- Wortmarke als wiederverwendbares Symbol -->
-<svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <defs>
-    <symbol id="mark" viewBox="0 0 64 56">
-      <path d="M4 30 L32 6 L60 30" fill="none" stroke="currentColor" stroke-width="7" stroke-linejoin="miter" stroke-linecap="square"/>
-      <rect x="22" y="32" width="20" height="5" fill="var(--yellow)"/>
-      <rect x="22" y="41" width="20" height="5" fill="var(--yellow)"/>
-      <rect x="22" y="50" width="20" height="5" fill="var(--yellow)"/>
-    </symbol>
-  </defs>
-</svg>
-
 <header class="hero">
   <div class="wrap">
     <div class="label">Markenhandbuch · Linee guida del marchio · Version 1.0 · Oktober 2026</div>
@@ -265,28 +264,24 @@ footer .logo { width: 180px; }
 
 <!-- 02 Logo -->
 <section class="ch"><div class="wrap">
-  <div class="ch-head"><div class="num"><b>02</b> Logo · Logo</div><h2>Dachfirst und Modulreihen</h2>
-    <p class="lede">Das Zeichen verbindet den Dachfirst in Blau mit drei gelben Modulreihen: Dach und Photovoltaik in einer Form. Die Wortmarke steht immer rechts neben dem Zeichen.</p></div>
+  <div class="ch-head"><div class="num"><b>02</b> Logo · Logo</div><h2>Das Logo bleibt, wie es ist</h2>
+    <p class="lede">Das bestehende Schatzer-Logo wird unverändert übernommen. Dieses Kapitel regelt nur, wie es auf der neuen Website, auf Fahrzeugen und in Drucksachen eingesetzt wird.</p></div>
   <div class="logo-grid">
-    <div class="logo-tile t-white"><span class="label">Primär · auf Weiß</span>
-      <svg class="logo" viewBox="0 0 320 64" role="img" aria-label="Schatzer Logo"><use href="#mark" x="0" y="4" width="64" height="56" style="color:var(--blue)"/><text x="78" y="42" font-family="Archivo, Arial Narrow, sans-serif" font-weight="900" font-stretch="75%" font-size="38" fill="var(--blue)" letter-spacing="1">SCHATZER</text><text x="80" y="58" font-family="IBM Plex Mono, monospace" font-size="9.5" fill="var(--slate)" letter-spacing="2.4">DACH · PV · SICHERHEIT</text></svg></div>
-    <div class="logo-tile t-blue"><span class="label">Negativ · auf Dachblau</span>
-      <svg class="logo" viewBox="0 0 320 64" role="img" aria-label="Schatzer Logo negativ"><use href="#mark" x="0" y="4" width="64" height="56" style="color:#fff"/><text x="78" y="42" font-family="Archivo, Arial Narrow, sans-serif" font-weight="900" font-stretch="75%" font-size="38" fill="#fff" letter-spacing="1">SCHATZER</text><text x="80" y="58" font-family="IBM Plex Mono, monospace" font-size="9.5" fill="var(--yellow)" letter-spacing="2.4">DACH · PV · SICHERHEIT</text></svg></div>
-    <div class="logo-tile t-yellow"><span class="label">Auf Sonnengelb · nur einfarbig</span>
-      <svg class="logo" viewBox="0 0 320 64" role="img" aria-label="Schatzer Logo einfarbig"><g style="color:var(--blue-deep)"><path d="M4 34 L32 10 L60 34" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="square"/><rect x="22" y="36" width="20" height="5" fill="currentColor"/><rect x="22" y="45" width="20" height="5" fill="currentColor"/><rect x="22" y="54" width="20" height="5" fill="currentColor"/></g><text x="78" y="42" font-family="Archivo, Arial Narrow, sans-serif" font-weight="900" font-stretch="75%" font-size="38" fill="var(--blue-deep)" letter-spacing="1">SCHATZER</text><text x="80" y="58" font-family="IBM Plex Mono, monospace" font-size="9.5" fill="var(--blue-deep)" letter-spacing="2.4">DACH · PV · SICHERHEIT</text></svg></div>
-    <div class="logo-tile t-deep"><span class="label">Bildzeichen allein · Favicon, Fahrzeug-Heck</span>
-      <svg viewBox="0 0 64 60" width="96" height="90" role="img" aria-label="Bildzeichen"><use href="#mark" x="0" y="2" width="64" height="56" style="color:#fff"/></svg></div>
+    <div class="logo-tile t-white"><span class="label">Original · auf Weiß</span><div class="logo-slot"><span><b>SCHATZER</b>Bestehendes Logo · Original</span></div></div>
+    <div class="logo-tile t-blue"><span class="label">Negativ · auf Dachblau</span><div class="logo-slot"><span><b>SCHATZER</b>Logo in Weiß</span></div></div>
+    <div class="logo-tile t-yellow"><span class="label">Einfarbig · auf Sonnengelb</span><div class="logo-slot"><span><b>SCHATZER</b>Logo in Nachtblau</span></div></div>
+    <div class="logo-tile t-deep"><span class="label">Negativ · auf Nachtblau</span><div class="logo-slot"><span><b>SCHATZER</b>Logo in Weiß</span></div></div>
   </div>
   <div class="rules">
     <div><span class="label">Schutzzone</span>
-      <div class="zone"><div class="inner"><svg viewBox="0 0 320 64" width="220" aria-hidden="true"><use href="#mark" x="0" y="4" width="64" height="56" style="color:var(--blue)"/><text x="78" y="42" font-family="Archivo, Arial Narrow, sans-serif" font-weight="900" font-stretch="75%" font-size="38" fill="var(--blue)">SCHATZER</text></svg></div></div>
-      <p>Rund um das Logo bleibt mindestens die Höhe des Dachfirsts (x) frei. Kein Text, kein Bildrand in dieser Zone.</p></div>
+      <p>Rund um das Logo bleibt mindestens die Höhe eines Großbuchstabens im Schriftzug frei. Kein Text und kein Bildrand in dieser Zone.</p></div>
     <div><span class="label">Mindestgröße</span>
-      <p><strong>Digital:</strong> 120 px Breite mit Wortmarke, 24 px nur Bildzeichen.<br><strong>Druck:</strong> 30 mm Breite mit Wortmarke, 8 mm nur Bildzeichen.</p>
-      <p>Unter diesen Maßen den Zusatz „Dach · PV · Sicherheit" weglassen.</p></div>
+      <p><strong>Digital:</strong> 120 px Breite.<br><strong>Druck:</strong> 30 mm Breite.</p></div>
     <div><span class="label">Hinweis</span>
-      <p>Die Wortmarke ist ein Entwurf. Die finalen Logodateien (SVG, PDF, PNG) werden nach Freigabe geliefert.</p></div>
+      <p>Die Felder oben sind Platzhalter. Eingesetzt wird die Original-Logodatei; die Markenfarben werden mit ihr abgeglichen.</p></div>
   </div>
+  <div class="ratio"><span class="label">Nicht erlaubt</span>
+    <div class="dont-list"><div>Verzerren oder stauchen</div><div>Umfärben außerhalb der Markenfarben</div><div>Schatten, Konturen, Effekte</div><div>Elemente verschieben oder weglassen</div><div>Auf unruhigen Fotos ohne Fläche</div></div></div>
 </div></section>
 
 <!-- 03 Farben -->
@@ -339,7 +334,7 @@ footer .logo { width: 180px; }
   <div class="sitemap">
     <div class="nav-demo">
       <div class="nav-bar">
-        <svg class="logo" viewBox="0 0 320 64" aria-hidden="true"><use href="#mark" x="0" y="4" width="64" height="56" style="color:var(--blue)"/><text x="78" y="44" font-family="Archivo, Arial Narrow, sans-serif" font-weight="900" font-stretch="75%" font-size="38" fill="var(--blue)">SCHATZER</text></svg>
+        <div class="logo-slot"><span><b>SCHATZER</b>Logo</span></div>
         <nav><span>Leistungen<small>Servizi</small></span><span>Über uns<small>Chi siamo</small></span><span>Produkte<small>Prodotti</small></span><span>Referenzen<small>Lavori</small></span><span>Jobs<small>Lavora con noi</small></span><span>Kontakt<small>Contatti</small></span></nav>
         <span class="lang"><b>DE</b> | IT</span>
       </div>
@@ -425,7 +420,7 @@ footer .logo { width: 180px; }
     <div class="box dont"><h3>Das vermeiden wir</h3><ul>
       <li>Stockfotos von fremden Häusern oder Ländern.</li>
       <li>Arbeit auf dem Dach ohne Absturzsicherung.</li>
-      <li>Logo verzerren, umfärben oder schräg stellen.</li>
+      <li>Das Logo verändern, verzerren oder umfärben.</li>
       <li>Gelb als Textfarbe auf hellem Grund.</li></ul></div>
   </div>
   <div class="voice" style="margin-top:28px">
@@ -440,20 +435,20 @@ footer .logo { width: 180px; }
   <div class="ch-head"><div class="num"><b>09</b> Nächste Schritte · Prossimi passi</div><h2>Was wir von Ihnen brauchen</h2>
     <p class="lede">Damit Website, 3D-Katalog und Karte mit echten Inhalten starten, bitten wir um folgende Unterlagen.</p></div>
   <ul class="check">
-    <li><div><strong>Vorhandenes Logo</strong><span>Als SVG, PDF oder AI, falls bereits eines existiert.</span></div></li>
+    <li><div><strong>Logo-Originaldatei</strong><span>Das bestehende Logo als SVG, PDF oder AI, dazu die Farbwerte aus dem Logo.</span></div></li>
     <li><div><strong>Referenzprojekte</strong><span>Fotos, Ort, Jahr, Leistung und Eckdaten (z. B. kWp, m²) je Projekt.</span></div></li>
     <li><div><strong>Produkte für den 3D-Katalog</strong><span>Produktliste mit Datenblättern; 3D-Dateien (STEP, OBJ, GLB) der Hersteller, wo vorhanden.</span></div></li>
     <li><div><strong>Orte und Einsatzgebiet</strong><span>Liste der Gemeinden in Südtirol und der Länder für internationale Aufträge.</span></div></li>
     <li><div><strong>Über uns</strong><span>Geschichte, Teamfotos, Zertifikate und Mitgliedschaften.</span></div></li>
     <li><div><strong>Jobs</strong><span>Offene Stellen und Lehrstellen mit kurzer Beschreibung, deutsch und italienisch.</span></div></li>
     <li><div><strong>Kontakt</strong><span>Adresse, Telefon, E-Mail, Öffnungszeiten, Notdienst.</span></div></li>
-    <li><div><strong>Freigabe</strong><span>Rückmeldung zu Farben, Schrift und Logo-Entwurf in diesem Handbuch.</span></div></li>
+    <li><div><strong>Freigabe</strong><span>Rückmeldung zu Farben, Schrift und Bildsprache in diesem Handbuch.</span></div></li>
   </ul>
 </div></section>
 </main>
 
 <footer><div class="wrap">
-  <svg class="logo" viewBox="0 0 320 64" aria-hidden="true"><use href="#mark" x="0" y="4" width="64" height="56" style="color:#fff"/><text x="78" y="44" font-family="Archivo, Arial Narrow, sans-serif" font-weight="900" font-stretch="75%" font-size="38" fill="#fff">SCHATZER</text></svg>
+  <div class="logo-slot"><span><b>SCHATZER</b>Logo</span></div>
   <span>Markenhandbuch 1.0 · Entwurf zur Freigabe · Oktober 2026</span>
 </div></footer>
 
