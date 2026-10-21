@@ -1,0 +1,536 @@
+<title>Schatzeder Markenhandbuch</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: ein Dokument in Kapiteln, blaue Titelbahn, Kapitel als Dachflächen getrennt durch eine gelbe First-Linie.
+   Bewusst ein einziger heller Look: Das Handbuch zeigt die Markenfarben auf Papier, wie der Kunde sie sieht. */
+:root {
+  --blue: #0F3D7A;        /* Dachblau – Primärfarbe */
+  --blue-deep: #0A2647;   /* Nachtblau – Text auf Gelb, Footer */
+  --yellow: #F6BE00;      /* Sonnengelb – Akzent */
+  --yellow-soft: #FFF3C4;
+  --slate: #1C2430;       /* Schiefer – Fließtext */
+  --muted: #5B6676;
+  --zinc: #E9EDF3;        /* Zink – Flächen */
+  --line: #CDD5E0;
+  --paper: #FAFBFC;
+  --white: #FFFFFF;
+  --ok: #1E7A4C;
+  --no: #B3261E;
+
+  --f-display: "Archivo", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+
+  --gutter-l: max(16px, env(safe-area-inset-left, 0px));
+  --gutter-r: max(16px, env(safe-area-inset-right, 0px));
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body { background: var(--paper); color: var(--slate); font-family: var(--f-body); font-size: 16px; line-height: 1.6; }
+.wrap { max-width: 1080px; margin: 0 auto; padding-left: var(--gutter-l); padding-right: var(--gutter-r); }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; line-height: 1.05; }
+h2 { font-size: clamp(2rem, 4.5vw, 3rem); font-stretch: 80%; font-weight: 800; color: var(--blue); letter-spacing: -0.01em; }
+h3 { font-size: 1.15rem; font-weight: 700; font-stretch: 90%; color: var(--slate); }
+p { margin: 0; max-width: 65ch; }
+.label { font-family: var(--f-mono); font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.it { color: var(--muted); font-style: italic; }
+:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+
+/* Titel */
+.hero { background: var(--blue); color: var(--white); position: relative; overflow: hidden; }
+.hero .wrap { padding-block: 56px 72px; display: grid; gap: 28px; }
+.hero .label { color: #B9C8E0; }
+.hero h1 { font-size: clamp(3rem, 10vw, 7rem); font-weight: 900; font-stretch: 70%; letter-spacing: -0.02em; text-transform: uppercase; }
+.hero h1 span { color: var(--yellow); }
+.hero p { color: #DCE4F1; font-size: 1.1rem; }
+.hero-meta { display: flex; flex-wrap: wrap; gap: 8px 28px; font-family: var(--f-mono); font-size: 0.8rem; color: #B9C8E0; }
+.hero svg.roofline { position: absolute; right: -40px; bottom: -2px; width: min(560px, 70vw); height: auto; opacity: .95; }
+.ridge { height: 6px; background: var(--yellow); }
+
+/* Kapitel */
+section.ch { padding-block: 72px; border-bottom: 1px solid var(--line); }
+.ch-head { display: grid; gap: 12px; margin-bottom: 36px; }
+.ch-head .num { font-family: var(--f-mono); color: var(--blue); font-size: 0.85rem; }
+.ch-head .num b { background: var(--yellow); color: var(--blue-deep); padding: 1px 6px; font-weight: 500; }
+.lede { font-size: 1.1rem; }
+
+/* Markenkern */
+.core { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; }
+.svc { background: var(--white); border: 1px solid var(--line); padding: 22px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.svc svg { width: 40px; height: 40px; }
+.svc h3 { font-size: 1.3rem; }
+.svc .it { font-size: 0.9rem; }
+.reach { margin-top: 28px; display: flex; flex-wrap: wrap; gap: 0; border: 2px solid var(--blue); }
+.reach div { flex: 1 1 200px; padding: 18px 22px; display: grid; gap: 4px; }
+.reach div + div { border-left: 2px solid var(--blue); }
+.reach strong { font-family: var(--f-display); font-stretch: 80%; font-size: 1.5rem; color: var(--blue); }
+@media (max-width: 640px) { .reach div + div { border-left: 0; border-top: 2px solid var(--blue); } }
+
+/* Logo */
+.logo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.logo-tile { min-height: 200px; display: grid; place-items: center; padding: 32px; position: relative; }
+.logo-tile .label { position: absolute; left: 14px; top: 12px; }
+.t-white { background: var(--white); border: 1px solid var(--line); }
+.t-blue { background: var(--blue); } .t-blue .label { color: #B9C8E0; }
+.t-yellow { background: var(--yellow); } .t-yellow .label { color: var(--blue-deep); }
+.t-deep { background: var(--blue-deep); } .t-deep .label { color: #B9C8E0; }
+.logo { width: min(320px, 100%); height: auto; }
+.rules { margin-top: 28px; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; }
+.rules > div { display: grid; gap: 8px; align-content: start; }
+.zone { background: var(--white); border: 1px dashed var(--blue); padding: 18px; display: grid; place-items: center; position: relative; }
+.zone::before { content: "x"; position: absolute; top: 2px; left: 6px; font-family: var(--f-mono); font-size: .7rem; color: var(--blue); }
+.zone .inner { outline: 1px solid var(--yellow); }
+
+/* Farben */
+.swatches { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; }
+.sw { border: 1px solid var(--line); background: var(--white); display: grid; min-width: 0; }
+.sw .chip { height: 140px; display: flex; align-items: flex-end; padding: 12px; font-family: var(--f-display); font-weight: 800; font-stretch: 80%; font-size: 1.4rem; }
+.sw .info { padding: 14px; display: grid; gap: 4px; font-size: .88rem; }
+.sw .info h3 { font-size: 1.05rem; }
+.codes { font-family: var(--f-mono); font-size: .78rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.copy { justify-self: start; margin-top: 6px; font: 500 .75rem var(--f-mono); background: var(--zinc); color: var(--blue); border: 1px solid var(--line); padding: 4px 10px; cursor: pointer; }
+.copy:hover { background: var(--yellow-soft); }
+.ratio { margin-top: 28px; display: grid; gap: 10px; }
+.ratio-bar { display: flex; height: 44px; border: 1px solid var(--line); }
+.ratio-bar div { display: flex; align-items: center; padding-inline: 12px; font: 500 .78rem var(--f-mono); white-space: nowrap; overflow: hidden; }
+.contrast { margin-top: 28px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.pair { padding: 16px; display: grid; gap: 6px; border: 1px solid var(--line); }
+.pair .big { font-family: var(--f-display); font-weight: 800; font-size: 1.5rem; font-stretch: 85%; }
+.pair .verdict { font: 500 .72rem var(--f-mono); }
+
+/* Typografie */
+.type-specimen { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 32px; }
+@media (max-width: 760px) { .type-specimen { grid-template-columns: 1fr; } }
+.specimen { background: var(--white); border: 1px solid var(--line); padding: 28px; display: grid; gap: 14px; min-width: 0; }
+.specimen .aa { font-family: var(--f-display); font-weight: 900; font-stretch: 70%; font-size: clamp(4rem, 12vw, 8rem); color: var(--blue); line-height: .9; }
+.scale { display: grid; gap: 0; }
+.scale-row { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 16px; align-items: baseline; padding-block: 12px; border-bottom: 1px solid var(--line); }
+.scale-row .label { white-space: nowrap; }
+.scale-row > div:last-child { min-width: 0; overflow-wrap: anywhere; }
+
+/* Website */
+.sitemap { overflow-x: auto; }
+.nav-demo { background: var(--white); border: 1px solid var(--line); min-width: 720px; }
+.nav-bar { display: flex; align-items: center; gap: 28px; padding: 16px 22px; border-bottom: 4px solid var(--yellow); }
+.nav-bar .logo { width: 170px; }
+.nav-bar nav { display: flex; gap: 22px; margin-left: auto; font-weight: 600; font-size: .92rem; }
+.nav-bar nav span { display: grid; line-height: 1.2; }
+.nav-bar nav small { font-weight: 400; color: var(--muted); font-size: .75rem; }
+.lang { font: 500 .78rem var(--f-mono); border: 1px solid var(--line); padding: 3px 8px; }
+.lang b { color: var(--blue); }
+.tree { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1px; background: var(--line); }
+.tree div { background: var(--white); padding: 14px; font-size: .84rem; display: grid; gap: 6px; align-content: start; }
+.tree h3 { font-size: .95rem; color: var(--blue); }
+.tree ul { margin: 0; padding-left: 16px; color: var(--muted); }
+
+/* Komponenten */
+.comp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+.comp { display: grid; gap: 12px; align-content: start; min-width: 0; }
+.btns { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; background: var(--white); border: 1px solid var(--line); padding: 20px; }
+.btn { font: 700 .95rem var(--f-display); font-stretch: 90%; letter-spacing: .02em; text-transform: uppercase; padding: 13px 20px; border: 2px solid transparent; cursor: pointer; }
+.btn-primary { background: var(--yellow); color: var(--blue-deep); }
+.btn-primary:hover { background: #FFCC1A; }
+.btn-secondary { background: var(--blue); color: var(--white); }
+.btn-ghost { background: transparent; border-color: var(--blue); color: var(--blue); }
+.ref-card { background: var(--white); border: 1px solid var(--line); }
+.ref-img { aspect-ratio: 16 / 10; max-width: 100%; background: linear-gradient(180deg, #9DB7D9 0%, #DCE6F2 55%, #B8C4B0 56%, #8FA182 100%); position: relative; overflow: hidden; }
+.ref-img svg { position: absolute; inset: auto 0 0 0; width: 100%; height: auto; }
+.ref-tag { position: absolute; left: 12px; top: 12px; background: var(--yellow); color: var(--blue-deep); font: 600 .72rem var(--f-mono); padding: 3px 8px; text-transform: uppercase; letter-spacing: .06em; }
+.ref-body { padding: 16px 18px; display: grid; gap: 6px; }
+.ref-facts { display: flex; flex-wrap: wrap; gap: 4px 16px; font: .78rem var(--f-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.cat-card { background: var(--white); border: 1px solid var(--line); }
+.viewer { aspect-ratio: 4 / 3; max-width: 100%; background: radial-gradient(circle at 50% 60%, var(--white), var(--zinc)); display: grid; place-items: center; position: relative; cursor: grab; perspective: 700px; }
+.viewer .model { width: 58%; transition: transform .5s ease; transform: rotateX(8deg) rotateY(-14deg); }
+.viewer:hover .model { transform: rotateX(4deg) rotateY(18deg); }
+.badge360 { position: absolute; right: 12px; top: 12px; font: 600 .72rem var(--f-mono); background: var(--blue); color: var(--white); padding: 3px 8px; }
+.viewer .hint { position: absolute; bottom: 10px; font: .72rem var(--f-mono); color: var(--muted); }
+.cat-body { padding: 16px 18px; display: grid; gap: 8px; }
+.spec { display: grid; grid-template-columns: auto 1fr; gap: 2px 14px; font-size: .82rem; }
+.spec dt { font-family: var(--f-mono); color: var(--muted); font-size: .76rem; }
+.spec dd { margin: 0; font-variant-numeric: tabular-nums; }
+
+/* Karte */
+.map-box { background: var(--white); border: 1px solid var(--line); display: grid; grid-template-columns: minmax(0, 1fr) 260px; }
+@media (max-width: 820px) { .map-box { grid-template-columns: 1fr; } }
+.map-filters { display: flex; flex-wrap: wrap; gap: 8px; padding: 16px; border-bottom: 1px solid var(--line); grid-column: 1 / -1; }
+.f-chip { font: 600 .82rem var(--f-body); padding: 7px 12px; border: 1.5px solid var(--blue); background: var(--white); color: var(--blue); cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
+.f-chip small { font-weight: 400; color: var(--muted); }
+.f-chip[aria-pressed="true"] { background: var(--blue); color: var(--white); }
+.f-chip[aria-pressed="true"] small { color: #B9C8E0; }
+.map-svg-wrap { padding: 12px; min-width: 0; }
+.map-svg-wrap svg { width: 100%; height: auto; display: block; }
+.pin { transition: opacity .25s ease; cursor: pointer; }
+.pin.dim { opacity: .18; }
+.map-list { border-left: 1px solid var(--line); padding: 16px; display: grid; gap: 10px; align-content: start; font-size: .88rem; }
+@media (max-width: 820px) { .map-list { border-left: 0; border-top: 1px solid var(--line); } }
+.map-list .count { font-family: var(--f-display); font-weight: 800; font-stretch: 80%; font-size: 2.4rem; color: var(--blue); line-height: 1; font-variant-numeric: tabular-nums; }
+.map-list ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.map-list li { display: flex; justify-content: space-between; gap: 8px; border-bottom: 1px dotted var(--line); padding-bottom: 3px; }
+.map-list li span:last-child { font: .74rem var(--f-mono); color: var(--muted); }
+.intl { display: flex; flex-wrap: wrap; gap: 6px; }
+.intl span { font: 500 .74rem var(--f-mono); background: var(--yellow-soft); color: var(--blue-deep); padding: 2px 8px; }
+
+/* Bild & Sprache, Do/Don't */
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+.box { background: var(--white); border: 1px solid var(--line); padding: 22px; display: grid; gap: 12px; align-content: start; min-width: 0; }
+.box ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+.box.do { border-top: 4px solid var(--ok); }
+.box.dont { border-top: 4px solid var(--no); }
+.box.do h3 { color: var(--ok); } .box.dont h3 { color: var(--no); }
+.voice { display: grid; gap: 10px; }
+.voice-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line); border: 1px solid var(--line); }
+.voice-row > div { background: var(--white); padding: 14px 16px; display: grid; gap: 4px; min-width: 0; }
+@media (max-width: 560px) { .voice-row { grid-template-columns: 1fr; } }
+
+/* Checkliste */
+.check { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+.check li { background: var(--white); border: 1px solid var(--line); padding: 16px 18px; display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 12px; }
+.check li::before { content: ""; width: 18px; height: 18px; border: 2px solid var(--blue); margin-top: 3px; }
+.check strong { display: block; }
+.check span { color: var(--muted); font-size: .9rem; }
+
+footer { background: var(--blue-deep); color: #B9C8E0; }
+footer .wrap { padding-block: 36px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; font-size: .88rem; }
+footer .logo { width: 180px; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<!-- Wortmarke als wiederverwendbares Symbol -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="mark" viewBox="0 0 64 56">
+      <path d="M4 30 L32 6 L60 30" fill="none" stroke="currentColor" stroke-width="7" stroke-linejoin="miter" stroke-linecap="square"/>
+      <rect x="22" y="32" width="20" height="5" fill="var(--yellow)"/>
+      <rect x="22" y="41" width="20" height="5" fill="var(--yellow)"/>
+      <rect x="22" y="50" width="20" height="5" fill="var(--yellow)"/>
+    </symbol>
+  </defs>
+</svg>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="label">Markenhandbuch · Linee guida del marchio · Version 1.0 · Oktober 2026</div>
+    <h1>Schatz<span>eder</span></h1>
+    <p>Dächer, Photovoltaik, Sicherheitssysteme und Sonderlösungen aus Brixen. Dieses Handbuch legt fest, wie die Marke aussieht und spricht: auf der Website, auf Fahrzeugen, Baustellenschildern und in Angeboten.</p>
+    <div class="hero-meta"><span>Sitz: Brixen / Bressanone</span><span>Einsatzgebiet: ganz Südtirol / tutto l'Alto Adige</span><span>International</span></div>
+  </div>
+  <svg class="roofline" viewBox="0 0 560 200" aria-hidden="true">
+    <path d="M0 200 L120 110 L200 160 L330 40 L460 140 L520 100 L560 130 L560 200 Z" fill="#0C3366"/>
+    <path d="M200 160 L330 40 L460 140" fill="none" stroke="var(--yellow)" stroke-width="6"/>
+    <g fill="#1B4E92" stroke="#0C3366" stroke-width="2">
+      <path d="M262 112 L300 77 L326 98 L288 133 Z"/><path d="M300 77 L330 49 L356 70 L326 98 Z"/>
+      <path d="M288 133 L326 98 L352 119 L314 154 Z"/><path d="M326 98 L356 70 L382 91 L352 119 Z"/>
+    </g>
+  </svg>
+</header>
+<div class="ridge"></div>
+
+<main>
+<!-- 01 Markenkern -->
+<section class="ch"><div class="wrap">
+  <div class="ch-head"><div class="num"><b>01</b> Markenkern · Identità</div><h2>Ein Betrieb, vier Leistungen</h2>
+    <p class="lede">Die Marke steht für solides Handwerk auf dem Dach. Jede Leistung bekommt ein eigenes Symbol, alle teilen dieselben Farben und dieselbe Schrift.</p></div>
+  <div class="core">
+    <div class="svc">
+      <svg viewBox="0 0 40 40" fill="none" stroke="var(--blue)" stroke-width="3" aria-hidden="true"><path d="M4 20 L20 6 L36 20"/><path d="M9 16 V34 H31 V16"/><rect x="17" y="24" width="6" height="10" fill="var(--yellow)" stroke="none"/></svg>
+      <h3>Dächer</h3><div class="it">Tetti</div>
+      <p>Neueindeckung, Sanierung, Spenglerarbeiten, Dämmung.</p>
+    </div>
+    <div class="svc">
+      <svg viewBox="0 0 40 40" fill="none" stroke="var(--blue)" stroke-width="3" aria-hidden="true"><circle cx="31" cy="9" r="5" fill="var(--yellow)" stroke="none"/><path d="M8 18 H32 L28 34 H4 Z"/><path d="M20 18 L16 34 M6 26 H30"/></svg>
+      <h3>Photovoltaik</h3><div class="it">Fotovoltaico</div>
+      <p>Planung und Montage von PV-Anlagen, Speicher, Indach-Lösungen.</p>
+    </div>
+    <div class="svc">
+      <svg viewBox="0 0 40 40" fill="none" stroke="var(--blue)" stroke-width="3" aria-hidden="true"><circle cx="20" cy="10" r="5"/><path d="M20 15 V30"/><path d="M8 34 H32"/><rect x="15" y="29" width="10" height="5" fill="var(--yellow)" stroke="none"/></svg>
+      <h3>Sicherheitssysteme</h3><div class="it">Sistemi di sicurezza</div>
+      <p>Absturzsicherung, Anschlagpunkte, Seilsysteme, Schneefang.</p>
+    </div>
+    <div class="svc">
+      <svg viewBox="0 0 40 40" fill="none" stroke="var(--blue)" stroke-width="3" aria-hidden="true"><path d="M6 34 H34 L6 6 Z"/><path d="M6 26 H10 M6 18 H10" /><circle cx="27" cy="13" r="4" fill="var(--yellow)" stroke="none"/></svg>
+      <h3>Sonderlösungen</h3><div class="it">Soluzioni speciali</div>
+      <p>Individuelle Konstruktionen für besondere Dächer und Bauten.</p>
+    </div>
+  </div>
+  <div class="reach">
+    <div><span class="label">Sitz</span><strong>Brixen</strong><span class="it">Bressanone</span></div>
+    <div><span class="label">Einsatzgebiet</span><strong>Ganz Südtirol</strong><span class="it">Tutto l'Alto Adige</span></div>
+    <div><span class="label">Darüber hinaus</span><strong>International</strong><span class="it">Internazionale</span></div>
+  </div>
+</div></section>
+
+<!-- 02 Logo -->
+<section class="ch"><div class="wrap">
+  <div class="ch-head"><div class="num"><b>02</b> Logo · Logo</div><h2>Dachfirst und Modulreihen</h2>
+    <p class="lede">Das Zeichen verbindet den Dachfirst in Blau mit drei gelben Modulreihen: Dach und Photovoltaik in einer Form. Die Wortmarke steht immer rechts neben dem Zeichen.</p></div>
+  <div class="logo-grid">
+    <div class="logo-tile t-white"><span class="label">Primär · auf Weiß</span>
+      <svg class="logo" viewBox="0 0 320 64" role="img" aria-label="Schatzeder Logo"><use href="#mark" x="0" y="4" width="64" height="56" style="color:var(--blue)"/><text x="78" y="42" font-family="Archivo, Arial Narrow, sans-serif" font-weight="900" font-stretch="75%" font-size="38" fill="var(--blue)" letter-spacing="1">SCHATZEDER</text><text x="80" y="58" font-family="IBM Plex Mono, monospace" font-size="9.5" fill="var(--slate)" letter-spacing="2.4">DACH · PV · SICHERHEIT</text></svg></div>
+    <div class="logo-tile t-blue"><span class="label">Negativ · auf Dachblau</span>
+      <svg class="logo" viewBox="0 0 320 64" role="img" aria-label="Schatzeder Logo negativ"><use href="#mark" x="0" y="4" width="64" height="56" style="color:#fff"/><text x="78" y="42" font-family="Archivo, Arial Narrow, sans-serif" font-weight="900" font-stretch="75%" font-size="38" fill="#fff" letter-spacing="1">SCHATZEDER</text><text x="80" y="58" font-family="IBM Plex Mono, monospace" font-size="9.5" fill="var(--yellow)" letter-spacing="2.4">DACH · PV · SICHERHEIT</text></svg></div>
+    <div class="logo-tile t-yellow"><span class="label">Auf Sonnengelb · nur einfarbig</span>
+      <svg class="logo" viewBox="0 0 320 64" role="img" aria-label="Schatzeder Logo einfarbig"><g style="color:var(--blue-deep)"><path d="M4 34 L32 10 L60 34" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="square"/><rect x="22" y="36" width="20" height="5" fill="currentColor"/><rect x="22" y="45" width="20" height="5" fill="currentColor"/><rect x="22" y="54" width="20" height="5" fill="currentColor"/></g><text x="78" y="42" font-family="Archivo, Arial Narrow, sans-serif" font-weight="900" font-stretch="75%" font-size="38" fill="var(--blue-deep)" letter-spacing="1">SCHATZEDER</text><text x="80" y="58" font-family="IBM Plex Mono, monospace" font-size="9.5" fill="var(--blue-deep)" letter-spacing="2.4">DACH · PV · SICHERHEIT</text></svg></div>
+    <div class="logo-tile t-deep"><span class="label">Bildzeichen allein · Favicon, Fahrzeug-Heck</span>
+      <svg viewBox="0 0 64 60" width="96" height="90" role="img" aria-label="Bildzeichen"><use href="#mark" x="0" y="2" width="64" height="56" style="color:#fff"/></svg></div>
+  </div>
+  <div class="rules">
+    <div><span class="label">Schutzzone</span>
+      <div class="zone"><div class="inner"><svg viewBox="0 0 320 64" width="220" aria-hidden="true"><use href="#mark" x="0" y="4" width="64" height="56" style="color:var(--blue)"/><text x="78" y="42" font-family="Archivo, Arial Narrow, sans-serif" font-weight="900" font-stretch="75%" font-size="38" fill="var(--blue)">SCHATZEDER</text></svg></div></div>
+      <p>Rund um das Logo bleibt mindestens die Höhe des Dachfirsts (x) frei. Kein Text, kein Bildrand in dieser Zone.</p></div>
+    <div><span class="label">Mindestgröße</span>
+      <p><strong>Digital:</strong> 120 px Breite mit Wortmarke, 24 px nur Bildzeichen.<br><strong>Druck:</strong> 30 mm Breite mit Wortmarke, 8 mm nur Bildzeichen.</p>
+      <p>Unter diesen Maßen den Zusatz „Dach · PV · Sicherheit" weglassen.</p></div>
+    <div><span class="label">Hinweis</span>
+      <p>Die Wortmarke ist ein Entwurf. Die finalen Logodateien (SVG, PDF, PNG) werden nach Freigabe geliefert.</p></div>
+  </div>
+</div></section>
+
+<!-- 03 Farben -->
+<section class="ch"><div class="wrap">
+  <div class="ch-head"><div class="num"><b>03</b> Farben · Colori</div><h2>Blau trägt, Gelb zeigt</h2>
+    <p class="lede">Dachblau ist die Hauptfarbe für Flächen, Überschriften und Fahrzeuge. Sonnengelb setzt Akzente: Buttons, Markierungen, die Modulreihen im Logo. Gelb wird nie für Text auf Weiß verwendet.</p></div>
+  <div class="swatches">
+    <div class="sw"><div class="chip" style="background:var(--blue);color:#fff">Dachblau</div><div class="info"><h3>Dachblau <span class="it">Blu tetto</span></h3><div class="codes">HEX #0F3D7A<br>RGB 15 61 122<br>CMYK 100 75 15 10<br>RAL ≈ 5010 Enzianblau</div><button class="copy" type="button" data-hex="#0F3D7A">HEX kopieren</button></div></div>
+    <div class="sw"><div class="chip" style="background:var(--yellow);color:var(--blue-deep)">Sonnengelb</div><div class="info"><h3>Sonnengelb <span class="it">Giallo sole</span></h3><div class="codes">HEX #F6BE00<br>RGB 246 190 0<br>CMYK 0 25 100 0<br>RAL ≈ 1023 Verkehrsgelb</div><button class="copy" type="button" data-hex="#F6BE00">HEX kopieren</button></div></div>
+    <div class="sw"><div class="chip" style="background:var(--blue-deep);color:#fff">Nachtblau</div><div class="info"><h3>Nachtblau <span class="it">Blu notte</span></h3><div class="codes">HEX #0A2647<br>RGB 10 38 71<br>CMYK 100 80 35 40</div><button class="copy" type="button" data-hex="#0A2647">HEX kopieren</button></div></div>
+    <div class="sw"><div class="chip" style="background:var(--slate);color:#fff">Schiefer</div><div class="info"><h3>Schiefer <span class="it">Ardesia</span></h3><div class="codes">HEX #1C2430<br>RGB 28 36 48<br>Fließtext</div><button class="copy" type="button" data-hex="#1C2430">HEX kopieren</button></div></div>
+    <div class="sw"><div class="chip" style="background:var(--zinc);color:var(--blue)">Zink</div><div class="info"><h3>Zink <span class="it">Zinco</span></h3><div class="codes">HEX #E9EDF3<br>RGB 233 237 243<br>Flächen, Hintergründe</div><button class="copy" type="button" data-hex="#E9EDF3">HEX kopieren</button></div></div>
+  </div>
+  <div class="ratio"><span class="label">Mengenverhältnis auf einer Seite</span>
+    <div class="ratio-bar"><div style="flex:55;background:var(--white);color:var(--muted)">Weiß / Zink 55 %</div><div style="flex:30;background:var(--blue);color:#fff">Dachblau 30 %</div><div style="flex:10;background:var(--yellow);color:var(--blue-deep)">Gelb 10 %</div><div style="flex:5;background:var(--slate);color:#fff" title="Schiefer 5 %">5 %</div></div></div>
+  <div class="contrast">
+    <div class="pair" style="background:var(--blue);color:#fff"><span class="big">Aa</span><span class="verdict">Weiß auf Blau · 10.9:1 · ✓</span></div>
+    <div class="pair" style="background:var(--yellow);color:var(--blue-deep)"><span class="big">Aa</span><span class="verdict">Nachtblau auf Gelb · 9.4:1 · ✓</span></div>
+    <div class="pair" style="background:var(--blue);color:var(--yellow)"><span class="big">Aa</span><span class="verdict">Gelb auf Blau · 5.6:1 · ✓ ab 18 px</span></div>
+    <div class="pair" style="background:var(--white);color:var(--yellow)"><span class="big">Aa</span><span class="verdict" style="color:var(--no)">Gelb auf Weiß · 1.7:1 · ✗ nie</span></div>
+  </div>
+</div></section>
+
+<!-- 04 Typografie -->
+<section class="ch"><div class="wrap">
+  <div class="ch-head"><div class="num"><b>04</b> Typografie · Tipografia</div><h2>Schmal und kräftig wie ein Firstbalken</h2>
+    <p class="lede">Zwei Schriftfamilien, beide kostenlos über Google Fonts und für Deutsch und Italienisch vollständig.</p></div>
+  <div class="type-specimen">
+    <div class="specimen"><span class="label">Headlines · Archivo, schmal (75 %), Black</span><div class="aa">Aa Ää</div>
+      <p style="font-family:var(--f-display);font-stretch:75%;font-weight:800;font-size:1.6rem;color:var(--blue);line-height:1.1">WIR DECKEN SÜDTIROL. COPRIAMO L'ALTO ADIGE.</p>
+      <span class="label">Fließtext · IBM Plex Sans, Regular & Semibold</span>
+      <p>Seit Jahren sanieren wir Dächer in Brixen und im ganzen Land. Wir planen Photovoltaik, sichern Dachflächen ab und bauen Lösungen, die es so nur einmal gibt.</p>
+      <span class="label">Technische Angaben · IBM Plex Mono</span>
+      <p style="font-family:var(--f-mono);font-size:.88rem">12,4 kWp · 31 Module · 68 m² · Neigung 32°</p></div>
+    <div class="scale">
+      <div class="scale-row"><span class="label">H1 · 64/56</span><div style="font-family:var(--f-display);font-weight:900;font-stretch:70%;font-size:2.6rem;line-height:1;color:var(--blue)">Dächer</div></div>
+      <div class="scale-row"><span class="label">H2 · 40/44</span><div style="font-family:var(--f-display);font-weight:800;font-stretch:80%;font-size:1.9rem;line-height:1.1;color:var(--blue)">Photovoltaik</div></div>
+      <div class="scale-row"><span class="label">H3 · 22/26</span><div style="font-family:var(--f-display);font-weight:700;font-stretch:90%;font-size:1.3rem">Sicherheitssysteme</div></div>
+      <div class="scale-row"><span class="label">Text · 17/27</span><div>Fließtext für Seiten und Angebote.</div></div>
+      <div class="scale-row"><span class="label">Klein · 14/20</span><div style="font-size:.88rem">Bildunterschriften, Fußnoten</div></div>
+      <div class="scale-row"><span class="label">Label · 12 mono</span><div class="label" style="color:var(--slate)">Brixen · 2025 · Satteldach</div></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- 05 Website -->
+<section class="ch"><div class="wrap">
+  <div class="ch-head"><div class="num"><b>05</b> Website · Sito web</div><h2>Sechs Seiten, zwei Sprachen</h2>
+    <p class="lede">Die Navigation ist auf Deutsch und Italienisch gleichwertig. Der Sprachwechsel sitzt immer oben rechts.</p></div>
+  <div class="sitemap">
+    <div class="nav-demo">
+      <div class="nav-bar">
+        <svg class="logo" viewBox="0 0 320 64" aria-hidden="true"><use href="#mark" x="0" y="4" width="64" height="56" style="color:var(--blue)"/><text x="78" y="44" font-family="Archivo, Arial Narrow, sans-serif" font-weight="900" font-stretch="75%" font-size="38" fill="var(--blue)">SCHATZEDER</text></svg>
+        <nav><span>Leistungen<small>Servizi</small></span><span>Über uns<small>Chi siamo</small></span><span>Produkte<small>Prodotti</small></span><span>Referenzen<small>Lavori</small></span><span>Jobs<small>Lavora con noi</small></span><span>Kontakt<small>Contatti</small></span></nav>
+        <span class="lang"><b>DE</b> | IT</span>
+      </div>
+      <div class="tree">
+        <div><h3>Leistungen</h3><ul><li>Dächer</li><li>Photovoltaik</li><li>Sicherheitssysteme</li><li>Sonderlösungen</li><li>Karte: Leistung × Ort</li></ul></div>
+        <div><h3>Über uns</h3><ul><li>Geschichte</li><li>Team</li><li>Standort Brixen</li><li>Zertifikate</li></ul></div>
+        <div><h3>Produkte</h3><ul><li>3D-Katalog</li><li>Datenblätter</li><li>Hersteller</li></ul></div>
+        <div><h3>Referenzen</h3><ul><li>Filter nach Leistung</li><li>Filter nach Ort</li><li>Projektseiten</li></ul></div>
+        <div><h3>Jobs</h3><ul><li>Offene Stellen</li><li>Lehre</li><li>Bewerbung</li></ul></div>
+        <div><h3>Kontakt</h3><ul><li>Formular</li><li>Anfahrt</li><li>Notdienst</li></ul></div>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<!-- 06 Komponenten -->
+<section class="ch"><div class="wrap">
+  <div class="ch-head"><div class="num"><b>06</b> Bausteine · Componenti</div><h2>Buttons, Referenzen, 3D-Katalog</h2>
+    <p class="lede">Ecken bleiben eckig wie Blechkanten. Ein gelber Button pro Ansicht, er führt immer zur Anfrage.</p></div>
+  <div class="comp-grid">
+    <div class="comp"><span class="label">Buttons</span>
+      <div class="btns"><button class="btn btn-primary" type="button">Angebot anfragen</button><button class="btn btn-secondary" type="button">Referenzen ansehen</button><button class="btn btn-ghost" type="button">Mehr erfahren</button></div>
+      <p style="font-size:.9rem">Gelb = Hauptaktion (Anfrage). Blau = zweite Aktion. Umriss = alles Weitere.</p></div>
+    <div class="comp"><span class="label">Referenz-Karte · Lavori</span>
+      <article class="ref-card">
+        <div class="ref-img"><span class="ref-tag">Photovoltaik</span>
+          <svg viewBox="0 0 400 250" aria-hidden="true"><path d="M0 130 L80 70 L150 110 L240 40 L330 100 L400 70 L400 250 L0 250 Z" fill="#7F96B3" opacity=".6"/><path d="M90 250 V160 L200 90 L310 160 V250 Z" fill="#E9E2D4"/><path d="M70 170 L200 80 L330 170" fill="none" stroke="var(--blue)" stroke-width="10"/><g fill="var(--blue)" opacity=".9"><path d="M140 140 L200 98 L222 113 L162 155 Z"/><path d="M168 160 L228 118 L250 133 L190 175 Z"/></g><rect x="185" y="200" width="30" height="50" fill="#8A6A4A"/></svg></div>
+        <div class="ref-body"><h3>Wohnhaus in Vahrn</h3><div class="ref-facts"><span>9,8 kWp</span><span>Satteldach</span><span>2025</span></div></div>
+      </article></div>
+    <div class="comp"><span class="label">Produkt im 3D-Katalog · Prodotti</span>
+      <article class="cat-card">
+        <div class="viewer" title="Zum Drehen ziehen">
+          <span class="badge360">3D · 360°</span>
+          <svg class="model" viewBox="0 0 200 180" aria-hidden="true"><path d="M100 20 L170 55 L170 70 L100 35 L30 70 L30 55 Z" fill="var(--blue)"/><path d="M100 35 L170 70 L170 150 L100 115 Z" fill="#2F5C9A"/><path d="M100 35 L30 70 L30 150 L100 115 Z" fill="#1B4A86"/><circle cx="100" cy="12" r="9" fill="none" stroke="var(--yellow)" stroke-width="5"/><path d="M100 21 V35" stroke="var(--yellow)" stroke-width="5"/></svg>
+          <span class="hint">Ziehen zum Drehen</span>
+        </div>
+        <div class="cat-body"><h3>Anschlagpunkt EN 795 Typ A</h3>
+          <dl class="spec"><dt>Material</dt><dd>Edelstahl V4A</dd><dt>Belastung</dt><dd>bis 3 Personen</dd><dt>Montage</dt><dd>Holz, Beton, Stahl</dd></dl></div>
+      </article></div>
+  </div>
+</div></section>
+
+<!-- 07 Karte -->
+<section class="ch"><div class="wrap">
+  <div class="ch-head"><div class="num"><b>07</b> Karte Leistung × Ort · Mappa</div><h2>Wo wir was gebaut haben</h2>
+    <p class="lede">Die Karte zeigt Referenzen nach Leistung und Ort. Ein Klick auf eine Leistung blendet die übrigen Orte ab. Die Punkte unten sind Beispieldaten für den Entwurf.</p></div>
+  <div class="map-box">
+    <div class="map-filters" role="group" aria-label="Leistung filtern">
+      <button class="f-chip" type="button" data-f="all" aria-pressed="true">Alle <small>Tutti</small></button>
+      <button class="f-chip" type="button" data-f="dach" aria-pressed="false">Dächer <small>Tetti</small></button>
+      <button class="f-chip" type="button" data-f="pv" aria-pressed="false">Photovoltaik <small>Fotovoltaico</small></button>
+      <button class="f-chip" type="button" data-f="sich" aria-pressed="false">Sicherheit <small>Sicurezza</small></button>
+      <button class="f-chip" type="button" data-f="sonder" aria-pressed="false">Sonderlösungen <small>Speciali</small></button>
+    </div>
+    <div class="map-svg-wrap">
+      <svg id="map" viewBox="0 0 600 380" role="img" aria-label="Schematische Karte Südtirol mit Referenzorten">
+        <path d="M47 114 L180 65 L313 58 L473 28 L567 152 L500 201 L420 266 L340 284 L233 352 L180 284 L127 247 L33 228 Z" fill="var(--zinc)" stroke="var(--blue)" stroke-width="2" stroke-linejoin="round"/>
+        <text x="62" y="100" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--muted)">↖ CH</text>
+        <text x="300" y="44" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--muted)">↑ AT · DE</text>
+        <text x="250" y="374" font-family="IBM Plex Mono, monospace" font-size="11" fill="var(--muted)">↓ Trentino · IT</text>
+        <g id="pins"></g>
+      </svg>
+    </div>
+    <div class="map-list">
+      <span class="label" id="map-label">Alle Leistungen</span>
+      <div><span class="count" id="map-count">0</span> <span>Referenzorte</span></div>
+      <ul id="map-ul"></ul>
+      <span class="label">International</span>
+      <div class="intl"><span>Österreich</span><span>Deutschland</span><span>Schweiz</span></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- 08 Bild & Sprache -->
+<section class="ch"><div class="wrap">
+  <div class="ch-head"><div class="num"><b>08</b> Bild & Sprache · Immagini e tono</div><h2>Echte Dächer, klare Worte</h2></div>
+  <div class="two">
+    <div class="box do"><h3>So zeigen wir uns</h3><ul>
+      <li>Eigene Baustellen und fertige Dächer, Berge im Hintergrund dürfen sichtbar sein.</li>
+      <li>Monteure mit sichtbarer Sicherheitsausrüstung.</li>
+      <li>Details: Blechkante, Modulreihe, Anschlagpunkt.</li>
+      <li>Tageslicht, klarer Himmel, natürliche Farben.</li></ul></div>
+    <div class="box dont"><h3>Das vermeiden wir</h3><ul>
+      <li>Stockfotos von fremden Häusern oder Ländern.</li>
+      <li>Arbeit auf dem Dach ohne Absturzsicherung.</li>
+      <li>Logo verzerren, umfärben oder schräg stellen.</li>
+      <li>Gelb als Textfarbe auf hellem Grund.</li></ul></div>
+  </div>
+  <div class="voice" style="margin-top:28px">
+    <span class="label">Tonalität · Wir sprechen Kunden mit „Sie" an, sachlich und direkt, in beiden Sprachen gleichwertig</span>
+    <div class="voice-row"><div><span class="label">Deutsch</span><p>Ihr Dach, sicher und dicht. Wir kommen zur Besichtigung nach Hause, in ganz Südtirol.</p></div><div><span class="label">Italiano</span><p>Il vostro tetto, sicuro e impermeabile. Veniamo a fare il sopralluogo in tutto l'Alto Adige.</p></div></div>
+    <div class="voice-row"><div><span class="label">Statt</span><p class="it">„Innovative ganzheitliche Energielösungen der Zukunft"</p></div><div><span class="label">Besser</span><p>„Strom vom eigenen Dach. Geplant und montiert aus Brixen."</p></div></div>
+  </div>
+</div></section>
+
+<!-- 09 Checkliste -->
+<section class="ch" style="border-bottom:0"><div class="wrap">
+  <div class="ch-head"><div class="num"><b>09</b> Nächste Schritte · Prossimi passi</div><h2>Was wir von Ihnen brauchen</h2>
+    <p class="lede">Damit Website, 3D-Katalog und Karte mit echten Inhalten starten, bitten wir um folgende Unterlagen.</p></div>
+  <ul class="check">
+    <li><div><strong>Vorhandenes Logo</strong><span>Als SVG, PDF oder AI, falls bereits eines existiert.</span></div></li>
+    <li><div><strong>Referenzprojekte</strong><span>Fotos, Ort, Jahr, Leistung und Eckdaten (z. B. kWp, m²) je Projekt.</span></div></li>
+    <li><div><strong>Produkte für den 3D-Katalog</strong><span>Produktliste mit Datenblättern; 3D-Dateien (STEP, OBJ, GLB) der Hersteller, wo vorhanden.</span></div></li>
+    <li><div><strong>Orte und Einsatzgebiet</strong><span>Liste der Gemeinden in Südtirol und der Länder für internationale Aufträge.</span></div></li>
+    <li><div><strong>Über uns</strong><span>Geschichte, Teamfotos, Zertifikate und Mitgliedschaften.</span></div></li>
+    <li><div><strong>Jobs</strong><span>Offene Stellen und Lehrstellen mit kurzer Beschreibung, deutsch und italienisch.</span></div></li>
+    <li><div><strong>Kontakt</strong><span>Adresse, Telefon, E-Mail, Öffnungszeiten, Notdienst.</span></div></li>
+    <li><div><strong>Freigabe</strong><span>Rückmeldung zu Farben, Schrift und Logo-Entwurf in diesem Handbuch.</span></div></li>
+  </ul>
+</div></section>
+</main>
+
+<footer><div class="wrap">
+  <svg class="logo" viewBox="0 0 320 64" aria-hidden="true"><use href="#mark" x="0" y="4" width="64" height="56" style="color:#fff"/><text x="78" y="44" font-family="Archivo, Arial Narrow, sans-serif" font-weight="900" font-stretch="75%" font-size="38" fill="#fff">SCHATZEDER</text></svg>
+  <span>Markenhandbuch 1.0 · Entwurf zur Freigabe · Oktober 2026</span>
+</div></footer>
+
+<script>
+(function () {
+  // Beispieldaten für den Entwurf; x/y aus Längen-/Breitengrad schematisch projiziert
+  var places = [
+    { n: "Brixen", it: "Bressanone", x: 355, y: 165, s: ["dach", "pv", "sich", "sonder"], hq: true },
+    { n: "Bozen", it: "Bolzano", x: 274, y: 247, s: ["dach", "pv", "sonder"] },
+    { n: "Meran", it: "Merano", x: 222, y: 183, s: ["dach", "sich"] },
+    { n: "Bruneck", it: "Brunico", x: 430, y: 135, s: ["pv", "sich"] },
+    { n: "Sterzing", it: "Vipiteno", x: 295, y: 97, s: ["dach", "pv"] },
+    { n: "Schlanders", it: "Silandro", x: 119, y: 199, s: ["pv"] },
+    { n: "Klausen", it: "Chiusa", x: 331, y: 195, s: ["dach", "sich"] },
+    { n: "Innichen", it: "San Candido", x: 522, y: 159, s: ["dach", "sonder"] },
+    { n: "Neumarkt", it: "Egna", x: 253, y: 315, s: ["pv", "sich"] },
+    { n: "Kaltern", it: "Caldaro", x: 236, y: 283, s: ["dach"] }
+  ];
+  var names = { all: "Alle Leistungen", dach: "Dächer · Tetti", pv: "Photovoltaik · Fotovoltaico", sich: "Sicherheitssysteme · Sicurezza", sonder: "Sonderlösungen · Speciali" };
+  var NS = "http://www.w3.org/2000/svg";
+  var g = document.getElementById("pins");
+  places.forEach(function (p) {
+    var el = document.createElementNS(NS, "g");
+    el.setAttribute("class", "pin");
+    el.setAttribute("transform", "translate(" + p.x + "," + p.y + ")");
+    var c = document.createElementNS(NS, "circle");
+    c.setAttribute("r", p.hq ? 11 : 7);
+    c.setAttribute("fill", p.hq ? "var(--yellow)" : "var(--blue)");
+    c.setAttribute("stroke", p.hq ? "var(--blue)" : "#fff");
+    c.setAttribute("stroke-width", p.hq ? 3 : 2);
+    var t = document.createElementNS(NS, "text");
+    t.setAttribute("x", p.hq ? 15 : 11); t.setAttribute("y", 4);
+    t.setAttribute("font-family", "IBM Plex Sans, Arial, sans-serif");
+    t.setAttribute("font-size", p.hq ? 14 : 12);
+    t.setAttribute("font-weight", p.hq ? 700 : 500);
+    t.setAttribute("fill", "var(--slate)");
+    t.textContent = p.n;
+    var tt = document.createElementNS(NS, "title");
+    tt.textContent = p.n + " / " + p.it + (p.hq ? " · Hauptsitz" : "");
+    el.appendChild(tt); el.appendChild(c); el.appendChild(t);
+    g.appendChild(el);
+    p.el = el;
+  });
+  function apply(f) {
+    var ul = document.getElementById("map-ul");
+    ul.textContent = "";
+    var n = 0;
+    places.forEach(function (p) {
+      var on = f === "all" || p.s.indexOf(f) > -1;
+      p.el.classList.toggle("dim", !on);
+      if (on) {
+        n++;
+        var li = document.createElement("li");
+        var a = document.createElement("span"); a.textContent = p.n + (p.hq ? " ★" : "");
+        var b = document.createElement("span"); b.textContent = p.it;
+        li.appendChild(a); li.appendChild(b); ul.appendChild(li);
+      }
+    });
+    document.getElementById("map-count").textContent = n;
+    document.getElementById("map-label").textContent = names[f];
+  }
+  document.querySelectorAll(".f-chip").forEach(function (b) {
+    b.addEventListener("click", function () {
+      document.querySelectorAll(".f-chip").forEach(function (o) { o.setAttribute("aria-pressed", o === b ? "true" : "false"); });
+      apply(b.dataset.f);
+    });
+  });
+  apply("all");
+
+  document.querySelectorAll(".copy").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var hex = b.dataset.hex, label = b.textContent;
+      function done(msg) { b.textContent = msg; setTimeout(function () { b.textContent = label; }, 1400); }
+      try {
+        navigator.clipboard.writeText(hex).then(function () { done("Kopiert: " + hex); }, function () { done(hex); });
+      } catch (e) { done(hex); }
+    });
+  });
+})();
+</script>
